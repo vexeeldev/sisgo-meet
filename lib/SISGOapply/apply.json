@@ -1,0 +1,61 @@
+[
+  {
+    "id": "753392c7-455a-4495-ad46-f8e30831c6fe",
+    "fullName": "Hawwin",
+    "email": "minassahiddin@gmail.com",
+    "phone": "083141302936",
+    "dateOfBirth": "1990-01-01",
+    "address": "Larangan",
+    "currentCompany": "",
+    "currentPosition": "",
+    "yearsOfExperience": "0",
+    "lastEducation": "s1",
+    "institution": "ITATS",
+    "major": "Teknik Informatika",
+    "positionApplied": "full-stack-developer",
+    "coverLetter": "Ini contoh",
+    "declaration": true,
+    "portfolioLink": "https://www.instagram.com/",
+    "skills": [
+      "Laravel",
+      "NextJS",
+      "Golang"
+    ],
+    "files": {
+      "resume": null,
+      "portfolio": null,
+      "certificates": null,
+      "photo": null
+    },
+    "createdAt": "2026-07-09T07:29:14.847Z"
+  },
+  {
+    "id": "6dd1bd9e-2004-4854-b6fe-09957d024bd1",
+    "fullName": "moh minas minassahiddin",
+    "email": "minassahiddin@gmail.com",
+    "phone": "083141302936",
+    "dateOfBirth": "2026-07-11",
+    "address": "kec.prambon kab.nganjuk Jawa Timur",
+    "currentCompany": "sisgo",
+    "currentPosition": "Software engineer",
+    "yearsOfExperience": "5",
+    "lastEducation": "s2",
+    "institution": "Universitas Indonesia",
+    "major": "Infromatic engineer",
+    "positionApplied": "uiux-designer",
+    "coverLetter": "nganjuk kota",
+    "declaration": true,
+    "portfolioLink": "https://www.instagram.com/",
+    "skills": [
+      "ko",
+      "kaoksoaoksa"
+    ],
+    "files": {
+      "resume": "/SISGOuploads/moh_minas_minassahiddin/resume-1783733702456-ID_MAHASISWA_KP24_4_2024.pdf",
+      "portfolio": null,
+      "certificates": null,
+      "photo": "/SISGOuploads/moh_minas_minassahiddin/photo-1783733702463-WhatsApp_Image_2026-07-09_at_6.39.58_PM.jpeg"
+    },
+    "createdAt": "2026-07-11T01:35:02.474Z"
+  }
+]

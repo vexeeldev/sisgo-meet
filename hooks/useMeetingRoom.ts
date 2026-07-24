@@ -1,0 +1,501 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useWebRTC } from '@/hooks/useWebRTC';
+import { useRecording } from '@/hooks/useRecording';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { api } from '@/lib/api-new';
+import { getUser } from '@/lib/meeting';
+import { VirtualBackgroundMode } from '@/lib/virtual-background';
+import { saveRecordingToStorage } from '@/lib/recording-storage';
+
+export interface UseMeetingRoomProps {
+  roomId: string;
+}
+
+export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
+  const router = useRouter();
+
+  const [showLobby, setShowLobby] = useState(true);
+  const [participantName, setParticipantName] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isVideoOff, setIsVideoOff] = useState(false);
+  const [shouldStartWebRTC, setShouldStartWebRTC] = useState(false);
+  const [participantUUID, setParticipantUUID] = useState<string | null>(null);
+  const [roomExists, setRoomExists] = useState<boolean | null>(null);
+  const [chatMessages, setChatMessages] = useState<{ id: string; name: string; message: string; time: string }[]>([]);
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
+  const [layout, setLayout] = useState<'auto' | 'tiled' | 'spotlight' | 'sidebar' | 'speaker' | 'grid'>('tiled');
+  const [showEndCallModal, setShowEndCallModal] = useState(false);
+  const [currentTime, setCurrentTime] = useState('');
+  const [isHandRaised, setIsHandRaised] = useState(false);
+  const [raisedHands, setRaisedHands] = useState<Record<string, boolean>>({});
+  const [virtualBgImage, setVirtualBgImage] = useState<string | null>(null);
+  const [showActionMenu, setShowActionMenu] = useState(false);
+  const [processingJoin, setProcessingJoin] = useState<Record<string, boolean>>({});
+  const [meetingRole, setMeetingRole] = useState<string | null>(null);
+
+  const [showChat, setShowChat] = useState(false);
+  const [showParticipants, setShowParticipants] = useState(false);
+  const [showRequests, setShowRequests] = useState(false);
+  const [showBgPanel, setShowBgPanel] = useState(false);
+
+  const user = getUser();
+  const isHost = meetingRole === 'interviewer';
+
+  const {
+    localStream,
+    remoteStreams,
+    participants,
+    participantDetails,
+    peerIdToStreamId,
+    screenStream,
+    remoteScreenStream,
+    remoteScreenSharerId,
+    remoteVideoOff,
+    remoteAudioOff,
+    speaking,
+    virtualBgMode,
+    joinRequests,
+    setJoinRequests,
+    isScreenSharing,
+    startScreenSharing,
+    stopScreenSharing,
+    toggleMute: toggleMuteStream,
+    toggleVideo: toggleVideoStream,
+    setVirtualBackground,
+    sendMessage,
+  } = useWebRTC({
+    roomId,
+    participantUUID: participantUUID || '',
+    userName: participantName,
+    userRole: meetingRole || 'candidate',
+    initialCameraOn: !isVideoOff,
+    initialMicOn: !isMuted,
+    onKicked: () => {
+      alert("Anda telah dikeluarkan dari meeting oleh Host.");
+      window.location.href = '/dashboard';
+    },
+    onCallEnded: () => {
+      alert("Meeting telah diakhiri oleh Host.");
+      window.location.href = '/dashboard';
+    },
+    onChatReceived: (msg: any) => {
+      setChatMessages((prev) => [...prev, msg]);
+      setUnreadChatCount((prev) => prev + 1);
+    },
+    onHandRaised: (msg: any, senderId?: string) => {
+      if (senderId) {
+        setRaisedHands((prev) => ({ ...prev, [senderId]: msg.isRaised }));
+      }
+    },
+    signalServer: shouldStartWebRTC
+      ? process.env.NEXT_PUBLIC_SIGNAL_SERVER || 'wss://backspace-repurpose-fervor.ngrok-free.dev/ws'
+      : '',
+  });
+
+  const {
+    isRecording,
+    isPaused,
+    elapsedMs,
+    result,
+    startRecording,
+    pauseRecording,
+    resumeRecording,
+    stopRecording,
+    downloadRecording,
+    discardRecording,
+  } = useRecording();
+
+  const handleChangeVirtualBg = async (mode: VirtualBackgroundMode, image?: string) => {
+    await setVirtualBackground(mode, image);
+    setVirtualBgImage(mode === 'image' ? image ?? null : null);
+  };
+
+  const remoteScreenShare = remoteScreenStream
+    ? {
+        stream: remoteScreenStream,
+        participantId: remoteScreenSharerId ?? '',
+        participantName:
+          remoteScreenSharerId && participantDetails[remoteScreenSharerId]
+            ? participantDetails[remoteScreenSharerId].name
+            : 'Someone',
+      }
+    : null;
+
+  useEffect(() => {
+    const checkRoom = async () => {
+      try {
+        const result = await api.checkRoom(roomId);
+        const exists = result.success;
+        setRoomExists(exists);
+      } catch (error) {
+        console.error('Error checking room:', error);
+        setRoomExists(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkRoom();
+  }, [roomId]);
+
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      setCurrentTime(`${hours}:${minutes}`);
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      sessionStorage.setItem('redirectAfterLogin', window.location.pathname);
+      router.push('/auth/login');
+      return;
+    }
+
+    const checkRoom = async () => {
+      try {
+        const result = await api.checkRoom(roomId);
+        setRoomExists(result.success);
+      } catch (error) {
+        console.error(error);
+        setRoomExists(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkRoom();
+  }, [roomId, router]);
+
+  useEffect(() => {
+    if (user) {
+      setParticipantName(user.name);
+    }
+  }, [user]);
+
+  // Keyboard shortcut for Easter Egg: Ctrl + / (Host only)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === '/' || e.code === 'Slash')) {
+        if (meetingRole === 'host' || meetingRole === 'interviewer') {
+          e.preventDefault();
+          setShowActionMenu((prev) => !prev);
+        } else {
+          console.warn('You are not a host! Role:', meetingRole);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [meetingRole, sendMessage]);
+
+  const handleJoinFromLobby = (uuid: string, role?: string, cameraOn?: boolean, micOn?: boolean) => {
+    setParticipantUUID(uuid);
+    if (role) {
+      setMeetingRole(role);
+    }
+    if (cameraOn === false) setIsVideoOff(true);
+    if (micOn === false) setIsMuted(true);
+    setShowLobby(false);
+    setShouldStartWebRTC(true);
+  };
+
+  const handleToggleLayout = () => {
+    setLayout((prev) => (prev === 'speaker' ? 'grid' : 'speaker'));
+  };
+
+  const handleEndCall = () => {
+    if (isRecording || isPaused) {
+      const confirmLeave = confirm(
+        'Kamu masih dalam sesi recording. Meninggalkan meeting akan menghentikan dan membuang rekaman yang belum di-download. Yakin mau keluar?'
+      );
+      if (!confirmLeave) return;
+      stopRecording();
+    } else if (result) {
+      const confirmLeave = confirm(
+        'Ada hasil rekaman yang belum di-download. Meninggalkan meeting akan membuang rekaman ini. Yakin mau keluar?'
+      );
+      if (!confirmLeave) return;
+    }
+
+    if (isHost) {
+      setShowEndCallModal(true);
+    } else {
+      if (!confirm('Are you sure you want to leave the meeting?')) return;
+      leaveCall();
+    }
+  };
+
+  const leaveCall = () => {
+    localStream?.getTracks().forEach((track) => track.stop());
+    router.push('/dashboard');
+  };
+
+  useEffect(() => {
+    if (showChat) {
+      setUnreadChatCount(0);
+    }
+  }, [showChat, chatMessages]);
+
+  useEffect(() => {
+    if (result && result.blob) {
+      saveRecordingToStorage(roomId, result.blob, result.durationMs).catch((err) => {
+        console.error('Failed to auto-save recording to IndexedDB:', err);
+      });
+    }
+  }, [result, roomId]);
+
+  const handleEndForAll = () => {
+    sendMessage('end_call', {});
+    leaveCall();
+  };
+
+  const handleKickParticipant = (connId: string) => {
+    if (confirm('Yakin ingin mengeluarkan peserta ini?')) {
+      sendMessage('kick', {}, connId);
+    }
+  };
+
+  const showToast = (message: string, type: 'info' | 'hand' = 'info') => {
+    const toast = document.createElement('div');
+    toast.className =
+      'fixed bottom-24 left-6 bg-[#3c3c3c] text-white px-5 py-3 rounded-full text-sm shadow-xl z-[9999] flex items-center gap-3 border border-[#4a4b4c] transition-all duration-300 animate-in fade-in slide-in-from-bottom-4';
+
+    if (type === 'hand') {
+      toast.innerHTML = `
+        <div class="bg-[#8ab4f8] rounded-full p-1.5 shadow-lg shadow-black/50 border-2 border-white/20">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#202124" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/>
+            <path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/>
+            <path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/>
+            <path d="M15.5 17c1.3-1.6 3.6-2.5 5.5-3.6 1.4-.8 2-2.3 2-3.8 0-1.7-1.3-3.1-3-3.1-1.3 0-2.4.8-2.9 2L15.5 11"/>
+            <path d="M2 15.2l5.2-5.4a3 3 0 0 1 4.5.1l.3.4"/>
+          </svg>
+        </div>
+        <span class="font-medium whitespace-nowrap">${message}</span>
+      `;
+    } else {
+      toast.innerHTML = `<span class="font-medium whitespace-nowrap">${message}</span>`;
+    }
+
+    document.body.appendChild(toast);
+    setTimeout(() => {
+      toast.classList.add('opacity-0', 'translate-y-4');
+      setTimeout(() => toast.remove(), 300);
+    }, 5000);
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    showToast('Link copied to clipboard!');
+  };
+
+  const handleToggleHand = () => {
+    const newStatus = !isHandRaised;
+    setIsHandRaised(newStatus);
+    setRaisedHands((prev) => ({ ...prev, local: newStatus }));
+    sendMessage('raise_hand', { isRaised: newStatus, name: participantName });
+  };
+
+  const handleApproveJoin = async (uuid: string) => {
+    setProcessingJoin((prev) => ({ ...prev, [uuid]: true }));
+    try {
+      const res = await api.approveParticipant(uuid);
+      if (
+        res.success ||
+        res.message === 'Participant approved' ||
+        res.message === 'Participant is not pending'
+      ) {
+        setJoinRequests((prev) => prev.filter((req) => req.participant_uuid !== uuid));
+        sendMessage('approved', { participant_uuid: uuid });
+      } else {
+        alert(res.message || 'Gagal menyetujui');
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setProcessingJoin((prev) => ({ ...prev, [uuid]: false }));
+    }
+  };
+
+  const handleRejectJoin = async (uuid: string) => {
+    setProcessingJoin((prev) => ({ ...prev, [uuid]: true }));
+    try {
+      const res = await api.rejectParticipant(uuid);
+      if (
+        res.success ||
+        res.message === 'Participant rejected' ||
+        res.message === 'Participant is not pending'
+      ) {
+        setJoinRequests((prev) => prev.filter((req) => req.participant_uuid !== uuid));
+        sendMessage('rejected', { participant_uuid: uuid });
+      } else {
+        alert(res.message || 'Gagal menolak');
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setProcessingJoin((prev) => ({ ...prev, [uuid]: false }));
+    }
+  };
+
+  const handleSendMessage = (message: string) => {
+    const newMsg = {
+      id: Date.now().toString(),
+      name: participantName,
+      message: message,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+    setChatMessages((prev) => [...prev, newMsg]);
+    sendMessage('chat', newMsg);
+  };
+
+  const handleToggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+    } else {
+      document.exitFullscreen();
+    }
+  };
+
+  const handleToggleMute = () => {
+    toggleMuteStream();
+    setIsMuted((prev) => !prev);
+  };
+
+  const handleToggleVideo = () => {
+    toggleVideoStream();
+    setIsVideoOff((prev) => !prev);
+  };
+
+  const handleToggleScreenShare = () => {
+    if (isScreenSharing) {
+      stopScreenSharing();
+    } else {
+      startScreenSharing();
+    }
+  };
+
+  const handleToggleChat = () => {
+    setShowChat((prev) => !prev);
+    if (!showChat) {
+      setShowParticipants(false);
+      setShowRequests(false);
+      setShowBgPanel(false);
+    }
+  };
+
+  const handleToggleParticipants = () => {
+    setShowParticipants((prev) => !prev);
+    if (!showParticipants) {
+      setShowChat(false);
+      setShowRequests(false);
+      setShowBgPanel(false);
+    }
+  };
+
+  const handleToggleRequests = () => {
+    setShowRequests((prev) => !prev);
+    if (!showRequests) {
+      setShowChat(false);
+      setShowParticipants(false);
+      setShowBgPanel(false);
+    }
+  };
+
+  useKeyboardShortcuts({
+    toggleMic: handleToggleMute,
+    toggleCamera: handleToggleVideo,
+    toggleScreenShare: handleToggleScreenShare,
+  });
+
+  return {
+    roomId,
+    showLobby,
+    participantName,
+    isLoading,
+    isMuted,
+    isVideoOff,
+    shouldStartWebRTC,
+    participantUUID,
+    roomExists,
+    chatMessages,
+    unreadChatCount,
+    layout,
+    showEndCallModal,
+    currentTime,
+    isHandRaised,
+    raisedHands,
+    virtualBgImage,
+    showActionMenu,
+    processingJoin,
+    meetingRole,
+    showChat,
+    showParticipants,
+    showRequests,
+    showBgPanel,
+    isHost,
+    localStream,
+    remoteStreams,
+    participants,
+    participantDetails,
+    peerIdToStreamId,
+    screenStream,
+    remoteScreenStream,
+    remoteScreenShare,
+    remoteScreenSharerId,
+    remoteVideoOff,
+    remoteAudioOff,
+    speaking,
+    virtualBgMode,
+    joinRequests,
+    isScreenSharing,
+    isRecording,
+    isPaused,
+    elapsedMs,
+    result,
+    setShowChat,
+    setShowParticipants,
+    setShowRequests,
+    setShowBgPanel,
+    setShowEndCallModal,
+    setShowActionMenu,
+    handleJoinFromLobby,
+    handleToggleLayout,
+    handleEndCall,
+    leaveCall,
+    handleEndForAll,
+    handleKickParticipant,
+    handleApproveJoin,
+    handleRejectJoin,
+    handleSendMessage,
+    handleToggleFullscreen,
+    handleToggleMute,
+    handleToggleVideo,
+    handleToggleScreenShare,
+    handleToggleChat,
+    handleToggleParticipants,
+    handleToggleRequests,
+    handleCopyLink,
+    handleToggleHand,
+    handleChangeVirtualBg,
+    startRecording,
+    stopRecording,
+    sendMessage,
+    setLayout,
+    downloadRecording,
+    discardRecording,
+  };
+}

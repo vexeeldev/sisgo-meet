@@ -1,0 +1,191 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ededed;
+  --foreground: #0a0a0a;
+  --primary: #2165a9;
+  --primary-light: #73bff6;
+  --secondary: #226529;
+  --secondary-light: #4ad278;
+  --light: #fbfbfd;
+  --dark: #2c353e;
+  --semi-dark: #e6e9eb9d;
+  --section-primary-color: rgb(228, 237, 243);
+  --section-secondary-color: rgb(246, 246, 246);
+}
+
+@theme {
+  @keyframes marqueeForward {
+    0% {
+      transform: translateX(0%);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
+
+  @keyframes marqueeBackward {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(0%);
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  --animate-marquee-forward: marqueeForward 35s linear infinite;
+  --animate-marquee-backward: marqueeBackward 35s linear infinite;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.bg-primary {
+  background-color: var(--section-primary-color);
+}
+.hover\:bg-primary:hover {
+  background-color: var(--section-primary-color);
+}
+
+.bg-secondary {
+  background-color: var(--section-secondary-color);
+}
+
+.bg-primary-blue {
+  background-color: var(--primary);
+}
+.hover\:bg-primary-blue:hover {
+  background-color: var(--primary);
+}
+.bg-primary-blue-light {
+  background-color: var(--primary-light);
+}
+
+.bg-secondary-green {
+  background-color: var(--secondary);
+}
+.bg-secondary-green-light {
+  background-color: var(--secondary-light);
+}
+
+.bg-light {
+  background-color: var(--light);
+}
+.border-primary {
+  border-color: var(--primary);
+}
+.text-primary {
+  color: var(--primary);
+}
+
+.text-secondary {
+  color: var(--secondary);
+}
+.text-secondary-light {
+  color: var(--secondary-light);
+}
+
+.hover\:text-primary:hover {
+  color: var(--primary);
+}
+
+footer {
+  background-color: #030917;
+  color: #cbd5e1;
+}
+
+.button-with-arrow a {
+  position: relative;
+}
+
+.button-with-arrow a::after {
+  color: var(--primary);
+  position: relative;
+  content: "›";
+  font-size: 33px;
+  top: 4px;
+  opacity: 0;
+  animation: btn-animate-arrow 1s linear infinite;
+  transition: all 0.5s;
+  left: 5px;
+  text-decoration: none;
+}
+
+@keyframes btn-animate-arrow {
+  0% {
+    left: 10px;
+    opacity: 0;
+  }
+
+  60% {
+    left: 15px;
+    opacity: 1;
+  }
+
+  100% {
+    left: 20px;
+    opacity: 0;
+  }
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE & Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
+
+
+
+
+.register-scrollbar::-webkit-scrollbar {
+  width: 2px;
+  height: 2px;
+}
+
+.register-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 2px;
+}
+
+.register-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+}
+
+.register-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Firefox */
+.register-scrollbar {
+  scrollbar-width: thin;  
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+  scrollbar-width: none;
+}

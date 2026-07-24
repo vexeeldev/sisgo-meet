@@ -1,0 +1,867 @@
+{
+  "navigation": {
+    "services": { "id": "Layanan", "en": "Services" },
+    "solutions": { "id": "Solusi", "en": "Solutions" },
+    "aboutUs": { "id": "Tentang Kami", "en": "About Us" },
+    "contactUs": { "id": "Hubungi Kami", "en": "Contact Us" },
+    "others": { "id": "Lainnya", "en": "Other" },
+    "home": { "id": "Beranda", "en": "Home" },
+    "about": { "id": "Tentang Kami", "en": "About" },
+    "contact": { "id": "Hubungi Kami", "en": "Contact" }
+  },
+  "hero": {
+    "title": { "id": "Your Next Chapter Starts Here", "en": "Your Next Chapter Starts Here" },
+    "subtitle": { "id": "Dapatkan solusi TI yang tepat & andal", "en": "Get reliable IT solutions" },
+    "description": { "id": "Layanan TI end-to-end, pengembangan perangkat lunak dengan jaminan kualitas oleh ahli yang berdedikasi.", "en": "End-to-end IT services, quality assurance software development by dedicated experts." },
+    "careerDescription": { "id": "Kami membangun teknologi yang dipakai jutaan orang. Tim kecil, dampak besar — dan selalu ada ruang untuk orang yang tepat.", "en": "We build technology used by millions of people. Small team, big impact—and there's always room for the right people." },
+    "viewPositions": { "id": "Lihat Posisi Terbuka", "en": "View Open Positions" },
+    "joinTeam": { "id": "Menjadi bagian dari tim yang terus bertumbuh", "en": "Become part of a growing team" },
+    "learnAbout": { "id": "Pelajari tentang", "en": "Learn about" },
+    "digitalTransformation": { "id": "Transformasi digital untuk dunia kerja masa depan", "en": "Digital transformation for the future of work" },
+    "why": { "id": "Mengapa", "en": "Why" },
+    "expertIn": { "id": "ahli dalam layanan terkait Teknologi dan Informasi seperti rekayasa software, web desain, mobile apps serta infrastruktur IT & industri.", "en": "expert in Technology and Information related services such as software engineering, web design, mobile apps and IT & industrial infrastructure." },
+    "getOffer": { "id": "Dapatkan Penawaran Sekarang", "en": "Get an Offer Now" },
+    "promoDesc": { "id": "berusaha mewujudkan ide Anda menjadi kenyataan dengan bantuan teknologi mutakhir dan tim pengembang kami yang berpengalaman. Mari kita memulai perjalanan baru ini dan mewujudkan impian Anda.", "en": "strives to turn your ideas into reality with the help of cutting-edge technology and our experienced development team. Let's embark on this new journey and make your dreams come true." },
+    "rightAnswer": { "id": "Jawaban tepat untuk kebutuhan Bisnis Anda", "en": "The right answer for your business needs" },
+    "learnMore": { "id": "Pelajari Selengkapnya", "en": "Learn More" }
+  },
+  "jobs": {
+    "openPositions": { "id": "Posisi Terbuka", "en": "Open Positions" },
+    "findPosition": { "id": "Temukan posisi yang tepat", "en": "Find the right position" },
+    "all": { "id": "Semua", "en": "All" },
+    "fullTime": { "id": "Penuh Waktu", "en": "Full Time" },
+    "internship": { "id": "Magang", "en": "Internship" },
+    "viewDetail": { "id": "Lihat detail", "en": "View details" }
+  },
+  "contactForm": {
+    "writeUs": { "id": "Kirim Pesan", "en": "Write Us" },
+    "question": { "id": "Pertanyaan", "en": "Question" },
+    "name": { "id": "Nama", "en": "Name" },
+    "message": { "id": "Isi Pesan", "en": "Message" },
+    "contact": { "id": "Kontak", "en": "Contact" },
+    "information": { "id": "Informasi", "en": "Information" },
+    "selectOption": { "id": "Silahkan pilih salah satu opsi untuk mengajukan pertanyaan.", "en": "Please select one of the options to ask a question." }
+  },
+  "services": {
+    "webDev": { "id": "Pembuatan Website", "en": "Website Development" },
+    "webDevDesc": { "id": "Website modern & SEO bisnis Anda", "en": "Modern websites & SEO for your business" },
+    "desktopApp": { "id": "Pembuatan Desktop App", "en": "Desktop App Development" },
+    "desktopAppDesc": { "id": "Aplikasi desktop efisien & profesional", "en": "Efficient & professional desktop applications" },
+    "webApp": { "id": "Pembuatan Aplikasi Web", "en": "Web App Development" },
+    "webAppDesc": { "id": "Aplikasi web efisien & profesional", "en": "Efficient & professional web applications" },
+    "cloudServer": { "id": "Server Awan", "en": "Cloud Server" },
+    "cloudServerDesc": { "id": "Server awan aman & scalable", "en": "Secure & scalable cloud servers" },
+    "mobileApp": { "id": "Pembuatan Aplikasi Mobile", "en": "Mobile App Development" },
+    "mobileAppDesc": { "id": "Android & iOS untuk bisnis Anda", "en": "Android & iOS for your business" },
+    "sisgo": { "id": "SISGO", "en": "SISGO" }
+  },
+  "industries": {
+    "title": { "id": "Skala Bisnis", "en": "Business Scale" },
+    "manufacturing": { "id": "Manufaktur", "en": "Manufacturing" },
+    "manufacturingDesc": { "id": "Otomasi produksi", "en": "Production automation" },
+    "mining": { "id": "Pertambangan", "en": "Mining" },
+    "miningDesc": { "id": "Efisiensi tambang", "en": "Mine efficiency" },
+    "construction": { "id": "Konstruksi", "en": "Construction" },
+    "constructionDesc": { "id": "Proyek & lapangan", "en": "Project & field" },
+    "agribusiness": { "id": "Agribisnis", "en": "Agribusiness" },
+    "agribusinessDesc": { "id": "Produksi & distribusi tani", "en": "Agricultural production & distribution" },
+    "logistics": { "id": "Logistik", "en": "Logistics" },
+    "logisticsDesc": { "id": "Pengiriman & rantai pasok", "en": "Delivery & supply chain" },
+    "distributor": { "id": "Distributor", "en": "Distributor" },
+    "distributorDesc": { "id": "Distribusi terintegrasi", "en": "Integrated distribution" },
+    "retail": { "id": "Retail", "en": "Retail" },
+    "retailDesc": { "id": "POS & toko modern", "en": "POS & modern store" },
+    "hospitality": { "id": "Hospitality", "en": "Hospitality" },
+    "hospitalityDesc": { "id": "Hotel & restoran", "en": "Hotel & restaurant" },
+    "property": { "id": "Properti & Real Estate", "en": "Property & Real Estate" },
+    "propertyDesc": { "id": "Aset & properti digital", "en": "Digital assets & property" },
+    "finance": { "id": "Keuangan", "en": "Finance" },
+    "financeDesc": { "id": "Keuangan & akuntansi", "en": "Finance & accounting" },
+    "healthcare": { "id": "Kesehatan", "en": "Healthcare" },
+    "healthcareDesc": { "id": "Manajemen klinik & RS", "en": "Clinic & hospital management" },
+    "education": { "id": "Pendidikan", "en": "Education" },
+    "educationDesc": { "id": "Manajemen sekolah", "en": "School management" }
+  },
+  "educationDetails": {
+    "title": { "id": "Edukasi", "en": "Education" },
+    "schoolWeb": { "id": "Website Sekolah", "en": "School Website" },
+    "schoolWebDesc": { "id": "Portal profil dan informasi sekolah", "en": "School profile and information portal" },
+    "ppdb": { "id": "PPDB Online", "en": "Online PPDB" },
+    "ppdbDesc": { "id": "Sistem pendaftaran dan seleksi siswa baru", "en": "New student registration and selection system" },
+    "academic": { "id": "Sistem Akademik", "en": "Academic System" },
+    "academicDesc": { "id": "Manajemen data siswa, kelas, dan kurikulum", "en": "Student, class, and curriculum data management" },
+    "lms": { "id": "E-Learning (LMS)", "en": "E-Learning (LMS)" },
+    "lmsDesc": { "id": "Platform pembelajaran dan ujian online", "en": "Online learning and examination platform" },
+    "eReport": { "id": "E-Raport", "en": "E-Report" },
+    "eReportDesc": { "id": "Laporan hasil belajar digital siswa", "en": "Student digital study report card" },
+    "attendance": { "id": "Absensi Digital", "en": "Digital Attendance" },
+    "attendanceDesc": { "id": "Pencatatan kehadiran siswa dan guru", "en": "Student and teacher attendance record" },
+    "wallet": { "id": "Dompet Sekolah", "en": "School Wallet" },
+    "walletDesc": { "id": "Pembayaran dan keuangan sekolah digital", "en": "Digital school payment and finance" },
+    "canteen": { "id": "E-Kantin", "en": "E-Canteen" },
+    "canteenDesc": { "id": "Transaksi dan manajemen kantin digital", "en": "Digital canteen transactions and management" }
+  },
+  "analytics": {
+    "title": { "id": "Analytics", "en": "Analytics" },
+    "swot": { "id": "SWOT Analytics", "en": "SWOT Analytics" },
+    "swotDesc": { "id": "Analisis strategis berbasis data", "en": "Data-driven strategic analysis" },
+    "kpi": { "id": "KPI Monitoring", "en": "KPI Monitoring" },
+    "kpiDesc": { "id": "Pemantauan kinerja bisnis real-time", "en": "Real-time business performance monitoring" },
+    "sales": { "id": "Sales Dashboard", "en": "Sales Dashboard" },
+    "salesDesc": { "id": "Visualisasi performa dan tren penjualan", "en": "Sales performance and trend visualization" },
+    "marketing": { "id": "Marketing Analytics", "en": "Marketing Analytics" },
+    "marketingDesc": { "id": "Analisis performa kampanye dan channel", "en": "Campaign and channel performance analysis" },
+    "customer": { "id": "Customer Intelligence", "en": "Customer Intelligence" },
+    "customerDesc": { "id": "Analisis perilaku dan segmentasi pelanggan", "en": "Customer behavior and segmentation analysis" },
+    "financial": { "id": "Financial Insights", "en": "Financial Insights" },
+    "financialDesc": { "id": "Monitoring keuangan dan profitabilitas", "en": "Financial and profitability monitoring" },
+    "risk": { "id": "Risk Analytics", "en": "Risk Analytics" },
+    "riskDesc": { "id": "Identifikasi dan mitigasi risiko bisnis", "en": "Business risk identification and mitigation" },
+    "operational": { "id": "Operational Analytics", "en": "Operational Analytics" },
+    "operationalDesc": { "id": "Analisis efisiensi dan operasional", "en": "Efficiency and operational analysis" },
+    "inventory": { "id": "Inventory Analytics", "en": "Inventory Analytics" },
+    "inventoryDesc": { "id": "Monitoring stok dan perputaran barang", "en": "Stock and inventory turnover monitoring" },
+    "hr": { "id": "HR Analytics", "en": "HR Analytics" },
+    "hrDesc": { "id": "Analisis kinerja dan produktivitas tim", "en": "Team performance and productivity analysis" },
+    "project": { "id": "Project Analytics", "en": "Project Analytics" },
+    "projectDesc": { "id": "Monitoring progres dan efisiensi proyek", "en": "Project progress and efficiency monitoring" },
+    "forecasting": { "id": "Forecasting Analytics", "en": "Forecasting Analytics" },
+    "forecastingDesc": { "id": "Prediksi tren dan pertumbuhan bisnis", "en": "Business trend and growth prediction" }
+  },
+  "solutions": {
+    "title": { "id": "Solusi Alternatif", "en": "Alternative Solutions" },
+    "clinicQueue": { "id": "Antrian Klinik", "en": "Clinic Queue" },
+    "clinicQueueDesc": { "id": "Manajemen antrian pasien", "en": "Patient queue management" },
+    "communityData": { "id": "Pendataan Masyarakat", "en": "Community Data Collection" },
+    "communityDataDesc": { "id": "Pengelolaan data masyarakat", "en": "Community data management" },
+    "drivingCourse": { "id": "Kursus Mengemudi", "en": "Driving Course" },
+    "drivingCourseDesc": { "id": "Registrasi dan peserta kursus", "en": "Course registration and participants" },
+    "procurement": { "id": "Pengadaan Barang & Jasa", "en": "Procurement" },
+    "procurementDesc": { "id": "Manajemen procurement dan vendor", "en": "Procurement and vendor management" },
+    "outsourcing": { "id": "Outsourcing Karyawan", "en": "Employee Outsourcing" },
+    "outsourcingDesc": { "id": "Pengelolaan tenaga kerja outsourcing", "en": "Outsourced labor management" },
+    "taskManagement": { "id": "Task Management", "en": "Task Management" },
+    "taskManagementDesc": { "id": "Manajemen tugas dan kolaborasi", "en": "Task management and collaboration" },
+    "documentManagement": { "id": "Manajemen Dokumen", "en": "Document Management" },
+    "documentManagementDesc": { "id": "Pengelolaan arsip digital", "en": "Digital archives management" },
+    "aiAutomation": { "id": "AI Automation", "en": "AI Automation" },
+    "aiAutomationDesc": { "id": "Otomasi proses berbasis AI", "en": "AI-based process automation" }
+  },
+  "company": {
+    "title": { "id": "Perusahaan", "en": "Company" },
+    "career": { "id": "Karir", "en": "Career" },
+    "applyNow": { "id": "Lamar Sekarang", "en": "Apply Now" },
+    "hiring": { "id": "- We're Hiring!", "en": "- We're Hiring!" },
+    "blog": { "id": "Blog", "en": "Blog" },
+    "csr": { "id": "Program CSR", "en": "CSR Program" }
+  },
+  "products": {
+    "title": { "id": "Produk", "en": "Products" },
+    "website": { "id": "Website", "en": "Website" },
+    "webApp": { "id": "Aplikasi Web", "en": "Web App" },
+    "mobileApp": { "id": "Aplikasi Mobile", "en": "Mobile App" }
+  },
+  "footer": {
+    "address": { "id": "Alamat", "en": "Address" },
+    "officeAddress": { "id": "Jl. Jenderal Sudirman V No. 3, Larangan...", "en": "Jl. Jenderal Sudirman V No. 3, Larangan..." },
+    "allRightsReserved": { "id": "Seluruh hak cipta dilindungi.", "en": "All rights reserved." },
+    "openingHours": { "id": "Jam operasional", "en": "Opening hours" },
+    "privacyPolicy": { "id": "Kebijakan Privasi", "en": "Privacy Policy" },
+    "termsCondition": { "id": "Syarat & Ketentuan", "en": "Terms & Conditions" }
+  },
+  "auth": {
+  "welcome": { "id": "Selamat datang", "en": "Welcome" },
+  "enterEmail": { "id": "Masukkan email untuk melanjutkan.", "en": "Enter your email to continue." },
+  "continueWithGoogle": { "id": "Lanjutkan dengan Google", "en": "Continue with Google" },
+  "loginWithPasskey": { "id": "Masuk dengan Passkey", "en": "Login with Passkey" },
+  "processing": { "id": "Memproses...", "en": "Processing..." },
+  "orWithEmail": { "id": "atau dengan email", "en": "or continue with email" },
+  "email": { "id": "Email", "en": "Email" },
+  "checking": { "id": "Memeriksa...", "en": "Checking..." },
+  "continue": { "id": "Lanjutkan", "en": "Continue" },
+  "alreadyHaveAccount": { "id": "Sudah punya akun?", "en": "Already have an account?" },
+  "registerNow": { "id": "Daftar sekarang", "en": "Register now" },
+
+  "leftbar": {
+    "careers": { "id": "Karier", "en": "Careers" },
+    "buildFuture": { "id": "Bangun Masa Depanmu", "en": "Build Your Future" },
+    "titleLine1": { "id": "Setiap langkah besar", "en": "Every great journey" },
+    "titleLine2": { "id": "dimulai dari sini.", "en": "starts here." },
+    "description": {
+      "id": "Kami percaya setiap talenta memiliki potensi untuk menciptakan dampak. Masuk dan lanjutkan perjalananmu menuju karier yang penuh peluang.",
+      "en": "We believe every talent has the potential to make an impact. Sign in and continue your journey toward a career full of opportunities."
+    }
+  },
+
+  "register": {
+    "title": {
+      "id": "Buat akun",
+      "en": "Create an account"
+    },
+    "subtitle": {
+      "id": "Lengkapi data berikut untuk mulai mendaftar.",
+      "en": "Complete the following information to get started."
+    },
+    "continueWithGoogle": {
+      "id": "Daftar dengan Google",
+      "en": "Sign up with Google"
+    },
+    "orWithEmail": {
+      "id": "atau dengan email",
+      "en": "or continue with email"
+    },
+    "username": {
+      "id": "Username",
+      "en": "Username"
+    },
+    "fullName": {
+      "id": "Nama lengkap",
+      "en": "Full Name"
+    },
+    "email": {
+      "id": "email",
+      "en": "Email"
+    },
+    "whatsapp": {
+      "id": "No. WhatsApp",
+      "en": "WhatsApp Number"
+    },
+    "password": {
+      "id": "Kata Sandi",
+      "en": "Password"
+    },
+    "confirmPassword": {
+      "id": "Konfirmasi Kata Sandi",
+      "en": "Confirm Password"
+    },
+    "processing": {
+      "id": "Memproses...",
+      "en": "Processing..."
+    },
+    "register": {
+      "id": "Daftar",
+      "en": "Register"
+    },
+    "alreadyHaveAccount": {
+      "id": "Sudah punya akun?",
+      "en": "Already have an account?"
+    },
+    "loginNow": {
+      "id": "Masuk sekarang",
+      "en": "Login now"
+    }
+    },
+    "changeEmail": {
+      "id": "Ganti email",
+      "en": "Change email"
+    },
+    "enterPassword": {
+      "id": "Masukkan Kata sandi Anda",
+      "en": "Enter your password"
+    },
+    "loginAs": {
+      "id": "Masuk sebagai",
+      "en": "Sign in as"
+    },
+    "password": {
+      "id": "Kata sandi",
+      "en": "Password"
+    },
+    "forgotPassword": {
+      "id": "Lupa sandi?",
+      "en": "Forgot password?"
+    },
+    "loggingIn": {
+      "id": "Masuk...",
+      "en": "Signing in..."
+    },
+    "login": {
+      "id": "Masuk",
+      "en": "Sign In"
+    }
+  },
+  "dashboard": {
+    "myApplications": {
+      "id": "Lamaran Saya",
+      "en": "My Applications"
+    },
+    "openPositions": {
+      "id": "Posisi Terbuka",
+      "en": "Open Positions"
+    },
+    "profile": {
+      "title": {
+        "id": "Profil",
+        "en": "Profile"
+      },
+      "viewProfile": {
+        "id": "Lihat Profil",
+        "en": "View Profile"
+      },
+      "heading": {
+        "id": "Profil Saya",
+        "en": "My Profile"
+      },
+      "description": {
+        "id": "Kelola informasi pribadi, dokumen, dan keamanan akun Anda.",
+        "en": "Manage your personal information, documents, and account security."
+      },
+      "saved": {
+        "id": "Perubahan berhasil disimpan!",
+        "en": "Changes saved successfully!"
+      },
+      "editProfile": {
+        "id": "Sunting Profil",
+        "en": "Edit Profile"
+      },
+      "security": {
+        "id": "Keamanan",
+        "en": "Security"
+      },
+      "personalInformation": {
+        "id": "Informasi Pribadi",
+        "en": "Personal Information"
+      },
+      "fullName": {
+        "id": "Nama Lengkap",
+        "en": "Full Name"
+      },
+      "fullNamePlaceholder": {
+        "id": "Masukkan nama lengkap",
+        "en": "Enter your full name"
+      },
+      "email": {
+        "id": "Email",
+        "en": "Email"
+      },
+      "emailPlaceholder": {
+        "id": "anda@email.com",
+        "en": "you@example.com"
+      },
+      "phoneNumber": {
+        "id": "Nomor Telepon",
+        "en": "Phone Number"
+      },
+      "phonePlaceholder": {
+        "id": "+62 xxx xxxx xxxx",
+        "en": "+62 xxx xxxx xxxx"
+      },
+      "dateOfBirth": {
+        "id": "Tanggal Lahir",
+        "en": "Date of Birth"
+      },
+      "address": {
+        "id": "Alamat",
+        "en": "Address"
+      },
+      "addressPlaceholder": {
+        "id": "Masukkan alamat lengkap",
+        "en": "Enter your complete address"
+      },
+      "saveChanges": {
+        "id": "Simpan Perubahan",
+        "en": "Save Changes"
+      },
+      "securityTitle": {
+        "id": "Keamanan Akun",
+        "en": "Account Security"
+      },
+      "securityDescription": {
+        "id": "Perbarui kata sandi dan amankan akun Anda.",
+        "en": "Update your password and secure your account."
+      },
+      "currentPassword": {
+        "id": "Kata Sandi Sekarang",
+        "en": "Current Password"
+      },
+      "newPassword": {
+        "id": "Kata Sandi Baru",
+        "en": "New Password"
+      },
+      "passwordPlaceholder": {
+        "id": "Minimal 8 karakter",
+        "en": "Minimum 8 characters"
+      },
+      "updatePassword": {
+        "id": "Perbarui Kata Sandi",
+        "en": "Update Password"
+      },
+      "user": {
+        "id": "Pengguna",
+        "en": "User"
+      },
+      "profileCompletion": {
+        "id": "Kelengkapan Profil",
+        "en": "Profile Completion"
+      }
+    },
+    "dashboard": {
+      "id": "Dashboard Pelamar",
+      "en": "Applicant Dashboard"
+    },
+    "logout": {
+      "id": "Keluar",
+      "en": "Logout"
+    },
+    "loading": {
+      "id": "Memuat...",
+      "en": "Loading..."
+    },
+    "changeLanguage": {
+      "id": "Ubah Bahasa",
+      "en": "Change Language"
+    },
+    "indonesia": {
+      "id": "Indonesia",
+      "en": "Indonesia"
+    },
+    "english": {
+      "id": "Inggris",
+      "en": "English"
+    },
+    "passkeyActive": {
+      "id": "Passkey Aktif",
+      "en": "Passkey Active"
+    },
+    "enablePasskey": {
+      "id": "Aktifkan Passkey",
+      "en": "Enable Passkey"
+    },
+    "logoutFailed": {
+      "id": "Logout gagal",
+      "en": "Logout failed"
+    },
+    "pleaseLoginFirst": {
+      "id": "Silakan login terlebih dahulu",
+      "en": "Please login first"
+    },
+    "passkeyEnabled": {
+      "id": "Passkey berhasil diaktifkan!",
+      "en": "Passkey enabled successfully!"
+    },
+    "passkeyFailed": {
+      "id": "Gagal mengaktifkan Passkey",
+      "en": "Failed to enable Passkey"
+    },
+    "myApplicationsDescription": {
+      "id": "Pantau seluruh proses rekrutmen dan perkembangan status lamaran Anda.",
+      "en": "Track your recruitment process and monitor the progress of your applications."
+    },
+    "filters": {
+      "all": {
+        "id": "Semua",
+        "en": "All"
+      },
+      "applied": {
+        "id": "Lamar",
+        "en": "Applied"
+      },
+      "screening": {
+        "id": "Penyaringan",
+        "en": "Screening"
+      },
+      "interview": {
+        "id": "Wawancara",
+        "en": "Interview"
+      },
+      "result": {
+        "id": "Hasil",
+        "en": "Result"
+      },
+      "fullTime": {
+        "id": "Penuh Waktu",
+        "en": "Full Time"
+      },
+      "internship": {
+        "id": "Magang",
+        "en": "Internship"
+      }
+    },
+    "application": {
+      "jobTitle": {
+        "id": "Senior Software Engineer",
+        "en": "Senior Software Engineer"
+      },
+      "company": {
+        "id": "PT SISGO Global Teknologi",
+        "en": "PT SISGO Global Teknologi"
+      },
+      "department": {
+        "id": "Engineering",
+        "en": "Engineering"
+      },
+      "hrInterview": {
+        "id": "Interview HR",
+        "en": "HR Interview"
+      },
+      "appliedOn": {
+        "id": "Dilamar",
+        "en": "Applied"
+      },
+      "viewInterview": {
+        "id": "Lihat Wawancara",
+        "en": "View Interview"
+      }
+    },
+    "progress": {
+      "applied": {
+        "id": "Lamar",
+        "en": "Applied"
+      },
+      "cvScreening": {
+        "id": "Menyaring CV",
+        "en": "CV Screening"
+      },
+      "hrInterview": {
+        "id": "Wawancara HR",
+        "en": "HR Interview"
+      },
+      "finalResult": {
+        "id": "Hasil Akhir",
+        "en": "Final Result"
+      }
+    },
+    "timeline": {
+      "title": {
+        "id": "Riwayat Aktivitas",
+        "en": "Activity History"
+      },
+      "applicationReceived": {
+        "id": "Lamaran Diterima",
+        "en": "Application Received"
+      },
+      "cvPassed": {
+        "id": "CV Lolos Penyaringan",
+        "en": "CV Passed Screening"
+      },
+      "hrInterviewSchedule": {
+        "id": "Jadwal Interview HR",
+        "en": "HR Interview Schedule"
+      },
+      "finalResult": {
+        "id": "Hasil Akhir",
+        "en": "Final Result"
+      },
+      "waiting": {
+        "id": "Menunggu",
+        "en": "Waiting"
+      }
+    },
+    "interview": {
+      "title": {
+        "id": "Jadwal Wawancara HR",
+        "en": "HR Interview Schedule"
+      },
+      "description": {
+        "id": "Berikut adalah detail sesi wawancara Anda untuk posisi",
+        "en": "Here are the details of your interview session for the position"
+      },
+      "date": {
+        "id": "Tanggal",
+        "en": "Date"
+      },
+      "time": {
+        "id": "Waktu",
+        "en": "Time"
+      },
+      "type": {
+        "id": "Tipe",
+        "en": "Type"
+      },
+      "close": {
+        "id": "Tutup",
+        "en": "Close"
+      },
+      "joinSession": {
+        "id": "Gabung Sesi",
+        "en": "Join Session"
+      }
+    },
+    "jobs": {
+      "title": {
+        "id": "Posisi Terbuka",
+        "en": "Open Positions"
+      },
+      "heading": {
+        "id": "Lowongan Tersedia",
+        "en": "Available Jobs"
+      },
+      "description": {
+        "id": "Temukan posisi yang sesuai dengan minat dan keahlian Anda di PT SISGO Global Teknologi.",
+        "en": "Find a position that matches your interests and skills at PT SISGO Global Teknologi."
+      },
+      "searchPlaceholder": {
+        "id": "Cari lowongan pekerjaan...",
+        "en": "Search job vacancies..."
+      },
+      "noJobs": {
+        "id": "Tidak ada lowongan pekerjaan yang cocok dengan pencarian Anda.",
+        "en": "No job vacancies match your search."
+      }
+    },
+    "apply": {
+      "backToCareers": {
+        "id": "Kembali ke Lowongan",
+        "en": "Back to Careers"
+      },
+      "applyAt": {
+        "id": "Lamar di ",
+        "en": "Apply at "
+      },
+      "description": {
+        "id": "Lengkapi data di bawah ini. Kolom yang bertanda * wajib diisi.",
+        "en": "Fill in your details below. Fields marked with * are required."
+      },
+      "applyingFor": {
+        "id": "Melamar untuk:",
+        "en": "Applying for:"
+      },
+      "personalInformation": {
+        "id": "Informasi Pribadi",
+        "en": "Personal Information"
+      },
+      "fullName": {
+        "id": "Nama Lengkap",
+        "en": "Full Name"
+      },
+      "fullNamePlaceholder": {
+        "id": "contoh: John Doe",
+        "en": "e.g. John Doe"
+      },
+      "email": {
+        "id": "Email",
+        "en": "Email"
+      },
+      "emailPlaceholder": {
+        "id": "email@contoh.com",
+        "en": "you@example.com"
+      },
+      "phone": {
+        "id": "No. WhatsApp",
+        "en": "WhatsApp Number"
+      },
+      "phonePlaceholder": {
+        "id": "contoh: 081234567890",
+        "en": "e.g. 081234567890"
+      },
+      "birthDate": {
+        "id": "Tanggal Lahir",
+        "en": "Date of Birth"
+      },
+      "address": {
+        "id": "Alamat",
+        "en": "Address"
+      },
+      "addressPlaceholder": {
+        "id": "contoh: Jakarta, Indonesia",
+        "en": "e.g. Jakarta, Indonesia"
+      },
+      "professionalInformation": {
+        "id": "Informasi Profesional",
+        "en": "Professional Information"
+      },
+      "education": {
+        "id": "Pendidikan",
+        "en": "Education"
+      },
+      "positionApplied": {
+        "id": "Posisi yang Dilamar",
+        "en": "Position Applied"
+      },
+      "coverLetter": {
+        "id": "Surat Lamaran",
+        "en": "Cover Letter"
+      },
+      "coverLetterLabel": {
+        "id": "Ceritakan mengapa Anda ingin bergabung dengan SISGO",
+        "en": "Tell us why you want to join SISGO"
+      },
+      "coverLetterPlaceholder": {
+        "id": "Ceritakan motivasi Anda, pengalaman yang relevan, dan alasan mengapa Anda tertarik dengan posisi ini...",
+        "en": "Share your motivation, relevant experience, and what excites you about this role..."
+      },
+      "skills": {
+        "id": "Keahlian",
+        "en": "Skills"
+      },
+      "portfolio": {
+        "id": "Tautan Portofolio (Opsional)",
+        "en": "Portfolio Link (Optional)"
+      },
+      "uploadDocuments": {
+        "id": "Unggah Dokumen",
+        "en": "Upload Documents"
+      },
+      "declaration": {
+        "id": "Pernyataan",
+        "en": "Declaration"
+      },
+      "lastWorkplace": {
+        "id": "Tempat Kerja Terakhir",
+        "en": "Last Workplace"
+      },
+      "currentPosition": {
+        "id": "Posisi Saat Ini",
+        "en": "Current Position"
+      },
+      "yearsExperience": {
+        "id": "Pengalaman Kerja",
+        "en": "Years of Experience"
+      },
+      "submitFailed": {
+        "id": "Pengiriman lamaran gagal. Silakan coba lagi.",
+        "en": "Failed to submit your application. Please try again."
+      },
+      "experience": {
+        "freshGraduate": {
+          "id": "Fresh Graduate (Belum Berpengalaman)",
+          "en": "Fresh Graduate (No Experience)"
+        },
+        "oneYear": {
+          "id": "1 Tahun",
+          "en": "1 Year"
+        },
+        "twoYears": {
+          "id": "2 Tahun",
+          "en": "2 Years"
+        },
+        "threeYears": {
+          "id": "3 Tahun",
+          "en": "3 Years"
+        },
+        "fourYears": {
+          "id": "4 Tahun",
+          "en": "4 Years"
+        },
+        "fiveYears": {
+          "id": "5+ Tahun",
+          "en": "5+ Years"
+        },
+        "tenYears": {
+          "id": "10+ Tahun",
+          "en": "10+ Years"
+        }
+      },
+      "lastEducation": {
+        "id": "Pendidikan Terakhir",
+        "en": "Last Education"
+      },
+      "selectEducation": {
+        "id": "Pilih pendidikan",
+        "en": "Select education"
+      },
+      "institution": {
+        "id": "Nama Universitas / Sekolah",
+        "en": "University / School Name"
+      },
+      "institutionPlaceholder": {
+        "id": "contoh: Universitas Indonesia",
+        "en": "e.g. University of Indonesia"
+      },
+      "major": {
+        "id": "Jurusan / Bidang Studi",
+        "en": "Your Major / Field of Study"
+      },
+      "majorPlaceholder": {
+        "id": "contoh: Teknik Informatika",
+        "en": "e.g. Computer Science"
+      },
+      "educationOption": {
+        "freshGraduate": {
+          "id": "Fresh Graduate",
+          "en": "Fresh Graduate"
+        },
+        "highSchool": {
+          "id": "SMA/SMK",
+          "en": "High School"
+        },
+        "d3": {
+          "id": "D3",
+          "en": "Associate Degree (D3)"
+        },
+        "s1": {
+          "id": "S1",
+          "en": "Bachelor's Degree"
+        },
+        "s2": {
+          "id": "S2",
+          "en": "Master's Degree"
+        },
+        "s3": {
+          "id": "S3",
+          "en": "Doctoral Degree"
+        }
+      },
+      "position": {
+        "id": "Posisi",
+        "en": "Position"
+      },
+      "selectPosition": {
+        "id": "Pilih posisi...",
+        "en": "Select a position..."
+      },
+      "skillsLabel": {
+        "id": "Tambahkan keahlian teknis dan soft skill Anda",
+        "en": "Add your technical and soft skills"
+      },
+      "examples": {
+        "id": "Contoh",
+        "en": "Examples"
+      },
+      "skillPlaceholder": {
+        "id": "Ketik keahlian lalu tekan Enter",
+        "en": "Type a skill and press Enter"
+      },
+      "portfolioLink": {
+        "id": "Tautan Portofolio",
+        "en": "Portfolio Link"
+      },
+      "portfolioPlaceholder": {
+        "id": "https://github.com/username atau https://www.behance.net/username",
+        "en": "https://github.com/username or https://www.behance.net/username"
+      },
+      "resume": {
+        "id": "CV / Resume (PDF)",
+        "en": "CV / Resume (PDF)"
+      },
+      "profilePhoto": {
+        "id": "Foto Profil",
+        "en": "Profile Photo"
+      },
+      "optional": {
+        "id": "Opsional",
+        "en": "Optional"
+      },
+      "dragDrop": {
+        "id": "Seret file ke sini atau klik untuk memilih",
+        "en": "Drag & drop or click to browse"
+      },
+      "declarationText": {
+        "id": "Saya menyatakan bahwa seluruh informasi yang saya berikan adalah benar.",
+        "en": "I declare that all information I have provided is true and accurate."
+      },
+      "submitting": {
+        "id": "Mengirim...",
+        "en": "Submitting..."
+      },
+      "submitApplication": {
+        "id": "Kirim Lamaran",
+        "en": "Submit Application"
+      },
+      "success": {
+        "title": {
+          "id": "Lamaran Berhasil Dikirim",
+          "en": "Application Submitted"
+        },
+        "description": {
+          "id": "Terima kasih telah melamar di SISGO. Tim rekrutmen kami akan meninjau lamaran Anda dan menghubungi Anda apabila kualifikasi Anda sesuai dengan kebutuhan kami.",
+          "en": "Thank you for applying at SISGO. Our recruitment team will review your application and contact you if your qualifications match our requirements."
+        },
+        "back": {
+          "id": "Kembali ke Lowongan",
+          "en": "Back to Careers"
+        }
+      }
+    }
+  }
+}
