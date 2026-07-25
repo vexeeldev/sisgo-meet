@@ -23,6 +23,8 @@ interface UseWebRTCProps {
   signalServer?: string;
   initialCameraOn?: boolean;
   initialMicOn?: boolean;
+  onWhiteboardToggle?: (isOpen: boolean) => void;
+  onWhiteboardUpdate?: (snapshot: any) => void;
 }
 
 interface WSMessage {
@@ -78,7 +80,7 @@ const isScreenShareStream = (stream: MediaStream) => {
   return false;
 };
 
-export function useWebRTC({ roomId, participantUUID, userName, userRole, onCallEnded, onKicked, onChatReceived, onHandRaised, signalServer = 'wss://backspace-repurpose-fervor.ngrok-free.dev/ws', initialCameraOn = true, initialMicOn = true }: UseWebRTCProps) {
+export function useWebRTC({ roomId, participantUUID, userName, userRole, onCallEnded, onKicked, onChatReceived, onHandRaised, onWhiteboardToggle, onWhiteboardUpdate, signalServer = 'wss://backspace-repurpose-fervor.ngrok-free.dev/ws', initialCameraOn = true, initialMicOn = true }: UseWebRTCProps) {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStreams, setRemoteStreams] = useState<MediaStream[]>([]);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
@@ -498,6 +500,20 @@ export function useWebRTC({ roomId, participantUUID, userName, userRole, onCallE
 
           case 'brimo_time': {
             playSound();
+            break;
+          }
+
+          case 'whiteboard_toggle': {
+            if (onWhiteboardToggle) {
+              onWhiteboardToggle(!!msg.data?.isOpen);
+            }
+            break;
+          }
+
+          case 'whiteboard_update': {
+            if (onWhiteboardUpdate && msg.data?.snapshot) {
+              onWhiteboardUpdate(msg.data.snapshot);
+            }
             break;
           }
 

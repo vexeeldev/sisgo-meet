@@ -254,6 +254,23 @@ export default function MeetingLobby({ roomId, roomExists, roomType = 'private',
     }
   };
 
+  const getResolvedName = (providedName?: string) => {
+    if (providedName && providedName !== 'Guest') return providedName;
+    const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const uName = storedUser.name || storedUser.NamaLengkap || storedUser.nama_lengkap || storedUser.email || storedUser.username;
+    if (uName) return uName;
+
+    if (customGuestName && customGuestName.trim()) {
+      return customGuestName.trim();
+    }
+
+    const savedGuestName = typeof window !== 'undefined' 
+      ? (sessionStorage.getItem(`guestName_${roomId}`) || localStorage.getItem(`guestName_${roomId}`))
+      : null;
+
+    return savedGuestName || 'Guest';
+  };
+
   const connectWaitingSocket = (participantUUID: string, providedName?: string) => {
     wsRef.current?.close();
 
@@ -261,13 +278,6 @@ export default function MeetingLobby({ roomId, roomExists, roomType = 'private',
     const ws = new WebSocket(
       `${signalServer}?room=${encodeURIComponent(roomId)}&participant_uuid=${encodeURIComponent(participantUUID)}`
     );
-
-    const getResolvedName = () => {
-      if (providedName && providedName !== 'Guest') return providedName;
-      const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-      const savedGuestName = typeof window !== 'undefined' ? sessionStorage.getItem(`guestName_${roomId}`) : null;
-      return storedUser.name || savedGuestName || customGuestName.trim() || 'Guest';
-    };
 
     ws.onopen = () => {
       const activeName = getResolvedName();
@@ -338,14 +348,13 @@ export default function MeetingLobby({ roomId, roomExists, roomType = 'private',
     }
 
     const token = localStorage.getItem("token");
-    const activeName = user?.name || user?.username || customGuestName.trim() || 'Guest';
+    const activeName = getResolvedName();
 
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && activeName && activeName !== 'Guest') {
       sessionStorage.setItem(`guestName_${roomId}`, activeName);
+      localStorage.setItem(`guestName_${roomId}`, activeName);
     }
 
-    // Jika user sudah punya UUID (pernah minta join dan ditolak)
-    // kita bisa langsung kirim ulang request via WS tanpa tembak API join lagi (jika API menolak)
     if (participantUUIDRef.current && error.includes("ditolak")) {
       setError('');
       setWaitingApproval(true);

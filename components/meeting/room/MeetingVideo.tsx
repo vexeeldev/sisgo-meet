@@ -29,6 +29,11 @@ interface MeetingVideoProps {
   participantDetails?: Record<string, {name: string}>;
   peerIdToStreamId?: Record<string, string>;
   raisedHands?: Record<string, boolean>;
+  isWhiteboardOpen?: boolean;
+  isHost?: boolean;
+  whiteboardSnapshot?: any;
+  onWhiteboardSnapshotChange?: (snapshot: any) => void;
+  onCloseWhiteboard?: () => void;
 }
 
 export default function MeetingVideo({
@@ -48,6 +53,11 @@ export default function MeetingVideo({
   participantDetails = {},
   peerIdToStreamId = {},
   raisedHands = {},
+  isWhiteboardOpen = false,
+  isHost = false,
+  whiteboardSnapshot,
+  onWhiteboardSnapshotChange,
+  onCloseWhiteboard,
 }: MeetingVideoProps) {
   const cameraStreams = useMemo(() => {
     const streams = remoteScreenShare
@@ -86,7 +96,7 @@ export default function MeetingVideo({
     return names;
   }, [cameraStreams, participantDetails, peerIdToStreamId]);
 
-  const hasScreenShare = screenStream !== null || remoteScreenShare !== null; 
+  const hasScreenShare = screenStream !== null || remoteScreenShare !== null || isWhiteboardOpen; 
 
   const raisedHandsByStreamId = useMemo(() => {
     const result: Record<string, boolean> = { local: raisedHands['local'] || false };
@@ -105,16 +115,15 @@ export default function MeetingVideo({
     activeLayout = 'tiled';
   }
 
-  const isSpeakerMode = ['speaker', 'spotlight', 'sidebar'].includes(activeLayout);
+  const isSpeakerMode = ['speaker', 'spotlight', 'sidebar'].includes(activeLayout) || isWhiteboardOpen;
 
   const mainSpeakerId =
     isSpeakerMode && !hasScreenShare && cameraStreams.length > 0
       ? cameraStreams[0].id
       : null;
 
-  // Show rail whenever screen share is active (all cameras in sidebar)
-  // OR in speaker mode with 1+ remote cameras
-  const showRail = activeLayout === 'sidebar' && (hasScreenShare || cameraStreams.length >= 1);
+  // Show rail whenever screen share is active OR in speaker/spotlight/sidebar mode with 1+ cameras
+  const showRail = isSpeakerMode && (hasScreenShare || cameraStreams.length >= 1);
   const railRemoteStreams = showRail ? cameraStreams : [];
   // Only exclude main speaker from rail when NO screen share and 2+ cameras
   // (so the first camera occupies main area and rest go to rail)
@@ -160,6 +169,11 @@ export default function MeetingVideo({
             hidePip={hasScreenShare || showRail}
             speaking={speaking}
             raisedHands={raisedHandsByStreamId}
+            isWhiteboardOpen={isWhiteboardOpen}
+            isHost={isHost}
+            whiteboardSnapshot={whiteboardSnapshot}
+            onWhiteboardSnapshotChange={onWhiteboardSnapshotChange}
+            onCloseWhiteboard={onCloseWhiteboard}
           />
         ) : (
           <GridLayout

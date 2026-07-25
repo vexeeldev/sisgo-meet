@@ -42,6 +42,8 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
   const [showParticipants, setShowParticipants] = useState(false);
   const [showRequests, setShowRequests] = useState(false);
   const [showBgPanel, setShowBgPanel] = useState(false);
+  const [isWhiteboardOpen, setIsWhiteboardOpen] = useState(false);
+  const [whiteboardSnapshot, setWhiteboardSnapshot] = useState<any>(null);
 
   const user = getUser();
   const isHost = meetingRole === 'interviewer';
@@ -88,9 +90,16 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
       setUnreadChatCount((prev) => prev + 1);
     },
     onHandRaised: (msg: any, senderId?: string) => {
+      const isRaised = !!msg.isRaised;
       if (senderId) {
-        setRaisedHands((prev) => ({ ...prev, [senderId]: msg.isRaised }));
+        setRaisedHands((prev) => ({ ...prev, [senderId]: isRaised }));
       }
+    },
+    onWhiteboardToggle: (isOpen: boolean) => {
+      setIsWhiteboardOpen(isOpen);
+    },
+    onWhiteboardUpdate: (snapshot: any) => {
+      setWhiteboardSnapshot(snapshot);
     },
     signalServer: shouldStartWebRTC
       ? process.env.NEXT_PUBLIC_SIGNAL_SERVER || 'wss://backspace-repurpose-fervor.ngrok-free.dev/ws'
@@ -175,13 +184,16 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
   }, [roomId]);
 
   useEffect(() => {
-    const savedGuestName = typeof window !== 'undefined' ? sessionStorage.getItem(`guestName_${roomId}`) : null;
-    if (user && user.name) {
-      setParticipantName(user.name);
-    } else if (savedGuestName) {
-      setParticipantName(savedGuestName);
-    } else {
-      setParticipantName('Guest');
+    const savedGuestName = typeof window !== 'undefined' 
+      ? (sessionStorage.getItem(`guestName_${roomId}`) || localStorage.getItem(`guestName_${roomId}`))
+      : null;
+
+    const uName = user && (user.name || user.NamaLengkap || user.nama_lengkap || user.email || user.username);
+
+    if (uName) {
+      setParticipantName(uName);
+    } else if (savedGuestName && savedGuestName.trim()) {
+      setParticipantName(savedGuestName.trim());
     }
   }, [user, roomId]);
 
@@ -207,10 +219,12 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     if (role) {
       setMeetingRole(role);
     }
-    if (name) {
-      setParticipantName(name);
+    if (name && name.trim()) {
+      const cleanName = name.trim();
+      setParticipantName(cleanName);
       if (typeof window !== 'undefined') {
-        sessionStorage.setItem(`guestName_${roomId}`, name);
+        sessionStorage.setItem(`guestName_${roomId}`, cleanName);
+        localStorage.setItem(`guestName_${roomId}`, cleanName);
       }
     }
     if (cameraOn === false) setIsVideoOff(true);
@@ -428,6 +442,19 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     toggleScreenShare: handleToggleScreenShare,
   });
 
+  const handleToggleWhiteboard = () => {
+    setIsWhiteboardOpen((prev) => {
+      const nextState = !prev;
+      sendMessage('whiteboard_toggle', { isOpen: nextState });
+      return nextState;
+    });
+  };
+
+  const handleWhiteboardSnapshotChange = (snapshot: any) => {
+    setWhiteboardSnapshot(snapshot);
+    sendMessage('whiteboard_update', { snapshot });
+  };
+
   return {
     roomId,
     showLobby,
@@ -474,6 +501,8 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     isPaused,
     elapsedMs,
     result,
+    isWhiteboardOpen,
+    whiteboardSnapshot,
     setShowChat,
     setShowParticipants,
     setShowRequests,
@@ -505,5 +534,7 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     setLayout,
     downloadRecording,
     discardRecording,
+    handleToggleWhiteboard,
+    handleWhiteboardSnapshotChange,
   };
 }

@@ -9,6 +9,7 @@ import MeetingSidebar from '@/components/meeting/room/MeetingSidebarBackground';
 import MeetingSidebarRecordings from '@/components/meeting/room/MeetingSidebarRecordings';
 import EndCallModal from '@/components/meeting/room/EndCallModal';
 import HostActionMenuModal from '@/components/meeting/HostActionMenuModal';
+import WhiteboardModal from '@/components/meeting/WhiteboardModal';
 import MeetingLobby from './lobby/page';
 import { stringToColor } from '@/lib/meeting';
 import { useMeetingRoom } from '@/hooks/useMeetingRoom';
@@ -89,6 +90,10 @@ export default function MeetingPage() {
     downloadRecording,
     discardRecording,
     sendMessage,
+    isWhiteboardOpen,
+    whiteboardSnapshot,
+    handleToggleWhiteboard,
+    handleWhiteboardSnapshotChange,
   } = useMeetingRoom({ roomId });
 
   if (isLoading) {
@@ -161,6 +166,11 @@ export default function MeetingPage() {
             speaking={speaking}
             remoteScreenShare={remoteScreenShare}
             raisedHands={raisedHands}
+            isWhiteboardOpen={isWhiteboardOpen}
+            isHost={isHost}
+            whiteboardSnapshot={whiteboardSnapshot}
+            onWhiteboardSnapshotChange={handleWhiteboardSnapshotChange}
+            onCloseWhiteboard={handleToggleWhiteboard}
           />
         </div>
 
@@ -230,6 +240,8 @@ export default function MeetingPage() {
         isHost={isHost}
         isHandRaised={isHandRaised}
         onToggleHand={handleToggleHand}
+        onToggleWhiteboard={handleToggleWhiteboard}
+        isWhiteboardOpen={isWhiteboardOpen}
         layout={layout as any}
         onChangeLayout={setLayout as any}
         virtualBgMode={virtualBgMode}

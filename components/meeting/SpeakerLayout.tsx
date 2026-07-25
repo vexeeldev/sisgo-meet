@@ -3,7 +3,18 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
 import { BackHand as Hand, MicOffFilled as MicOff } from './icons';
 import { getUserColors } from '@/lib/meeting';
-import { Volume2, VolumeX } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import { Sparkles, X, Volume2, VolumeX } from 'lucide-react';
+
+const TldrawCanvas = dynamic(() => import('./TldrawCanvas'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full flex flex-col items-center justify-center bg-[#1e1f22] text-white">
+      <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-3" />
+      <span className="text-sm font-medium text-gray-300">Memuat Papan Tulis (TLDraw)...</span>
+    </div>
+  ),
+});
 
 interface RemoteScreenShare {
   stream: MediaStream;
@@ -40,6 +51,11 @@ interface SpeakerLayoutProps {
   raisedHands?: Record<string, boolean>;
   remoteAudioOff?: Record<string, boolean>;
   speaking?: Record<string, boolean>;
+  isWhiteboardOpen?: boolean;
+  isHost?: boolean;
+  whiteboardSnapshot?: any;
+  onWhiteboardSnapshotChange?: (snapshot: any) => void;
+  onCloseWhiteboard?: () => void;
 }
 
 export default function SpeakerLayout({
@@ -58,6 +74,11 @@ export default function SpeakerLayout({
   raisedHands = {},
   remoteAudioOff = {},
   speaking = {},
+  isWhiteboardOpen = false,
+  isHost = false,
+  whiteboardSnapshot,
+  onWhiteboardSnapshotChange,
+  onCloseWhiteboard,
 }: SpeakerLayoutProps) {
   const localMainVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRefs = useRef<Record<string, HTMLVideoElement>>({});
@@ -187,6 +208,9 @@ export default function SpeakerLayout({
   };
 
   const getMainContent = () => {
+    if (isWhiteboardOpen) {
+      return 'whiteboard';
+    }
     if (showScreen) {
       return 'screen';
     }
@@ -365,7 +389,49 @@ export default function SpeakerLayout({
 
   return (
     <div className="w-full h-full relative bg-transparent rounded-xl overflow-hidden">
-      {mainContent === 'screen' ? (
+      {mainContent === 'whiteboard' ? (
+        <div className="w-full h-full relative flex flex-col rounded-2xl overflow-hidden bg-[#1e1f22] border border-[#3c4043] shadow-2xl">
+          {/* Header Bar */}
+          <div className="flex items-center justify-between px-4 py-2 bg-[#2b2c30] border-b border-[#3c4043] shrink-0">
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-blue-600/20 text-blue-400 flex items-center justify-center">
+                <Sparkles className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-white text-sm font-semibold flex items-center gap-2">
+                  Papan Tulis Rapat (Whiteboard)
+                  {isHost ? (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-medium">Host Control</span>
+                  ) : (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-medium flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Live View
+                    </span>
+                  )}
+                </h3>
+              </div>
+            </div>
+
+            {onCloseWhiteboard && (
+              <button
+                onClick={onCloseWhiteboard}
+                className="w-7 h-7 flex items-center justify-center rounded-full bg-[#3c4043] hover:bg-white/10 text-gray-300 hover:text-white transition-colors cursor-pointer"
+                title="Tutup Whiteboard"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          {/* Canvas Body */}
+          <div className="flex-1 w-full h-full relative overflow-hidden bg-white">
+            <TldrawCanvas
+              isHost={!!isHost}
+              initialSnapshot={whiteboardSnapshot}
+              onSnapshotChange={onWhiteboardSnapshotChange}
+            />
+          </div>
+        </div>
+      ) : mainContent === 'screen' ? (
         <div className="w-full h-full relative flex items-center justify-center group bg-transparent">
           <video
             ref={screenVideoRef}
