@@ -806,6 +806,29 @@ export const api = {
   },
 
   // ── Helper methods untuk auth ──────────────────────────────────
+  getMe: async () => {
+    const token = getToken();
+    if (!token) return { success: false, message: 'No token' };
+    try {
+      const res = await fetch(`${API_BASE}/auth/me`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+      const data = await res.json();
+      if (data.success && data.data) {
+        setUser(data.data);
+        return { success: true, data: data.data };
+      }
+      return { success: false, message: data.message || 'Failed' };
+    } catch (err: any) {
+      return { success: false, message: err?.message };
+    }
+  },
+
   getCurrentUser: () => {
     if (typeof window === 'undefined') return null;
     try {

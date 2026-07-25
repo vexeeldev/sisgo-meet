@@ -100,7 +100,18 @@ export default function MeetingHomePage() {
         return;
       }
 
-      const currentUser = api.getCurrentUser();
+      let currentUser = api.getCurrentUser();
+      if (!currentUser) {
+        try {
+          const profileRes = await api.getMe();
+          if (profileRes.success && profileRes.data) {
+            currentUser = profileRes.data;
+          }
+        } catch (err) {
+          console.error("Error fetching me:", err);
+        }
+      }
+
       if (!currentUser || !api.isAdmin()) {
         api.logout();
         router.push("/auth/login");
