@@ -32,9 +32,10 @@ export default function WhiteboardModal({
 
   return (
     <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/70 backdrop-blur-md animate-in fade-in duration-250 p-2 sm:p-6">
-      <div className="bg-[#1e1f22] rounded-3xl w-full h-[90vh] max-w-6xl flex flex-col overflow-hidden shadow-2xl border border-[#3c4043]">
+      {/* FIX: h-[90vh] -> h-full, biar modal ngisi penuh area yang disediakan wrapper (padding luar yang ngasih jarak ke tepi layar), gak nyisa gap yang nampilin backdrop sebagai garis hitam */}
+      <div className="bg-[#1e1f22] rounded-3xl w-full h-full max-w-6xl flex flex-col overflow-hidden shadow-2xl border border-[#3c4043]">
         {/* Header Bar */}
-        <div className="flex items-center justify-between px-6 py-4 bg-[#2b2c30] border-b border-[#3c4043]">
+        <div className="flex items-center justify-between px-6 py-4 bg-[#2b2c30] border-b border-[#3c4043] shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center">
               <Sparkles className="w-5 h-5" />
@@ -66,7 +67,8 @@ export default function WhiteboardModal({
         </div>
 
         {/* Canvas Body */}
-        <div className="flex-1 w-full h-full relative overflow-hidden bg-white">
+        {/* FIX: hapus h-full yang tabrakan sama flex-1, cukup flex-1 aja biar ngisi sisa ruang setelah header */}
+        <div className="flex-1 w-full relative overflow-hidden bg-white min-h-0">
           <TldrawCanvas
             isHost={isHost}
             initialSnapshot={initialSnapshot}

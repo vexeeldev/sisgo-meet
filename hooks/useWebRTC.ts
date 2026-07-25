@@ -25,6 +25,8 @@ interface UseWebRTCProps {
   initialMicOn?: boolean;
   onWhiteboardToggle?: (isOpen: boolean) => void;
   onWhiteboardUpdate?: (snapshot: any) => void;
+  isWhiteboardOpen?: boolean;
+  whiteboardSnapshot?: any;
 }
 
 interface WSMessage {
@@ -80,7 +82,7 @@ const isScreenShareStream = (stream: MediaStream) => {
   return false;
 };
 
-export function useWebRTC({ roomId, participantUUID, userName, userRole, onCallEnded, onKicked, onChatReceived, onHandRaised, onWhiteboardToggle, onWhiteboardUpdate, signalServer = 'wss://backspace-repurpose-fervor.ngrok-free.dev/ws', initialCameraOn = true, initialMicOn = true }: UseWebRTCProps) {
+export function useWebRTC({ roomId, participantUUID, userName, userRole, onCallEnded, onKicked, onChatReceived, onHandRaised, onWhiteboardToggle, onWhiteboardUpdate, isWhiteboardOpen, whiteboardSnapshot, signalServer = 'wss://backspace-repurpose-fervor.ngrok-free.dev/ws', initialCameraOn = true, initialMicOn = true }: UseWebRTCProps) {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStreams, setRemoteStreams] = useState<MediaStream[]>([]);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
@@ -108,6 +110,16 @@ export function useWebRTC({ roomId, participantUUID, userName, userRole, onCallE
   const remoteScreenSharerIdRef = useRef<string | null>(null);
   const remoteScreenStreamRef = useRef<MediaStream | null>(null);
   const isScreenSharingRef = useRef(false);
+
+  const isWhiteboardOpenRef = useRef(isWhiteboardOpen);
+  useEffect(() => {
+    isWhiteboardOpenRef.current = isWhiteboardOpen;
+  }, [isWhiteboardOpen]);
+
+  const whiteboardSnapshotRef = useRef(whiteboardSnapshot);
+  useEffect(() => {
+    whiteboardSnapshotRef.current = whiteboardSnapshot;
+  }, [whiteboardSnapshot]);
 
   const pendingStreamActions = useRef<Array<() => void>>([]);
   const pendingSignals = useRef<Record<string, any[]>>({});
@@ -310,6 +322,14 @@ export function useWebRTC({ roomId, participantUUID, userName, userRole, onCallE
             // Beritahu orang yang baru join siapa kita
             sendMessage('profile', { name: userName, role: userRole }, connId);
             playSound(); // Entry chime sound when a new participant enters
+
+            // Jika kita adalah Host dan Whiteboard sedang terbuka, kirim status & snapshot ke orang baru yang join
+            if ((userRole === 'interviewer' || userRole === 'host') && isWhiteboardOpenRef.current) {
+              sendMessage('whiteboard_toggle', { isOpen: true }, connId);
+              if (whiteboardSnapshotRef.current) {
+                sendMessage('whiteboard_update', { snapshot: whiteboardSnapshotRef.current }, connId);
+              }
+            }
             break;
           }
           
@@ -319,6 +339,12 @@ export function useWebRTC({ roomId, participantUUID, userName, userRole, onCallE
             const role = msg.data?.role;
             if (name) {
               setParticipantDetails(prev => ({ ...prev, [connId]: { name, role } }));
+            }
+            if ((userRole === 'interviewer' || userRole === 'host') && isWhiteboardOpenRef.current) {
+              sendMessage('whiteboard_toggle', { isOpen: true }, connId);
+              if (whiteboardSnapshotRef.current) {
+                sendMessage('whiteboard_update', { snapshot: whiteboardSnapshotRef.current }, connId);
+              }
             }
             break;
           }

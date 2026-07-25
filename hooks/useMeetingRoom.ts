@@ -101,6 +101,8 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     onWhiteboardUpdate: (snapshot: any) => {
       setWhiteboardSnapshot(snapshot);
     },
+    isWhiteboardOpen,
+    whiteboardSnapshot,
     signalServer: shouldStartWebRTC
       ? process.env.NEXT_PUBLIC_SIGNAL_SERVER || 'wss://backspace-repurpose-fervor.ngrok-free.dev/ws'
       : '',

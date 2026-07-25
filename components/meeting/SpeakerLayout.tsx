@@ -6,12 +6,12 @@ import { getUserColors } from '@/lib/meeting';
 import dynamic from 'next/dynamic';
 import { Sparkles, X, Volume2, VolumeX } from 'lucide-react';
 
-const TldrawCanvas = dynamic(() => import('./TldrawCanvas'), {
+const ExcalidrawCanvas = dynamic(() => import('./ExcalidrawCanvas'), {
   ssr: false,
   loading: () => (
     <div className="w-full h-full flex flex-col items-center justify-center bg-[#1e1f22] text-white">
       <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-3" />
-      <span className="text-sm font-medium text-gray-300">Memuat Papan Tulis (TLDraw)...</span>
+      <span className="text-sm font-medium text-gray-300">Memuat Papan Tulis (Excalidraw)...</span>
     </div>
   ),
 });
@@ -424,7 +424,7 @@ export default function SpeakerLayout({
 
           {/* Canvas Body */}
           <div className="flex-1 w-full h-full relative overflow-hidden bg-white">
-            <TldrawCanvas
+            <ExcalidrawCanvas
               isHost={!!isHost}
               initialSnapshot={whiteboardSnapshot}
               onSnapshotChange={onWhiteboardSnapshotChange}

@@ -11,6 +11,7 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
+    "@excalidraw/excalidraw": "^0.18.1",
     "@iconify/react": "^6.0.2",
     "@livekit/components-react": "^2.9.23",
     "@livekit/components-styles": "^1.2.0",
