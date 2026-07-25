@@ -25,6 +25,7 @@ export default function MeetingPage() {
     isMuted,
     isVideoOff,
     roomExists,
+    roomType,
     chatMessages,
     unreadChatCount,
     layout,
@@ -106,6 +107,7 @@ export default function MeetingPage() {
       <MeetingLobby
         roomId={roomId}
         roomExists={roomExists}
+        roomType={roomType}
         onJoin={handleJoinFromLobby}
       />
     );
@@ -213,6 +215,7 @@ export default function MeetingPage() {
       <MeetingControls
         currentTime={currentTime}
         roomId={roomId}
+        roomType={roomType}
         isMuted={isMuted}
         isVideoOff={isVideoOff}
         isScreenSharing={isScreenSharing}

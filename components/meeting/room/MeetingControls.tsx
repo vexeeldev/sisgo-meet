@@ -42,6 +42,7 @@ interface MeetingControlsProps {
   onToggleBgPanel?: () => void;
   showRecordingsPanel?: boolean;
   onToggleRecordingsPanel?: () => void;
+  roomType?: string;
 }
 
 /** Tombol panel kanan (People / Chat) — icon-only, bergaya pill Google Meet */
@@ -120,6 +121,7 @@ export default function MeetingControls({
   onToggleBgPanel,
   showRecordingsPanel,
   onToggleRecordingsPanel,
+  roomType = 'private',
 }: MeetingControlsProps) {
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const [showLayoutMenu, setShowLayoutMenu] = useState(false);
@@ -127,6 +129,8 @@ export default function MeetingControls({
   const [showVideoMenu, setShowVideoMenu] = useState(false);
   const [showShortcutsMenu, setShowShortcutsMenu] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
+
+  const isInterviewCandidate = roomType === 'interview' && !isHost;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -167,14 +171,14 @@ export default function MeetingControls({
       // Mute / Unmute mic: Ctrl + D
       if ((e.ctrlKey || e.metaKey) && key === 'd') {
         e.preventDefault();
-        onToggleMute?.();
+        if (!isInterviewCandidate) onToggleMute?.();
         return;
       }
 
       // Camera on / off: Ctrl + E
       if ((e.ctrlKey || e.metaKey) && key === 'e') {
         e.preventDefault();
-        onToggleVideo?.();
+        if (!isInterviewCandidate) onToggleVideo?.();
         return;
       }
 
@@ -195,7 +199,7 @@ export default function MeetingControls({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onToggleHand, onToggleMute, onToggleVideo, onToggleScreenShare, onToggleRecordingsPanel, isHost]);
+  }, [onToggleHand, onToggleMute, onToggleVideo, onToggleScreenShare, onToggleRecordingsPanel, isHost, isInterviewCandidate]);
 
   useEffect(() => {
     if (isMuted || !localStream) {
@@ -267,7 +271,7 @@ export default function MeetingControls({
         
           {/* Mic split button: dots + mic share one pill background */}
           <div className="relative">
-            <div className={`flex items-center overflow-hidden transition-all ${
+            <div className={`flex items-center transition-all ${
               isMuted ? 'rounded-2xl bg-[#842020]' : 'rounded-full bg-[#3c4043]'
             }`}>
               {/* Audio Indicator / Options Button */}
@@ -318,19 +322,31 @@ export default function MeetingControls({
                 )}
               </button>
               {/* Mic - inner circle, different color scheme when muted */}
-              <button
-                onClick={onToggleMute}
-                className={`w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center transition-colors cursor-pointer ${
-                  isMuted ? 'rounded-2xl bg-[#f5c6c2] hover:bg-[#f0b3ae]' : 'rounded-full bg-[#4a4b4c] hover:bg-[#5a5b5e]'
-                }`}
-                title={isMuted ? 'Turn on microphone (Ctrl+D)' : 'Turn off microphone (Ctrl+D)'}
-              >
-                {isMuted ? (
-                  <MicOffFilled className="w-6 h-6 sm:w-7 sm:h-7 text-[#d93025]" />
-                ) : (
-                  <MicFilled className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+              <div className="relative">
+                <button
+                  onClick={isInterviewCandidate ? undefined : onToggleMute}
+                  disabled={isInterviewCandidate}
+                  className={`w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center transition-colors ${
+                    isInterviewCandidate
+                      ? 'rounded-full bg-[#4a4b4c] opacity-80 cursor-not-allowed'
+                      : isMuted ? 'rounded-2xl bg-[#f5c6c2] hover:bg-[#f0b3ae] cursor-pointer' : 'rounded-full bg-[#4a4b4c] hover:bg-[#5a5b5e] cursor-pointer'
+                  }`}
+                  title={isInterviewCandidate ? 'Mikrofon wajib menyala pada sesi Interview' : isMuted ? 'Turn on microphone (Ctrl+D)' : 'Turn off microphone (Ctrl+D)'}
+                >
+                  {isMuted ? (
+                    <MicOffFilled className="w-6 h-6 sm:w-7 sm:h-7 text-[#d93025]" />
+                  ) : (
+                    <MicFilled className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                  )}
+                </button>
+                {isInterviewCandidate && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#5f6368] text-white border-2 border-[#1e1f22] flex items-center justify-center shadow-md pointer-events-none z-30" title="Mikrofon Terkunci (Wajib Menyala)">
+                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </span>
                 )}
-              </button>
+              </div>
             </div>
             {showAudioMenu && (
               <>
@@ -351,7 +367,7 @@ export default function MeetingControls({
 
           {/* Camera split button: chevron + camera share one pill background */}
           <div className="relative">
-            <div className={`flex items-center overflow-hidden transition-all ${
+            <div className={`flex items-center transition-all ${
               isVideoOff ? 'rounded-2xl bg-[#842020]' : 'rounded-full bg-[#3c4043]'
             }`}>
               {/* Chevron - flat, slight rounded box, no hover */}
@@ -363,19 +379,31 @@ export default function MeetingControls({
                 <ExpandLess className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
               </button>
               {/* Camera - inner circle, different color scheme when off */}
-              <button
-                onClick={onToggleVideo}
-                className={`w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center transition-colors cursor-pointer ${
-                  isVideoOff ? 'rounded-2xl bg-[#f5c6c2] hover:bg-[#f0b3ae]' : 'rounded-full bg-[#4a4b4c] hover:bg-[#5a5b5e]'
-                }`}
-                title={isVideoOff ? 'Turn on camera (Ctrl+E)' : 'Turn off camera (Ctrl+E)'}
-              >
-                {isVideoOff ? (
-                  <VideocamOff className="w-6 h-6 sm:w-7 sm:h-7 text-[#d93025]" />
-                ) : (
-                  <Videocam className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+              <div className="relative">
+                <button
+                  onClick={isInterviewCandidate ? undefined : onToggleVideo}
+                  disabled={isInterviewCandidate}
+                  className={`w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center transition-colors ${
+                    isInterviewCandidate
+                      ? 'rounded-full bg-[#4a4b4c] opacity-80 cursor-not-allowed'
+                      : isVideoOff ? 'rounded-2xl bg-[#f5c6c2] hover:bg-[#f0b3ae] cursor-pointer' : 'rounded-full bg-[#4a4b4c] hover:bg-[#5a5b5e] cursor-pointer'
+                  }`}
+                  title={isInterviewCandidate ? 'Kamera wajib menyala pada sesi Interview' : isVideoOff ? 'Turn on camera (Ctrl+E)' : 'Turn off camera (Ctrl+E)'}
+                >
+                  {isVideoOff ? (
+                    <VideocamOff className="w-6 h-6 sm:w-7 sm:h-7 text-[#d93025]" />
+                  ) : (
+                    <Videocam className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                  )}
+                </button>
+                {isInterviewCandidate && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#5f6368] text-white border-2 border-[#1e1f22] flex items-center justify-center shadow-md pointer-events-none z-30" title="Kamera Terkunci (Wajib Menyala)">
+                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </span>
                 )}
-              </button>
+              </div>
             </div>
             {showVideoMenu && (
               <>

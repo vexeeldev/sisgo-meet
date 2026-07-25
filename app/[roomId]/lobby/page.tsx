@@ -14,10 +14,11 @@ import { LoaderCircle } from "lucide-react";
 interface MeetingLobbyProps {
   roomId: string;
   roomExists: boolean | null;
+  roomType?: string;
   onJoin: (participantUUID: string, role?: string, cameraOn?: boolean, micOn?: boolean, name?: string) => void;
 }
 
-export default function MeetingLobby({ roomId, roomExists, onJoin }: MeetingLobbyProps) {
+export default function MeetingLobby({ roomId, roomExists, roomType = 'private', onJoin }: MeetingLobbyProps) {
   const router = useRouter();
   const [error, setError] = useState('');
   const [redirectCountdown, setRedirectCountdown] = useState(3);
@@ -228,7 +229,11 @@ export default function MeetingLobby({ roomId, roomExists, onJoin }: MeetingLobb
     }
   }, [localStream]);
 
+  const isHostOrInterviewer = user?.role === 'host' || user?.role === 'interviewer';
+  const isInterviewLocked = roomType === 'interview' && !isHostOrInterviewer;
+
   const toggleCamera = () => {
+    if (isInterviewLocked) return;
     if (localStream) {
       const videoTrack = localStream.getVideoTracks()[0];
       if (videoTrack) {
@@ -239,6 +244,7 @@ export default function MeetingLobby({ roomId, roomExists, onJoin }: MeetingLobb
   };
 
   const toggleMic = () => {
+    if (isInterviewLocked) return;
     if (localStream) {
       const audioTrack = localStream.getAudioTracks()[0];
       if (audioTrack) {
@@ -500,6 +506,17 @@ export default function MeetingLobby({ roomId, roomExists, onJoin }: MeetingLobb
       <div className="flex-1 w-full flex items-center justify-center px-4">
         <div className="w-full max-w-[1200px] grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-10 items-center">
           <div>
+            {roomType === 'interview' && (
+              <div className="mb-3 px-4 py-2.5 bg-[#fef7e0] border border-[#f5e0a3] rounded-2xl flex items-center justify-between shadow-2xs">
+                <div className="flex items-center gap-2.5 text-[#b06000] text-sm font-medium">
+                  <svg className="w-4 h-4 shrink-0 text-[#b06000]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  <span>Sesi Interview: Kamera & Mikrofon Wajib Menyala</span>
+                </div>
+                <span className="text-[11px] text-[#b06000] bg-white/80 px-2.5 py-0.5 rounded-full font-semibold border border-[#f5e0a3]">Terkunci</span>
+              </div>
+            )}
             
             <div className="relative aspect-video bg-[#1c1c1e] rounded-2xl overflow-hidden w-full">
             
@@ -563,7 +580,7 @@ export default function MeetingLobby({ roomId, roomExists, onJoin }: MeetingLobb
                             ref={(el) => {
                               audioBarRefs.current[i] = el;
                             }}
-                            className="w-[3px] h-full rounded-full bg-blue-400 origin-bottom transition-transform duration-75"
+                            className="w-[3px] h-full bg-green-400 rounded-full transition-transform duration-75 origin-bottom"
                             style={{ transform: 'scaleY(0.18)' }}
                           />
                         ))}
@@ -575,14 +592,16 @@ export default function MeetingLobby({ roomId, roomExists, onJoin }: MeetingLobb
                     </svg>
                   )}
                 </div>
-              )}
-
-              {hasPermission && localStream && (
+              )}              {hasPermission && localStream && (
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-3">
                   <button
                     onClick={toggleMic}
-                    className={`w-11 h-11 rounded-full cursor-pointer flex items-center justify-center transition ${
-                      isMicOn ? 'bg-white/90 hover:bg-white' : 'bg-red-600 hover:bg-red-700'
+                    disabled={isInterviewLocked}
+                    title={isInterviewLocked ? 'Mikrofon wajib menyala pada sesi Interview' : ''}
+                    className={`w-11 h-11 rounded-full flex items-center justify-center transition ${
+                      isInterviewLocked
+                        ? 'bg-white/40 opacity-70 cursor-not-allowed text-gray-700'
+                        : isMicOn ? 'bg-white/90 hover:bg-white cursor-pointer' : 'bg-red-600 hover:bg-red-700 cursor-pointer'
                     }`}
                   >
                     {isMicOn ? (
@@ -596,8 +615,12 @@ export default function MeetingLobby({ roomId, roomExists, onJoin }: MeetingLobb
 
                   <button
                     onClick={toggleCamera}
-                    className={`w-11 h-11 rounded-full cursor-pointer flex items-center justify-center transition ${
-                      isCameraOn ? 'bg-white/90 hover:bg-white' : 'bg-red-600 hover:bg-red-700'
+                    disabled={isInterviewLocked}
+                    title={isInterviewLocked ? 'Kamera wajib menyala pada sesi Interview' : ''}
+                    className={`w-11 h-11 rounded-full flex items-center justify-center transition ${
+                      isInterviewLocked
+                        ? 'bg-white/40 opacity-70 cursor-not-allowed text-gray-700'
+                        : isCameraOn ? 'bg-white/90 hover:bg-white cursor-pointer' : 'bg-red-600 hover:bg-red-700 cursor-pointer'
                     }`}
                   >
                     {isCameraOn ? (

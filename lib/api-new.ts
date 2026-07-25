@@ -549,7 +549,8 @@ export const api = {
   },
 
   // ── Room Management ────────────────────────────────────────────
-  createRoom: async (roomName: string, notes?: string) => {
+  // ── Room Management ────────────────────────────────────────────
+  createRoom: async (roomName: string, notes?: string, roomType: string = 'private') => {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(`${API_BASE}/rooms`, {
@@ -559,7 +560,7 @@ export const api = {
           'Authorization': `Bearer ${token}`,
           'ngrok-skip-browser-warning': 'true',
         },
-        body: JSON.stringify({ room_name: roomName, notes: notes || '' }),
+        body: JSON.stringify({ room_name: roomName, notes: notes || '', room_type: roomType }),
       });
 
       const result = await res.json();
@@ -574,6 +575,7 @@ export const api = {
         room: result?.data?.room,
         room_code: result?.data?.room?.room_code,
         room_name: result?.data?.room?.room_name,
+        room_type: result?.data?.room?.room_type || roomType,
       };
     } catch (error: any) {
       console.error('Create room error:', error);
@@ -582,10 +584,11 @@ export const api = {
   },
 
   // Alias createInterview → createRoom (untuk kompatibilitas dashboard)
-  createInterview: async (opts: { title?: string; scheduled_at?: string }) => {
+  createInterview: async (opts: { title?: string; scheduled_at?: string; room_type?: string }) => {
     try {
       const token = localStorage.getItem('token');
       const roomName = opts?.title || `Meeting ${new Date().toLocaleDateString('id-ID')}`;
+      const roomType = opts?.room_type || 'private';
       const res = await fetch(`${API_BASE}/rooms`, {
         method: 'POST',
         headers: {
@@ -593,7 +596,7 @@ export const api = {
           'Authorization': `Bearer ${token}`,
           'ngrok-skip-browser-warning': 'true',
         },
-        body: JSON.stringify({ room_name: roomName }),
+        body: JSON.stringify({ room_name: roomName, room_type: roomType }),
       });
 
       const result = await res.json();
@@ -609,6 +612,7 @@ export const api = {
           room_name: room?.room_code,   // room_code dipakai sebagai ID masuk meeting
           room_uuid: room?.uuid,
           room_code: room?.room_code,
+          room_type: room?.room_type || roomType,
           access_token: null,
         },
         room,
@@ -677,6 +681,8 @@ export const api = {
         data: result?.data,
         room: result?.data?.room,
         status: result?.data?.status,
+        roomType: result?.data?.room_type || 'private',
+        roomName: result?.data?.room_name || '',
       };
     } catch (error: any) {
       console.error('Check room error:', error);

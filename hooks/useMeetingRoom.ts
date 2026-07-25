@@ -25,6 +25,7 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
   const [shouldStartWebRTC, setShouldStartWebRTC] = useState(false);
   const [participantUUID, setParticipantUUID] = useState<string | null>(null);
   const [roomExists, setRoomExists] = useState<boolean | null>(null);
+  const [roomType, setRoomType] = useState<'private' | 'anyone' | 'interview'>('private');
   const [chatMessages, setChatMessages] = useState<{ id: string; name: string; message: string; time: string }[]>([]);
   const [unreadChatCount, setUnreadChatCount] = useState(0);
   const [layout, setLayout] = useState<'auto' | 'tiled' | 'spotlight' | 'sidebar' | 'speaker' | 'grid'>('tiled');
@@ -131,6 +132,9 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
         const result = await api.checkRoom(roomId);
         const exists = result.success;
         setRoomExists(exists);
+        if (result.roomType) {
+          setRoomType(result.roomType as any);
+        }
       } catch (error) {
         console.error('Error checking room:', error);
         setRoomExists(false);
@@ -434,6 +438,7 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     shouldStartWebRTC,
     participantUUID,
     roomExists,
+    roomType,
     chatMessages,
     unreadChatCount,
     layout,

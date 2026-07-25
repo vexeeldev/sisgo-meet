@@ -54,6 +54,8 @@ export default function MeetingHomePage() {
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [showScheduleTypeModal, setShowScheduleTypeModal] = useState(false);
+  const [selectedScheduleType, setSelectedScheduleType] = useState<'private' | 'anyone' | 'interview'>('private');
 
   useEffect(() => {
     setCurrentTime(new Date());
@@ -105,13 +107,15 @@ export default function MeetingHomePage() {
   }, [router]);
 
   // 🔥 Create Meeting via API
-  const handleNewMeeting = async () => {
+  const handleNewMeeting = async (roomType: string = 'private') => {
     setIsCreating(true);
     setError(null);
     try {
+      const typeLabel = roomType === 'interview' ? 'Interview' : roomType === 'anyone' ? 'Publik' : 'Private';
       const result = await api.createInterview({
-        title: `Meeting ${new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}`,
+        title: `Rapat ${typeLabel} ${new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}`,
         scheduled_at: new Date().toISOString(),
+        room_type: roomType,
       });
 
       if (result.success && result.data?.room_name) {
@@ -142,14 +146,16 @@ export default function MeetingHomePage() {
     }
   };
 
-  const handleStartInstantMeeting = async () => {
+  const handleStartInstantMeeting = async (roomType: string = 'private') => {
     setShowDropdown(false);
     setIsCreating(true);
     setError(null);
     try {
+      const typeLabel = roomType === 'interview' ? 'Interview' : roomType === 'anyone' ? 'Publik' : 'Private';
       const result = await api.createInterview({
-        title: `Instant Meeting ${new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}`,
+        title: `Rapat Instan ${typeLabel} ${new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}`,
         scheduled_at: new Date().toISOString(),
+        room_type: roomType,
       });
       if (result.success && result.data?.room_name) {
         const roomCode = result.data.room_name;
@@ -322,24 +328,59 @@ export default function MeetingHomePage() {
                   className="fixed inset-0 z-40"
                   onClick={() => setShowDropdown(false)}
                 ></div>
-                <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.12)] border border-gray-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-100 overflow-hidden">
+                <div className="absolute top-full left-0 mt-2 w-80 bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.12)] border border-gray-100 py-2.5 z-50 animate-in fade-in zoom-in-95 duration-100 overflow-hidden">
+                  <div className="px-4 py-1.5 text-[11px] font-semibold text-[#5f6368] uppercase tracking-wider">Mulai Rapat Instan</div>
+                  
                   <button
-                    onClick={() => { setShowDropdown(false); handleNewMeeting(); }}
-                    className="w-full text-left px-5 py-3 hover:bg-[#f1f3f4] flex items-center gap-4 text-[15px] font-normal text-[#1f1f1f] cursor-pointer"
+                    onClick={() => handleStartInstantMeeting('private')}
+                    className="w-full text-left px-4 py-2.5 hover:bg-[#f1f3f4] flex items-center justify-between text-[14px] font-normal text-[#1f1f1f] cursor-pointer transition-colors"
                   >
-                    <svg className="w-5 h-5 text-[#444746]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <div className="flex items-center gap-3">
+                      <svg className="w-5 h-5 text-[#5f6368]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                      <span className="font-medium text-[#202124]">Rapat Private</span>
+                    </div>
+                    <span className="text-[11px] text-[#5f6368] bg-[#f1f3f4] px-2.5 py-0.5 rounded-full font-medium">Izin Host</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleStartInstantMeeting('anyone')}
+                    className="w-full text-left px-4 py-2.5 hover:bg-[#f1f3f4] flex items-center justify-between text-[14px] font-normal text-[#1f1f1f] cursor-pointer transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <svg className="w-5 h-5 text-[#5f6368]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                      </svg>
+                      <span className="font-medium text-[#202124]">Rapat Terbuka</span>
+                    </div>
+                    <span className="text-[11px] text-[#5f6368] bg-[#f1f3f4] px-2.5 py-0.5 rounded-full font-medium">Langsung Masuk</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleStartInstantMeeting('interview')}
+                    className="w-full text-left px-4 py-2.5 hover:bg-[#f1f3f4] flex items-center justify-between text-[14px] font-normal text-[#1f1f1f] cursor-pointer transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <svg className="w-5 h-5 text-[#5f6368]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      <span className="font-medium text-[#202124]">Rapat Khusus Interview</span>
+                    </div>
+                    <span className="text-[11px] text-[#5f6368] bg-[#f1f3f4] px-2.5 py-0.5 rounded-full font-medium">Cam/Mic Lock</span>
+                  </button>
+
+                  <div className="my-1.5 border-t border-gray-100" />
+                  <div className="px-4 py-1 text-[11px] font-semibold text-[#5f6368] uppercase tracking-wider">Buat Link Nanti</div>
+
+                  <button
+                    onClick={() => { setShowDropdown(false); setShowScheduleTypeModal(true); }}
+                    className="w-full text-left px-4 py-2.5 hover:bg-[#f1f3f4] flex items-center gap-3 text-[14px] font-normal text-[#1f1f1f] cursor-pointer transition-colors"
+                  >
+                    <svg className="w-5 h-5 text-[#5f6368]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                     </svg>
-                    Buat rapat untuk nanti
-                  </button>
-                  <button
-                    onClick={handleStartInstantMeeting}
-                    className="w-full text-left px-5 py-3 hover:bg-[#f1f3f4] flex items-center gap-4 text-[15px] font-normal text-[#1f1f1f] cursor-pointer"
-                  >
-                    <svg className="w-5 h-5 text-[#444746]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                    </svg>
-                    Mulai rapat instan
+                    <span className="font-medium text-[#202124]">Buat link rapat untuk nanti</span>
                   </button>
                 </div>
               </>
@@ -388,6 +429,120 @@ export default function MeetingHomePage() {
             </button>
           </form>
         </div>
+
+        {/* Modal Pilih Tipe Rapat Untuk Nanti */}
+        {showScheduleTypeModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-[2px]">
+            <div className="bg-white rounded-3xl p-6 w-full max-w-[440px] shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-gray-100 relative pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
+              <button
+                onClick={() => setShowScheduleTypeModal(false)}
+                className="absolute top-5 right-5 text-gray-400 hover:text-gray-700 transition-colors cursor-pointer p-1 rounded-full hover:bg-gray-100"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+
+              <h3 className="text-xl font-medium text-[#202124] mb-1 pr-6 tracking-tight">
+                Pilih Tipe Akses Rapat
+              </h3>
+              <p className="text-[13px] text-[#5f6368] mb-5">
+                Tentukan bagaimana peserta akan bergabung ke ruangan rapat ini:
+              </p>
+
+              <div className="space-y-2.5 mb-6">
+                {/* Option 1: Private */}
+                <div
+                  onClick={() => setSelectedScheduleType('private')}
+                  className={`flex items-start gap-3.5 p-4 rounded-2xl cursor-pointer transition-all ${
+                    selectedScheduleType === 'private'
+                      ? 'bg-[#e8f0fe] border border-[#1a73e8]'
+                      : 'bg-[#f8f9fa] hover:bg-[#f1f3f4] border border-transparent'
+                  }`}
+                >
+                  <div className={`p-2 rounded-xl mt-0.5 ${selectedScheduleType === 'private' ? 'bg-[#1a73e8] text-white' : 'bg-white text-[#5f6368] shadow-sm'}`}>
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[15px] font-medium text-[#202124]">Rapat Private</span>
+                      <span className="text-[11px] text-[#5f6368] bg-white px-2.5 py-0.5 rounded-full font-medium shadow-2xs">Standard</span>
+                    </div>
+                    <p className="text-[12px] text-[#5f6368] mt-1 leading-relaxed">Peserta/Guest wajib menunggu izin persetujuan dari Host untuk dapat bergabung.</p>
+                  </div>
+                </div>
+
+                {/* Option 2: Anyone */}
+                <div
+                  onClick={() => setSelectedScheduleType('anyone')}
+                  className={`flex items-start gap-3.5 p-4 rounded-2xl cursor-pointer transition-all ${
+                    selectedScheduleType === 'anyone'
+                      ? 'bg-[#e8f0fe] border border-[#1a73e8]'
+                      : 'bg-[#f8f9fa] hover:bg-[#f1f3f4] border border-transparent'
+                  }`}
+                >
+                  <div className={`p-2 rounded-xl mt-0.5 ${selectedScheduleType === 'anyone' ? 'bg-[#1a73e8] text-white' : 'bg-white text-[#5f6368] shadow-sm'}`}>
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[15px] font-medium text-[#202124]">Rapat Terbuka</span>
+                      <span className="text-[11px] text-[#5f6368] bg-white px-2.5 py-0.5 rounded-full font-medium shadow-2xs">Bebas Join</span>
+                    </div>
+                    <p className="text-[12px] text-[#5f6368] mt-1 leading-relaxed">Siapa saja yang memiliki link rapat langsung otomatis masuk tanpa antrean.</p>
+                  </div>
+                </div>
+
+                {/* Option 3: Interview */}
+                <div
+                  onClick={() => setSelectedScheduleType('interview')}
+                  className={`flex items-start gap-3.5 p-4 rounded-2xl cursor-pointer transition-all ${
+                    selectedScheduleType === 'interview'
+                      ? 'bg-[#e8f0fe] border border-[#1a73e8]'
+                      : 'bg-[#f8f9fa] hover:bg-[#f1f3f4] border border-transparent'
+                  }`}
+                >
+                  <div className={`p-2 rounded-xl mt-0.5 ${selectedScheduleType === 'interview' ? 'bg-[#1a73e8] text-white' : 'bg-white text-[#5f6368] shadow-sm'}`}>
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[15px] font-medium text-[#202124]">Khusus Interview</span>
+                      <span className="text-[11px] text-[#5f6368] bg-white px-2.5 py-0.5 rounded-full font-medium shadow-2xs">Cam/Mic Lock</span>
+                    </div>
+                    <p className="text-[12px] text-[#5f6368] mt-1 leading-relaxed">Membutuhkan izin Host. Kamera & Mic peserta wajib menyala dan terkunci.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowScheduleTypeModal(false)}
+                  className="px-5 py-2.5 text-[14px] text-[#5f6368] hover:bg-[#f1f3f4] rounded-full transition font-medium cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowScheduleTypeModal(false);
+                    handleNewMeeting(selectedScheduleType);
+                  }}
+                  className="px-6 py-2.5 text-[14px] text-white bg-[#0b57d0] hover:bg-[#0b57d0]/90 rounded-full transition font-medium shadow-sm cursor-pointer"
+                >
+                  Buat Link Rapat
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Modal Room Baru */}
         {createdRoom && (
