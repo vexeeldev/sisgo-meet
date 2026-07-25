@@ -82,7 +82,7 @@ export default function RegisterPage() {
   };
 
   const handleGoogleRegister = () => {
-    router.push("/api/auth/google");
+    api.googleLogin();
   };
 
   return (

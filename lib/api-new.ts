@@ -408,16 +408,13 @@ export const api = {
   googleLogin: (redirect?: string) => {
     if (typeof window === 'undefined') return;
     
-    let redirectUrl = redirect;
-    
-    if (!redirectUrl) {
-      redirectUrl = getRedirectUrl();
-    }
+    let redirectUrl = redirect || getRedirectUrl();
     if (redirectUrl && redirectUrl !== '/dashboard/v2') {
       sessionStorage.setItem('redirectAfterLogin', redirectUrl);
     }
     
-    window.location.href = `${API_BASE}/auth/google?redirect=${encodeURIComponent("")}`;
+    const targetRedirect = `${window.location.origin}/auth/login`;
+    window.location.href = `${API_BASE}/auth/google?redirect=${encodeURIComponent(targetRedirect)}`;
   },
 
   passkeyRegisterBegin: async (username: string) => {

@@ -254,7 +254,7 @@ export default function MeetingLobby({ roomId, roomExists, roomType = 'private',
     }
   };
 
-  const connectWaitingSocket = (participantUUID: string) => {
+  const connectWaitingSocket = (participantUUID: string, providedName?: string) => {
     wsRef.current?.close();
 
     const signalServer = process.env.NEXT_PUBLIC_SIGNAL_SERVER || 'wss://backspace-repurpose-fervor.ngrok-free.dev/ws';
@@ -262,9 +262,15 @@ export default function MeetingLobby({ roomId, roomExists, roomType = 'private',
       `${signalServer}?room=${encodeURIComponent(roomId)}&participant_uuid=${encodeURIComponent(participantUUID)}`
     );
 
-    ws.onopen = () => {
+    const getResolvedName = () => {
+      if (providedName && providedName !== 'Guest') return providedName;
       const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-      const activeName = storedUser.name || customGuestName.trim() || 'Guest';
+      const savedGuestName = typeof window !== 'undefined' ? sessionStorage.getItem(`guestName_${roomId}`) : null;
+      return storedUser.name || savedGuestName || customGuestName.trim() || 'Guest';
+    };
+
+    ws.onopen = () => {
+      const activeName = getResolvedName();
       ws.send(JSON.stringify({
         type: 'join_request',
         data: {
@@ -283,8 +289,7 @@ export default function MeetingLobby({ roomId, roomExists, roomType = 'private',
       }
 
       if (msg.type === 'host_joined') {
-        const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-        const activeName = storedUser.name || customGuestName.trim() || 'Guest';
+        const activeName = getResolvedName();
         ws.send(JSON.stringify({
           type: 'join_request',
           data: {
@@ -304,8 +309,7 @@ export default function MeetingLobby({ roomId, roomExists, roomType = 'private',
         }
 
         ws.close();
-        const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-        const activeName = storedUser.name || customGuestName.trim() || 'Guest';
+        const activeName = getResolvedName();
         onJoin(participantUUID, roleRef.current || 'candidate', isCameraOn, isMicOn, activeName);
       }
 
@@ -333,17 +337,21 @@ export default function MeetingLobby({ roomId, roomExists, roomType = 'private',
       return;
     }
 
+    const token = localStorage.getItem("token");
+    const activeName = user?.name || user?.username || customGuestName.trim() || 'Guest';
+
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem(`guestName_${roomId}`, activeName);
+    }
+
     // Jika user sudah punya UUID (pernah minta join dan ditolak)
     // kita bisa langsung kirim ulang request via WS tanpa tembak API join lagi (jika API menolak)
     if (participantUUIDRef.current && error.includes("ditolak")) {
       setError('');
       setWaitingApproval(true);
-      connectWaitingSocket(participantUUIDRef.current);
+      connectWaitingSocket(participantUUIDRef.current, activeName);
       return;
     }
-
-    const token = localStorage.getItem("token");
-    const activeName = user?.name || user?.username || customGuestName.trim() || 'Guest';
 
     setJoining(true);
     setError('');
@@ -365,7 +373,7 @@ export default function MeetingLobby({ roomId, roomExists, roomType = 'private',
       if (result.message.toLowerCase().includes("rejected") && storedUUID) {
         setError("Permintaan sebelumnya ditolak. Menghubungkan ulang...");
         setWaitingApproval(true);
-        connectWaitingSocket(storedUUID);
+        connectWaitingSocket(storedUUID, activeName);
         return;
       }
       setError(result.message);
@@ -377,7 +385,7 @@ export default function MeetingLobby({ roomId, roomExists, roomType = 'private',
       roleRef.current = result.participant.role;
       sessionStorage.setItem(`uuid_${roomId}`, result.participant.participant_uuid);
       setWaitingApproval(true);
-      connectWaitingSocket(result.participant.participant_uuid);
+      connectWaitingSocket(result.participant.participant_uuid, activeName);
       return;
     }
 
