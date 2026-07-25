@@ -85,6 +85,15 @@ export default function MeetingHomePage() {
 
   useEffect(() => {
     const checkAuth = async () => {
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        const urlToken = params.get('token');
+        if (urlToken) {
+          localStorage.setItem('token', urlToken);
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      }
+
       const token = localStorage.getItem("token");
       if (!token) {
         router.push("/auth/login");

@@ -413,7 +413,7 @@ export const api = {
       sessionStorage.setItem('redirectAfterLogin', redirectUrl);
     }
     
-    const targetRedirect = `${window.location.origin}/auth/login`;
+    const targetRedirect = `${window.location.origin}/dashboard`;
     window.location.href = `${API_BASE}/auth/google?redirect=${encodeURIComponent(targetRedirect)}`;
   },
 
