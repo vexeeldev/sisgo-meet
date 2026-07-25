@@ -53,6 +53,11 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+video {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
 .bg-primary {
   background-color: var(--section-primary-color);
 }

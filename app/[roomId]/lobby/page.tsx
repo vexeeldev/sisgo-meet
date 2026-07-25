@@ -14,7 +14,7 @@ import { LoaderCircle } from "lucide-react";
 interface MeetingLobbyProps {
   roomId: string;
   roomExists: boolean | null;
-  onJoin: (participantUUID: string, role?: string, cameraOn?: boolean, micOn?: boolean) => void;
+  onJoin: (participantUUID: string, role?: string, cameraOn?: boolean, micOn?: boolean, name?: string) => void;
 }
 
 export default function MeetingLobby({ roomId, roomExists, onJoin }: MeetingLobbyProps) {
@@ -48,6 +48,7 @@ export default function MeetingLobby({ roomId, roomExists, onJoin }: MeetingLobb
   const roleRef = useRef<string | null>(null);
 
   const [user, setUser] = useState<any>(null);
+  const [customGuestName, setCustomGuestName] = useState('');
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -132,8 +133,17 @@ export default function MeetingLobby({ roomId, roomExists, onJoin }: MeetingLobb
     setError('');
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 640 }, height: { ideal: 480 } },
-        audio: true,
+        video: {
+          width: { ideal: 1920, min: 1280 },
+          height: { ideal: 1080, min: 720 },
+          frameRate: { ideal: 60, min: 30 },
+          aspectRatio: { ideal: 1.7777777778 },
+        },
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
       });
 
       // Handle race condition: if component unmounted while waiting for camera
@@ -247,12 +257,13 @@ export default function MeetingLobby({ roomId, roomExists, onJoin }: MeetingLobb
     );
 
     ws.onopen = () => {
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+      const activeName = storedUser.name || customGuestName.trim() || 'Guest';
       ws.send(JSON.stringify({
         type: 'join_request',
         data: {
           participant_uuid: participantUUID,
-          name: user.name || 'Guest',
+          name: activeName,
         }
       }));
     };
@@ -266,12 +277,13 @@ export default function MeetingLobby({ roomId, roomExists, onJoin }: MeetingLobb
       }
 
       if (msg.type === 'host_joined') {
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+        const activeName = storedUser.name || customGuestName.trim() || 'Guest';
         ws.send(JSON.stringify({
           type: 'join_request',
           data: {
             participant_uuid: participantUUID,
-            name: user.name || 'Guest',
+            name: activeName,
           }
         }));
         return;
@@ -286,7 +298,9 @@ export default function MeetingLobby({ roomId, roomExists, onJoin }: MeetingLobb
         }
 
         ws.close();
-        onJoin(participantUUID, roleRef.current || 'candidate', isCameraOn, isMicOn);
+        const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+        const activeName = storedUser.name || customGuestName.trim() || 'Guest';
+        onJoin(participantUUID, roleRef.current || 'candidate', isCameraOn, isMicOn, activeName);
       }
 
       if (msg.type === 'rejected' && msg.data?.participant_uuid === participantUUID) {
@@ -322,10 +336,21 @@ export default function MeetingLobby({ roomId, roomExists, onJoin }: MeetingLobb
       return;
     }
 
+    const token = localStorage.getItem("token");
+    const activeName = user?.name || user?.username || customGuestName.trim() || 'Guest';
+
     setJoining(true);
     setError('');
 
-    const result = await api.joinRoom(roomId);
+    let result;
+    if (token) {
+      result = await api.joinRoom(roomId);
+      if (!result.success && (result.message?.toLowerCase().includes("token") || result.message?.includes("401") || result.message?.toLowerCase().includes("unauthorized"))) {
+        result = await api.joinRoomGuest(roomId, activeName);
+      }
+    } else {
+      result = await api.joinRoomGuest(roomId, activeName);
+    }
 
     setJoining(false);
 
@@ -719,10 +744,23 @@ export default function MeetingLobby({ roomId, roomExists, onJoin }: MeetingLobb
               </div>
             )}
 
+            {!user && (
+              <div className="mt-6 w-full text-left">
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Nama Anda</label>
+                <input
+                  type="text"
+                  value={customGuestName}
+                  onChange={(e) => setCustomGuestName(e.target.value)}
+                  placeholder="Masukkan nama Anda..."
+                  className="w-full px-4 py-3 rounded-full border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-sm outline-none transition"
+                />
+              </div>
+            )}
+
             <button
               onClick={handleJoin}
               disabled={!hasPermission || joining || waitingApproval}
-              className="mt-8 h-14 w-[15rem] rounded-full bg-blue-600 text-base font-semibold text-white transition-colors duration-200 hover:bg-blue-500 active:bg-blue-600 disabled:bg-[#1c1c1e] disabled:text-gray-600 disabled:cursor-not-allowed cursor-pointer"
+              className="mt-6 h-14 w-[15rem] rounded-full bg-blue-600 text-base font-semibold text-white transition-colors duration-200 hover:bg-blue-500 active:bg-blue-600 disabled:bg-[#1c1c1e] disabled:text-gray-600 disabled:cursor-not-allowed cursor-pointer"
             >
               {joining ? 'Mengirim...' : waitingApproval ? 'Menunggu...' : 'Gabung sekarang'}
             </button>

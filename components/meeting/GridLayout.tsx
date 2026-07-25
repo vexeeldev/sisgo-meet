@@ -149,18 +149,25 @@ export default function GridLayout({
 
   if (allStreams.length === 0) {
     return (
-      <div className="w-full h-full flex items-center justify-center rounded-xl">
-        <VideoPlaceholder name="No participants" />
+      <div className="w-full h-full flex flex-col items-center justify-center bg-[#121214] rounded-xl text-gray-400">
+        <div className="w-10 h-10 border-4 border-gray-600 border-t-blue-500 rounded-full animate-spin mb-3" />
+        <span className="text-sm font-medium text-gray-300">Menghubungkan ke room...</span>
       </div>
     );
   }
+
+  const hasVideoTrack = (s: MediaStream | null) => {
+    if (!s) return false;
+    const t = s.getVideoTracks()[0];
+    return t && t.enabled && t.readyState === 'live';
+  };
 
   return (
     <div className="w-full h-full relative rounded-xl overflow-hidden">
       {selectedGroup.length === 1 ? (
         <div className="w-full h-full p-0 flex items-center justify-center">
           {selectedGroup.map(({ id, stream, name }) => {
-            const isOff = id === 'local' ? isVideoOff : remoteVideoOff[id];
+            const isOff = id === 'local' ? isVideoOff : (remoteVideoOff[id] || !hasVideoTrack(stream));
             const isMuted = id === 'local' ? isAudioOff : remoteAudioOff[id];
             const isSpeaking = id === 'local' ? speaking['local'] : speaking[id];
             return (
@@ -264,7 +271,7 @@ export default function GridLayout({
           }}
         >
           {selectedGroup.map(({ id, stream, name }) => {
-            const isOff = id === 'local' ? isVideoOff : remoteVideoOff[id];
+            const isOff = id === 'local' ? isVideoOff : (remoteVideoOff[id] || !hasVideoTrack(stream));
             const isMuted = id === 'local' ? isAudioOff : remoteAudioOff[id];
             const isSpeaking = id === 'local' ? speaking['local'] : speaking[id];
 

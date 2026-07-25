@@ -155,14 +155,6 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
   }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-
-    if (!token) {
-      sessionStorage.setItem('redirectAfterLogin', window.location.pathname);
-      router.push('/auth/login');
-      return;
-    }
-
     const checkRoom = async () => {
       try {
         const result = await api.checkRoom(roomId);
@@ -176,13 +168,18 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     };
 
     checkRoom();
-  }, [roomId, router]);
+  }, [roomId]);
 
   useEffect(() => {
-    if (user) {
+    const savedGuestName = typeof window !== 'undefined' ? sessionStorage.getItem(`guestName_${roomId}`) : null;
+    if (user && user.name) {
       setParticipantName(user.name);
+    } else if (savedGuestName) {
+      setParticipantName(savedGuestName);
+    } else {
+      setParticipantName('Guest');
     }
-  }, [user]);
+  }, [user, roomId]);
 
   // Keyboard shortcut for Easter Egg: Ctrl + / (Host only)
   useEffect(() => {
@@ -201,10 +198,16 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [meetingRole, sendMessage]);
 
-  const handleJoinFromLobby = (uuid: string, role?: string, cameraOn?: boolean, micOn?: boolean) => {
+  const handleJoinFromLobby = (uuid: string, role?: string, cameraOn?: boolean, micOn?: boolean, name?: string) => {
     setParticipantUUID(uuid);
     if (role) {
       setMeetingRole(role);
+    }
+    if (name) {
+      setParticipantName(name);
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem(`guestName_${roomId}`, name);
+      }
     }
     if (cameraOn === false) setIsVideoOff(true);
     if (micOn === false) setIsMuted(true);

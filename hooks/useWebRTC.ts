@@ -207,9 +207,10 @@ export function useWebRTC({ roomId, participantUUID, userName, userRole, onCallE
       try {
         const constraints = {
           video: {
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-            frameRate: { ideal: 30 },
+            width: { ideal: 1920, min: 1280 },
+            height: { ideal: 1080, min: 720 },
+            frameRate: { ideal: 60, min: 30 },
+            aspectRatio: { ideal: 1.7777777778 },
           },
           audio: {
             echoCancellation: true,
@@ -222,8 +223,20 @@ export function useWebRTC({ roomId, participantUUID, userName, userRole, onCallE
         
         // Apply initial camera/mic states
         const videoTrack = stream.getVideoTracks()[0];
-        if (videoTrack && initialCameraOn === false) {
-          videoTrack.enabled = false;
+        if (videoTrack) {
+          if ('contentHint' in videoTrack) {
+            (videoTrack as any).contentHint = 'motion';
+          }
+          try {
+            videoTrack.applyConstraints({
+              width: { ideal: 1920 },
+              height: { ideal: 1080 },
+              frameRate: { ideal: 60 },
+            }).catch(() => {});
+          } catch (e) {}
+          if (initialCameraOn === false) {
+            videoTrack.enabled = false;
+          }
         }
         const audioTrack = stream.getAudioTracks()[0];
         if (audioTrack && initialMicOn === false) {
@@ -577,6 +590,35 @@ export function useWebRTC({ roomId, participantUUID, userName, userRole, onCallE
     }
   };
 
+function preferH264(sdp: string): string {
+  const lines = sdp.split('\r\n');
+  const mLineIndex = lines.findIndex(line => line.startsWith('m=video'));
+  if (mLineIndex === -1) return sdp;
+
+  const h264Payloads: string[] = [];
+  lines.forEach(line => {
+    if (line.startsWith('a=rtpmap:') && line.includes('H264/90000')) {
+      const parts = line.split(' ');
+      const payload = parts[0].split(':')[1];
+      h264Payloads.push(payload);
+    }
+  });
+
+  if (h264Payloads.length === 0) return sdp;
+
+  const mLineParts = lines[mLineIndex].split(' ');
+  const header = mLineParts.slice(0, 3);
+  const existingPayloads = mLineParts.slice(3);
+
+  const newPayloads = [
+    ...h264Payloads,
+    ...existingPayloads.filter(p => !h264Payloads.includes(p))
+  ];
+
+  lines[mLineIndex] = [...header, ...newPayloads].join(' ');
+  return lines.join('\r\n');
+}
+
   const createPeer = (userId: string, initiator: boolean, signal?: any) => {
     if (!localStreamRef.current) {
       console.warn('No local stream yet, queueing peer creation for', userId);
@@ -589,7 +631,6 @@ export function useWebRTC({ roomId, participantUUID, userName, userRole, onCallE
       return;
     }
 
-
     const peer = new Peer({
       initiator,
       stream: localStreamRef.current,
@@ -597,7 +638,10 @@ export function useWebRTC({ roomId, participantUUID, userName, userRole, onCallE
       config: {
         iceServers: ICE_SERVERS,
         iceTransportPolicy: 'all',
+        bundlePolicy: 'max-bundle',
+        rtcpMuxPolicy: 'require',
       },
+      sdpTransform: preferH264,
     });
 
     peer.on('signal', (signalData: any) => {
@@ -646,6 +690,25 @@ export function useWebRTC({ roomId, participantUUID, userName, userRole, onCallE
     // Having both caused double-classification race conditions.
 
     peer.on('connect', () => {
+      const pc: RTCPeerConnection | undefined = (peer as any)._pc;
+      if (pc) {
+        pc.getSenders().forEach(sender => {
+          if (sender.track?.kind === 'video') {
+            try {
+              const params = sender.getParameters();
+              (params as any).degradationPreference = 'maintain-resolution';
+              if (params.encodings && params.encodings.length > 0) {
+                params.encodings[0].maxBitrate = 6000000; // 6 Mbps for Full HD 1080p crisp video
+                params.encodings[0].maxFramerate = 60;
+              }
+              sender.setParameters(params).catch(err => console.warn('Failed setting sender parameters:', err));
+            } catch (err) {
+              console.warn('Error configuring RTCRtpSender:', err);
+            }
+          }
+        });
+      }
+
       const videoTrack = localStreamRef.current?.getVideoTracks()[0];
       if (videoTrack && !videoTrack.enabled) {
         sendMessage('video_off', undefined, userId);

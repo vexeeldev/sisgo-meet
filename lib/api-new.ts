@@ -713,10 +713,53 @@ export const api = {
 
       return {
         success: true,
-        participant: result?.data,
+        participant: result?.data || result,
       };
     } catch (error: any) {
       console.error("Join room error:", error);
+
+      return {
+        success: false,
+        message: error?.message || "Network error",
+      };
+    }
+  },
+  joinRoomGuest: async (roomCode: string, name: string) => {
+    try {
+      const res = await fetch(`${API_BASE}/rooms/join-guest`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true",
+        },
+        body: JSON.stringify({
+          room_code: roomCode,
+          name: name || "Guest",
+        }),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        return {
+          success: false,
+          message: result?.message || result?.error || "Failed to join room as guest",
+        };
+      }
+
+      const participantData = result?.data || result;
+      return {
+        success: true,
+        participant: {
+          participant_uuid: participantData.participant_uuid || participantData.uuid,
+          room_uuid: participantData.room_uuid,
+          status: participantData.status || "pending",
+          role: participantData.role || "candidate",
+          name: participantData.name || name || "Guest",
+        },
+      };
+    } catch (error: any) {
+      console.error("Join room guest error:", error);
 
       return {
         success: false,
