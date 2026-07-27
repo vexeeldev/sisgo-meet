@@ -740,7 +740,7 @@ function preferH264(sdp: string): string {
               const params = sender.getParameters();
               (params as any).degradationPreference = 'maintain-resolution';
               if (params.encodings && params.encodings.length > 0) {
-                params.encodings[0].maxBitrate = 6000000; // 6 Mbps for Full HD 1080p crisp video
+                params.encodings[0].maxBitrate = 3000000; 
                 params.encodings[0].maxFramerate = 60;
               }
               sender.setParameters(params).catch(err => console.warn('Failed setting sender parameters:', err));
