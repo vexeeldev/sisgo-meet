@@ -94,6 +94,9 @@ export default function MeetingPage() {
     whiteboardSnapshot,
     handleToggleWhiteboard,
     handleWhiteboardSnapshotChange,
+    screenAnnotations,
+    handleScreenAnnotationChange,
+    handleClearScreenAnnotations,
   } = useMeetingRoom({ roomId });
 
   if (isLoading) {
@@ -171,6 +174,9 @@ export default function MeetingPage() {
             whiteboardSnapshot={whiteboardSnapshot}
             onWhiteboardSnapshotChange={handleWhiteboardSnapshotChange}
             onCloseWhiteboard={handleToggleWhiteboard}
+            screenAnnotations={screenAnnotations}
+            onChangeScreenAnnotations={handleScreenAnnotationChange}
+            onClearScreenAnnotations={handleClearScreenAnnotations}
           />
         </div>
 

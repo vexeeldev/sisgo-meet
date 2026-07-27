@@ -27,6 +27,7 @@ interface UseWebRTCProps {
   onWhiteboardUpdate?: (snapshot: any) => void;
   isWhiteboardOpen?: boolean;
   whiteboardSnapshot?: any;
+  onScreenAnnotationUpdate?: (annotations: any[]) => void;
 }
 
 interface WSMessage {
@@ -82,7 +83,7 @@ const isScreenShareStream = (stream: MediaStream) => {
   return false;
 };
 
-export function useWebRTC({ roomId, participantUUID, userName, userRole, onCallEnded, onKicked, onChatReceived, onHandRaised, onWhiteboardToggle, onWhiteboardUpdate, isWhiteboardOpen, whiteboardSnapshot, signalServer = 'wss://backspace-repurpose-fervor.ngrok-free.dev/ws', initialCameraOn = true, initialMicOn = true }: UseWebRTCProps) {
+export function useWebRTC({ roomId, participantUUID, userName, userRole, onCallEnded, onKicked, onChatReceived, onHandRaised, onWhiteboardToggle, onWhiteboardUpdate, isWhiteboardOpen, whiteboardSnapshot, onScreenAnnotationUpdate, signalServer = 'wss://backspace-repurpose-fervor.ngrok-free.dev/ws', initialCameraOn = true, initialMicOn = true }: UseWebRTCProps) {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStreams, setRemoteStreams] = useState<MediaStream[]>([]);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
@@ -539,6 +540,13 @@ export function useWebRTC({ roomId, participantUUID, userName, userRole, onCallE
           case 'whiteboard_update': {
             if (onWhiteboardUpdate && msg.data?.snapshot) {
               onWhiteboardUpdate(msg.data.snapshot);
+            }
+            break;
+          }
+
+          case 'screen_annotation_update': {
+            if (onScreenAnnotationUpdate && Array.isArray(msg.data?.annotations)) {
+              onScreenAnnotationUpdate(msg.data.annotations);
             }
             break;
           }

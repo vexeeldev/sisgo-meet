@@ -44,9 +44,20 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
   const [showBgPanel, setShowBgPanel] = useState(false);
   const [isWhiteboardOpen, setIsWhiteboardOpen] = useState(false);
   const [whiteboardSnapshot, setWhiteboardSnapshot] = useState<any>(null);
+  const [screenAnnotations, setScreenAnnotations] = useState<any[]>([]);
 
   const user = getUser();
   const isHost = meetingRole === 'interviewer';
+
+  const handleScreenAnnotationChange = (annotations: any[]) => {
+    setScreenAnnotations(annotations);
+    sendMessage('screen_annotation_update', { annotations });
+  };
+
+  const handleClearScreenAnnotations = () => {
+    setScreenAnnotations([]);
+    sendMessage('screen_annotation_update', { annotations: [] });
+  };
 
   const {
     localStream,
@@ -100,6 +111,9 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     },
     onWhiteboardUpdate: (snapshot: any) => {
       setWhiteboardSnapshot(snapshot);
+    },
+    onScreenAnnotationUpdate: (annotations: any[]) => {
+      setScreenAnnotations(annotations);
     },
     isWhiteboardOpen,
     whiteboardSnapshot,
@@ -537,5 +551,8 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     discardRecording,
     handleToggleWhiteboard,
     handleWhiteboardSnapshotChange,
+    screenAnnotations,
+    handleScreenAnnotationChange,
+    handleClearScreenAnnotations,
   };
 }

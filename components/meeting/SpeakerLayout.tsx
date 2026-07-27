@@ -16,6 +16,10 @@ const ExcalidrawCanvas = dynamic(() => import('./ExcalidrawCanvas'), {
   ),
 });
 
+const ScreenAnnotation = dynamic(() => import('./ScreenAnnotation'), {
+  ssr: false,
+});
+
 interface RemoteScreenShare {
   stream: MediaStream;
   participantId: string;
@@ -56,6 +60,9 @@ interface SpeakerLayoutProps {
   whiteboardSnapshot?: any;
   onWhiteboardSnapshotChange?: (snapshot: any) => void;
   onCloseWhiteboard?: () => void;
+  screenAnnotations?: any[];
+  onChangeScreenAnnotations?: (annotations: any[]) => void;
+  onClearScreenAnnotations?: () => void;
 }
 
 export default function SpeakerLayout({
@@ -79,6 +86,9 @@ export default function SpeakerLayout({
   whiteboardSnapshot,
   onWhiteboardSnapshotChange,
   onCloseWhiteboard,
+  screenAnnotations = [],
+  onChangeScreenAnnotations,
+  onClearScreenAnnotations,
 }: SpeakerLayoutProps) {
   const localMainVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRefs = useRef<Record<string, HTMLVideoElement>>({});
@@ -432,13 +442,21 @@ export default function SpeakerLayout({
           </div>
         </div>
       ) : mainContent === 'screen' ? (
-        <div className="w-full h-full relative flex items-center justify-center group bg-transparent">
+        <div className="w-full h-full relative flex items-center justify-center group bg-transparent overflow-hidden">
           <video
             ref={screenVideoRef}
             autoPlay
             playsInline
             muted={isLocalScreenSharing || isScreenAudioMuted}
-            className="w-full h-full object-contain"
+            className="w-full h-full object-contain pointer-events-none"
+          />
+
+          {/* Realtime Screen Annotation Overlay (React Konva) */}
+          <ScreenAnnotation
+            isSharingHost={isLocalScreenSharing}
+            annotations={screenAnnotations}
+            onChangeAnnotations={onChangeScreenAnnotations}
+            onClearAnnotations={onClearScreenAnnotations}
           />
 
           <div className="absolute top-4 left-4 flex items-center gap-2 bg-[#202124]/80 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-[#3c4043]">

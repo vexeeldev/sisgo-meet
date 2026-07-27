@@ -34,6 +34,9 @@ interface MeetingVideoProps {
   whiteboardSnapshot?: any;
   onWhiteboardSnapshotChange?: (snapshot: any) => void;
   onCloseWhiteboard?: () => void;
+  screenAnnotations?: any[];
+  onChangeScreenAnnotations?: (annotations: any[]) => void;
+  onClearScreenAnnotations?: () => void;
 }
 
 export default function MeetingVideo({
@@ -58,6 +61,9 @@ export default function MeetingVideo({
   whiteboardSnapshot,
   onWhiteboardSnapshotChange,
   onCloseWhiteboard,
+  screenAnnotations = [],
+  onChangeScreenAnnotations,
+  onClearScreenAnnotations,
 }: MeetingVideoProps) {
   const cameraStreams = useMemo(() => {
     const streams = remoteScreenShare
@@ -174,6 +180,9 @@ export default function MeetingVideo({
             whiteboardSnapshot={whiteboardSnapshot}
             onWhiteboardSnapshotChange={onWhiteboardSnapshotChange}
             onCloseWhiteboard={onCloseWhiteboard}
+            screenAnnotations={screenAnnotations}
+            onChangeScreenAnnotations={onChangeScreenAnnotations}
+            onClearScreenAnnotations={onClearScreenAnnotations}
           />
         ) : (
           <GridLayout
