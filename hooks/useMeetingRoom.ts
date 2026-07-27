@@ -197,9 +197,8 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     } else if (savedGuestName && savedGuestName.trim()) {
       setParticipantName(savedGuestName.trim());
     }
-  }, [user, roomId]);
+  }, [user, roomId, showLobby]);
 
-  // Keyboard shortcut for Easter Egg: Ctrl + / (Host only)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && (e.key === '/' || e.code === 'Slash')) {

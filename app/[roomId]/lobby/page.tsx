@@ -261,7 +261,12 @@ export default function MeetingLobby({ roomId, roomExists, roomType = 'private',
     if (uName) return uName;
 
     if (customGuestName && customGuestName.trim()) {
-      return customGuestName.trim();
+      const clean = customGuestName.trim();
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem(`guestName_${roomId}`, clean);
+        localStorage.setItem(`guestName_${roomId}`, clean);
+      }
+      return clean;
     }
 
     const savedGuestName = typeof window !== 'undefined' 
