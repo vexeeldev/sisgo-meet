@@ -190,21 +190,7 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    const checkRoom = async () => {
-      try {
-        const result = await api.checkRoom(roomId);
-        setRoomExists(result.success);
-      } catch (error) {
-        console.error(error);
-        setRoomExists(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
 
-    checkRoom();
-  }, [roomId]);
 
   useEffect(() => {
     const savedGuestName = typeof window !== 'undefined' 

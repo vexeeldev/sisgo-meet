@@ -58,12 +58,21 @@ export default function MeetingLobby({ roomId, roomExists, roomType = 'private',
       if (storedUser) setUser(JSON.parse(storedUser));
     } catch (e) {}
 
+    if (typeof window !== 'undefined') {
+      const savedGuestName =
+        sessionStorage.getItem(`guestName_${roomId}`) ||
+        localStorage.getItem(`guestName_${roomId}`);
+      if (savedGuestName && savedGuestName.trim()) {
+        setCustomGuestName(savedGuestName.trim());
+      }
+    }
+
     setCurrentTime(new Date());
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [roomId]);
 
   // Redirect countdown
   useEffect(() => {
