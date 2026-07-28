@@ -30,6 +30,7 @@ interface MeetingVideoProps {
   peerIdToStreamId?: Record<string, string>;
   raisedHands?: Record<string, boolean>;
   isWhiteboardOpen?: boolean;
+  isWhiteboardMinimized?: boolean;
   isHost?: boolean;
   whiteboardSnapshot?: any;
   onWhiteboardSnapshotChange?: (snapshot: any) => void;
@@ -37,6 +38,8 @@ interface MeetingVideoProps {
   screenAnnotations?: any[];
   onChangeScreenAnnotations?: (annotations: any[]) => void;
   onClearScreenAnnotations?: () => void;
+  isScreenAnnotationOpen?: boolean;
+  onCloseScreenAnnotation?: () => void;
 }
 
 export default function MeetingVideo({
@@ -57,6 +60,7 @@ export default function MeetingVideo({
   peerIdToStreamId = {},
   raisedHands = {},
   isWhiteboardOpen = false,
+  isWhiteboardMinimized = false,
   isHost = false,
   whiteboardSnapshot,
   onWhiteboardSnapshotChange,
@@ -64,6 +68,8 @@ export default function MeetingVideo({
   screenAnnotations = [],
   onChangeScreenAnnotations,
   onClearScreenAnnotations,
+  isScreenAnnotationOpen = false,
+  onCloseScreenAnnotation,
 }: MeetingVideoProps) {
   const cameraStreams = useMemo(() => {
     const streams = remoteScreenShare
@@ -102,7 +108,8 @@ export default function MeetingVideo({
     return names;
   }, [cameraStreams, participantDetails, peerIdToStreamId]);
 
-  const hasScreenShare = screenStream !== null || remoteScreenShare !== null || isWhiteboardOpen; 
+  const isWhiteboardActive = isWhiteboardOpen && !isWhiteboardMinimized;
+  const hasScreenShare = screenStream !== null || remoteScreenShare !== null || isWhiteboardActive; 
 
   const raisedHandsByStreamId = useMemo(() => {
     const result: Record<string, boolean> = { local: raisedHands['local'] || false };
@@ -121,21 +128,17 @@ export default function MeetingVideo({
     activeLayout = 'tiled';
   }
 
-  const isSpeakerMode = ['speaker', 'spotlight', 'sidebar'].includes(activeLayout) || isWhiteboardOpen;
+  const isSpeakerMode = ['speaker', 'spotlight', 'sidebar'].includes(activeLayout) || isWhiteboardActive;
 
   const mainSpeakerId =
     isSpeakerMode && !hasScreenShare && cameraStreams.length > 0
-      ? cameraStreams[0].id
+      ? cameraStreams[0].id 
       : null;
 
-  // Show rail whenever screen share is active OR in speaker/spotlight/sidebar mode with 1+ cameras
   const showRail = isSpeakerMode && (hasScreenShare || cameraStreams.length >= 1);
   const railRemoteStreams = showRail ? cameraStreams : [];
-  // Only exclude main speaker from rail when NO screen share and 2+ cameras
-  // (so the first camera occupies main area and rest go to rail)
   const mainSpeakerStreamId = showRail && !hasScreenShare && cameraStreams.length > 1 ? cameraStreams[0].id : null;
 
-  // Get all names of participants with raised hands
   const raisedHandNames = useMemo(() => {
     const names: string[] = [];
     if (!raisedHands) return names;
@@ -147,13 +150,13 @@ export default function MeetingVideo({
     Object.entries(raisedHands).forEach(([id, isRaised]) => {
       if (id !== 'local' && isRaised) {
         const streamId = peerIdToStreamId?.[id] || id;
-        const name = participantDetails?.[streamId]?.name || 'Peserta';
+        const name = participantDetails?.[id]?.name || participantDetails?.[streamId]?.name || remoteNames[streamId] || remoteNames[id] || 'Peserta';
         names.push(name);
       }
     });
     
     return names;
-  }, [raisedHands, participantName, peerIdToStreamId, participantDetails]);
+  }, [raisedHands, participantName, peerIdToStreamId, participantDetails, remoteNames]);
 
   return (
     <div className="flex-1 w-full h-full bg-transparent flex justify-center min-h-0 relative">
@@ -176,6 +179,7 @@ export default function MeetingVideo({
             speaking={speaking}
             raisedHands={raisedHandsByStreamId}
             isWhiteboardOpen={isWhiteboardOpen}
+            isWhiteboardMinimized={isWhiteboardMinimized}
             isHost={isHost}
             whiteboardSnapshot={whiteboardSnapshot}
             onWhiteboardSnapshotChange={onWhiteboardSnapshotChange}
@@ -183,6 +187,7 @@ export default function MeetingVideo({
             screenAnnotations={screenAnnotations}
             onChangeScreenAnnotations={onChangeScreenAnnotations}
             onClearScreenAnnotations={onClearScreenAnnotations}
+            onCloseScreenAnnotation={isScreenAnnotationOpen ? onCloseScreenAnnotation : undefined}
           />
         ) : (
           <GridLayout
@@ -198,6 +203,10 @@ export default function MeetingVideo({
             remoteAudioOff={remoteAudioOff}
             speaking={speaking}
             raisedHands={raisedHandsByStreamId}
+            isWhiteboardMinimized={isWhiteboardOpen && isWhiteboardMinimized}
+            onOpenWhiteboard={onCloseWhiteboard}
+            hostName={isHost ? participantName : (Object.values(participantDetails).find((p: any) => p.role === 'interviewer' || p.role === 'host')?.name || 'Host')}
+            whiteboardSnapshot={whiteboardSnapshot}
           />
         )}
       </div>

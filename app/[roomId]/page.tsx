@@ -91,12 +91,15 @@ export default function MeetingPage() {
     discardRecording,
     sendMessage,
     isWhiteboardOpen,
+    isWhiteboardMinimized,
     whiteboardSnapshot,
     handleToggleWhiteboard,
     handleWhiteboardSnapshotChange,
     screenAnnotations,
     handleScreenAnnotationChange,
     handleClearScreenAnnotations,
+    isScreenAnnotationOpen,
+    handleToggleScreenAnnotation,
   } = useMeetingRoom({ roomId });
 
   if (isLoading) {
@@ -170,6 +173,7 @@ export default function MeetingPage() {
             remoteScreenShare={remoteScreenShare}
             raisedHands={raisedHands}
             isWhiteboardOpen={isWhiteboardOpen}
+            isWhiteboardMinimized={isWhiteboardMinimized}
             isHost={isHost}
             whiteboardSnapshot={whiteboardSnapshot}
             onWhiteboardSnapshotChange={handleWhiteboardSnapshotChange}
@@ -177,6 +181,8 @@ export default function MeetingPage() {
             screenAnnotations={screenAnnotations}
             onChangeScreenAnnotations={handleScreenAnnotationChange}
             onClearScreenAnnotations={handleClearScreenAnnotations}
+            isScreenAnnotationOpen={isScreenAnnotationOpen}
+            onCloseScreenAnnotation={handleToggleScreenAnnotation}
           />
         </div>
 
@@ -248,6 +254,8 @@ export default function MeetingPage() {
         onToggleHand={handleToggleHand}
         onToggleWhiteboard={handleToggleWhiteboard}
         isWhiteboardOpen={isWhiteboardOpen}
+        onToggleScreenAnnotation={handleToggleScreenAnnotation}
+        isScreenAnnotationOpen={isScreenAnnotationOpen}
         layout={layout as any}
         onChangeLayout={setLayout as any}
         virtualBgMode={virtualBgMode}

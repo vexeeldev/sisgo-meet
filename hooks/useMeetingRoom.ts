@@ -43,8 +43,10 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
   const [showRequests, setShowRequests] = useState(false);
   const [showBgPanel, setShowBgPanel] = useState(false);
   const [isWhiteboardOpen, setIsWhiteboardOpen] = useState(false);
+  const [isWhiteboardMinimized, setIsWhiteboardMinimized] = useState(false);
   const [whiteboardSnapshot, setWhiteboardSnapshot] = useState<any>(null);
   const [screenAnnotations, setScreenAnnotations] = useState<any[]>([]);
+  const [isScreenAnnotationOpen, setIsScreenAnnotationOpen] = useState(false);
 
   const user = getUser();
   const isHost = meetingRole === 'interviewer';
@@ -57,6 +59,10 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
   const handleClearScreenAnnotations = () => {
     setScreenAnnotations([]);
     sendMessage('screen_annotation_update', { annotations: [] });
+  };
+
+  const handleToggleScreenAnnotation = () => {
+    setIsScreenAnnotationOpen((prev) => !prev);
   };
 
   const {
@@ -108,6 +114,7 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     },
     onWhiteboardToggle: (isOpen: boolean) => {
       setIsWhiteboardOpen(isOpen);
+      if (isOpen) setIsWhiteboardMinimized(false);
     },
     onWhiteboardUpdate: (snapshot: any) => {
       setWhiteboardSnapshot(snapshot);
@@ -458,11 +465,17 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
   });
 
   const handleToggleWhiteboard = () => {
-    setIsWhiteboardOpen((prev) => {
-      const nextState = !prev;
-      sendMessage('whiteboard_toggle', { isOpen: nextState });
-      return nextState;
-    });
+    if (isHost) {
+      setIsWhiteboardOpen((prev) => {
+        const nextState = !prev;
+        sendMessage('whiteboard_toggle', { isOpen: nextState });
+        if (!nextState) setIsWhiteboardMinimized(false);
+        return nextState;
+      });
+    } else {
+      // Untuk peserta biasa (non-host), klik close/toggle hanya me-minimize/maximize preview box lokal
+      setIsWhiteboardMinimized((prev) => !prev);
+    }
   };
 
   const handleWhiteboardSnapshotChange = (snapshot: any) => {
@@ -516,8 +529,6 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     isPaused,
     elapsedMs,
     result,
-    isWhiteboardOpen,
-    whiteboardSnapshot,
     setShowChat,
     setShowParticipants,
     setShowRequests,
@@ -545,14 +556,19 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     handleChangeVirtualBg,
     startRecording,
     stopRecording,
-    sendMessage,
-    setLayout,
     downloadRecording,
     discardRecording,
+    sendMessage,
+    setLayout,
+    isWhiteboardOpen,
+    isWhiteboardMinimized,
+    whiteboardSnapshot,
     handleToggleWhiteboard,
     handleWhiteboardSnapshotChange,
     screenAnnotations,
     handleScreenAnnotationChange,
     handleClearScreenAnnotations,
+    isScreenAnnotationOpen,
+    handleToggleScreenAnnotation,
   };
 }

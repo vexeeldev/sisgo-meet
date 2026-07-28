@@ -45,6 +45,8 @@ interface MeetingControlsProps {
   roomType?: string;
   onToggleWhiteboard?: () => void;
   isWhiteboardOpen?: boolean;
+  onToggleScreenAnnotation?: () => void;
+  isScreenAnnotationOpen?: boolean;
 }
 
 /** Tombol panel kanan (People / Chat) — icon-only, bergaya pill Google Meet */
@@ -126,6 +128,8 @@ export default function MeetingControls({
   roomType = 'private',
   onToggleWhiteboard,
   isWhiteboardOpen = false,
+  onToggleScreenAnnotation,
+  isScreenAnnotationOpen = false,
 }: MeetingControlsProps) {
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const [showLayoutMenu, setShowLayoutMenu] = useState(false);
@@ -532,6 +536,23 @@ export default function MeetingControls({
           >
             <BackHand className="w-6 h-6 sm:w-7 sm:h-7" />
           </button>
+
+          {/* Screen Annotation Toggle (Di samping Raise Hand) */}
+          {onToggleScreenAnnotation && (
+            <button
+              onClick={onToggleScreenAnnotation}
+              className={`flex w-12 h-12 sm:w-14 sm:h-14 items-center justify-center transition-all cursor-pointer ${
+                isScreenAnnotationOpen
+                  ? 'rounded-2xl bg-[#c2e7ff] text-[#001d35]'
+                  : 'rounded-full bg-[#3c4043] hover:bg-[#4a4b4c] text-white'
+              }`}
+              title={isScreenAnnotationOpen ? 'Sembunyikan Anotasi Layar' : 'Buka Anotasi Layar'}
+            >
+              <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+            </button>
+          )}
 
           {/* More Options */}
           <div className="relative">

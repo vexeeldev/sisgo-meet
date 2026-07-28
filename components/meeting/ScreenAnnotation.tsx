@@ -9,7 +9,8 @@ import {
   ArrowRight, 
   Square, 
   Circle as CircleIcon, 
-  Minimize2
+  Minimize2,
+  X
 } from 'lucide-react';
 
 export interface AnnotationItem {
@@ -30,17 +31,18 @@ interface ScreenAnnotationProps {
   annotations: AnnotationItem[];
   onChangeAnnotations?: (annotations: AnnotationItem[]) => void;
   onClearAnnotations?: () => void;
+  onCloseAnnotation?: () => void;
 }
 
 const COLOR_PALETTE = [
-  '#ef4444', // Red
-  '#f97316', // Orange
-  '#eab308', // Yellow
-  '#22c55e', // Green
-  '#06b6d4', // Cyan
-  '#3b82f6', // Blue
-  '#a855f7', // Purple
-  '#ffffff', // White
+  '#ef4444',
+  '#f97316', 
+  '#eab308',
+  '#22c55e',
+  '#06b6d4',
+  '#3b82f6',
+  '#a855f7', 
+  '#ffffff',
 ];
 
 export default function ScreenAnnotation({
@@ -48,18 +50,17 @@ export default function ScreenAnnotation({
   annotations,
   onChangeAnnotations,
   onClearAnnotations,
+  onCloseAnnotation,
 }: ScreenAnnotationProps) {
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Tools state for Host
   const [activeTool, setActiveTool] = useState<'pen' | 'arrow' | 'rect' | 'circle' | 'eraser'>('pen');
   const [activeColor, setActiveColor] = useState('#ef4444');
   const [strokeWidth, setStrokeWidth] = useState(4);
   const [isDrawing, setIsDrawing] = useState(false);
   const [isToolbarCollapsed, setIsToolbarCollapsed] = useState(false);
 
-  // Resize listener to fit Stage to video container dimensions
   useEffect(() => {
     const updateSize = () => {
       if (containerRef.current) {
@@ -74,14 +75,16 @@ export default function ScreenAnnotation({
     return () => window.removeEventListener('resize', updateSize);
   }, []);
 
-  // Handle Mouse / Touch interactions for Host
+  const annotationsRef = useRef(annotations);
+  useEffect(() => {
+    annotationsRef.current = annotations;
+  }, [annotations]);
+
   const handleMouseDown = (e: any) => {
-    if (!isSharingHost) return;
     const stage = e.target.getStage();
     const point = stage.getPointerPosition();
     if (!point) return;
 
-    // Convert pixel point to normalized percentage (0 to 1) for cross-screen resolution scaling
     const normX = point.x / stageSize.width;
     const normY = point.y / stageSize.height;
 
@@ -91,7 +94,7 @@ export default function ScreenAnnotation({
       const clickedShape = e.target;
       if (clickedShape && clickedShape.attrs && clickedShape.attrs.id) {
         const shapeId = clickedShape.attrs.id;
-        const filtered = annotations.filter((item) => item.id !== shapeId);
+        const filtered = annotationsRef.current.filter((item) => item.id !== shapeId);
         onChangeAnnotations?.(filtered);
       }
       return;
@@ -110,11 +113,11 @@ export default function ScreenAnnotation({
       radius: 0,
     };
 
-    onChangeAnnotations?.([...annotations, newItem]);
+    onChangeAnnotations?.([...annotationsRef.current, newItem]);
   };
 
   const handleMouseMove = (e: any) => {
-    if (!isSharingHost || !isDrawing) return;
+    if (!isDrawing) return;
     const stage = e.target.getStage();
     const point = stage.getPointerPosition();
     if (!point) return;
@@ -126,16 +129,17 @@ export default function ScreenAnnotation({
       const clickedShape = e.target;
       if (clickedShape && clickedShape.attrs && clickedShape.attrs.id) {
         const shapeId = clickedShape.attrs.id;
-        const filtered = annotations.filter((item) => item.id !== shapeId);
+        const filtered = annotationsRef.current.filter((item) => item.id !== shapeId);
         onChangeAnnotations?.(filtered);
       }
       return;
     }
 
-    if (annotations.length === 0) return;
+    const currentList = annotationsRef.current;
+    if (currentList.length === 0) return;
 
-    const lastIndex = annotations.length - 1;
-    const lastItem = { ...annotations[lastIndex] };
+    const lastIndex = currentList.length - 1;
+    const lastItem = { ...currentList[lastIndex] };
 
     if (activeTool === 'pen') {
       lastItem.points = [...(lastItem.points || []), normX, normY];
@@ -156,17 +160,15 @@ export default function ScreenAnnotation({
       lastItem.radius = Math.sqrt(dx * dx + dy * dy);
     }
 
-    const updated = [...annotations];
+    const updated = [...currentList];
     updated[lastIndex] = lastItem;
     onChangeAnnotations?.(updated);
   };
 
   const handleMouseUp = () => {
-    if (!isSharingHost) return;
     setIsDrawing(false);
   };
 
-  // Convert normalized points (0-1) to actual stage pixels
   const getDenormalizedPoints = (points?: number[]) => {
     if (!points) return [];
     return points.map((val, idx) =>
@@ -177,11 +179,8 @@ export default function ScreenAnnotation({
   return (
     <div
       ref={containerRef}
-      className={`absolute inset-0 w-full h-full z-20 ${
-        isSharingHost ? 'pointer-events-auto' : 'pointer-events-none'
-      }`}
+      className="absolute inset-0 w-full h-full z-20 pointer-events-auto"
     >
-      {/* Konva Stage for Drawing Overlay */}
       {stageSize.width > 0 && stageSize.height > 0 && (
         <Stage
           width={stageSize.width}
@@ -261,123 +260,128 @@ export default function ScreenAnnotation({
         </Stage>
       )}
 
-      {/* Floating Toolbar - Displayed ONLY to Host */}
-      {isSharingHost && (
+      {onCloseAnnotation && (
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 pointer-events-auto animate-in fade-in slide-in-from-bottom-4 duration-200">
           <div className="bg-[#1e1f22]/90 backdrop-blur-md border border-[#3c4043] rounded-2xl shadow-2xl p-2 flex items-center gap-1.5 text-white">
-            {!isToolbarCollapsed ? (
-              <>
-                {/* Tools Selection */}
-                <div className="flex items-center gap-1 pr-2 border-r border-[#3c4043]">
-                  <button
-                    onClick={() => setActiveTool('pen')}
-                    className={`p-2 rounded-xl transition-all cursor-pointer ${
-                      activeTool === 'pen'
-                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
-                        : 'hover:bg-[#3c4043]/70 text-gray-300'
-                    }`}
-                    title="Coretan (Pen)"
-                  >
-                    <Pencil className="w-4.5 h-4.5" />
-                  </button>
-
-                  <button
-                    onClick={() => setActiveTool('arrow')}
-                    className={`p-2 rounded-xl transition-all cursor-pointer ${
-                      activeTool === 'arrow'
-                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
-                        : 'hover:bg-[#3c4043]/70 text-gray-300'
-                    }`}
-                    title="Panah (Arrow)"
-                  >
-                    <ArrowRight className="w-4.5 h-4.5" />
-                  </button>
-
-                  <button
-                    onClick={() => setActiveTool('rect')}
-                    className={`p-2 rounded-xl transition-all cursor-pointer ${
-                      activeTool === 'rect'
-                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
-                        : 'hover:bg-[#3c4043]/70 text-gray-300'
-                    }`}
-                    title="Kotak (Rectangle)"
-                  >
-                    <Square className="w-4.5 h-4.5" />
-                  </button>
-
-                  <button
-                    onClick={() => setActiveTool('circle')}
-                    className={`p-2 rounded-xl transition-all cursor-pointer ${
-                      activeTool === 'circle'
-                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
-                        : 'hover:bg-[#3c4043]/70 text-gray-300'
-                    }`}
-                    title="Lingkaran (Circle)"
-                  >
-                    <CircleIcon className="w-4.5 h-4.5" />
-                  </button>
-
-                  <button
-                    onClick={() => setActiveTool('eraser')}
-                    className={`p-2 rounded-xl transition-all cursor-pointer ${
-                      activeTool === 'eraser'
-                        ? 'bg-red-600 text-white shadow-lg shadow-red-500/30'
-                        : 'hover:bg-[#3c4043]/70 text-gray-300'
-                    }`}
-                    title="Hapus Garis (Eraser)"
-                  >
-                    <Eraser className="w-4.5 h-4.5" />
-                  </button>
-                </div>
-
-                {/* Color Palette */}
-                <div className="flex items-center gap-1.5 px-2 border-r border-[#3c4043]">
-                  {COLOR_PALETTE.map((c) => (
-                    <button
-                      key={c}
-                      onClick={() => setActiveColor(c)}
-                      className={`w-5 h-5 rounded-full transition-transform cursor-pointer ${
-                        activeColor === c ? 'scale-125 ring-2 ring-white shadow-md' : 'hover:scale-110 opacity-80'
-                      }`}
-                      style={{ backgroundColor: c }}
-                    />
-                  ))}
-                </div>
-
-                {/* Stroke Width Toggle */}
-                <div className="flex items-center gap-1 px-2 border-r border-[#3c4043]">
-                  {[2, 4, 8].map((w) => (
-                    <button
-                      key={w}
-                      onClick={() => setStrokeWidth(w)}
-                      className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-semibold cursor-pointer transition ${
-                        strokeWidth === w ? 'bg-blue-500 text-white' : 'hover:bg-[#3c4043] text-gray-400'
-                      }`}
-                    >
-                      {w === 2 ? 'S' : w === 4 ? 'M' : 'L'}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Clear All */}
+          {!isToolbarCollapsed ? (
+            <>
+              <div className="flex items-center gap-1 pr-2 border-r border-[#3c4043]">
                 <button
-                  onClick={onClearAnnotations}
-                  className="p-2 text-red-400 hover:bg-red-500/20 rounded-xl transition-colors cursor-pointer"
-                  title="Hapus Semua Anotasi"
+                  onClick={() => setActiveTool('pen')}
+                  className={`p-2 rounded-xl transition-all cursor-pointer ${
+                    activeTool === 'pen'
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                      : 'hover:bg-[#3c4043]/70 text-gray-300'
+                  }`}
+                  title="Coretan (Pen)"
                 >
-                  <Trash2 className="w-4.5 h-4.5" />
+                  <Pencil className="w-4.5 h-4.5" />
                 </button>
 
-                {/* Collapse Toolbar */}
                 <button
-                  onClick={() => setIsToolbarCollapsed(true)}
-                  className="p-2 text-gray-400 hover:text-white hover:bg-[#3c4043] rounded-xl transition-colors cursor-pointer"
-                  title="Kecilkan Toolbar"
+                  onClick={() => setActiveTool('arrow')}
+                  className={`p-2 rounded-xl transition-all cursor-pointer ${
+                    activeTool === 'arrow'
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                      : 'hover:bg-[#3c4043]/70 text-gray-300'
+                  }`}
+                  title="Panah (Arrow)"
                 >
-                  <Minimize2 className="w-4 h-4" />
+                  <ArrowRight className="w-4.5 h-4.5" />
                 </button>
-              </>
-            ) : (
+
+                <button
+                  onClick={() => setActiveTool('rect')}
+                  className={`p-2 rounded-xl transition-all cursor-pointer ${
+                    activeTool === 'rect'
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                      : 'hover:bg-[#3c4043]/70 text-gray-300'
+                  }`}
+                  title="Kotak (Rectangle)"
+                >
+                  <Square className="w-4.5 h-4.5" />
+                </button>
+
+                <button
+                  onClick={() => setActiveTool('circle')}
+                  className={`p-2 rounded-xl transition-all cursor-pointer ${
+                    activeTool === 'circle'
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                      : 'hover:bg-[#3c4043]/70 text-gray-300'
+                  }`}
+                  title="Lingkaran (Circle)"
+                >
+                  <CircleIcon className="w-4.5 h-4.5" />
+                </button>
+
+                <button
+                  onClick={() => setActiveTool('eraser')}
+                  className={`p-2 rounded-xl transition-all cursor-pointer ${
+                    activeTool === 'eraser'
+                      ? 'bg-red-600 text-white shadow-lg shadow-red-500/30'
+                      : 'hover:bg-[#3c4043]/70 text-gray-300'
+                  }`}
+                  title="Hapus Garis (Eraser)"
+                >
+                  <Eraser className="w-4.5 h-4.5" />
+                </button>
+              </div>
+
+              <div className="flex items-center gap-1.5 px-2 border-r border-[#3c4043]">
+                {COLOR_PALETTE.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => setActiveColor(c)}
+                    className={`w-5 h-5 rounded-full transition-transform cursor-pointer ${
+                      activeColor === c ? 'scale-125 ring-2 ring-white shadow-md' : 'hover:scale-110 opacity-80'
+                    }`}
+                    style={{ backgroundColor: c }}
+                  />
+                ))}
+              </div>
+
+              <div className="flex items-center gap-1 px-2 border-r border-[#3c4043]">
+                {[2, 4, 8].map((w) => (
+                  <button
+                    key={w}
+                    onClick={() => setStrokeWidth(w)}
+                    className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-semibold cursor-pointer transition ${
+                      strokeWidth === w ? 'bg-blue-500 text-white' : 'hover:bg-[#3c4043] text-gray-400'
+                    }`}
+                  >
+                    {w === 2 ? 'S' : w === 4 ? 'M' : 'L'}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={onClearAnnotations}
+                className="p-2 text-red-400 hover:bg-red-500/20 rounded-xl transition-colors cursor-pointer"
+                title="Hapus Semua Anotasi"
+              >
+                <Trash2 className="w-4.5 h-4.5" />
+              </button>
+
+              <button
+                onClick={() => setIsToolbarCollapsed(true)}
+                className="p-2 text-gray-400 hover:text-white hover:bg-[#3c4043] rounded-xl transition-colors cursor-pointer"
+                title="Kecilkan Toolbar"
+              >
+                <Minimize2 className="w-4 h-4" />
+              </button>
+
+              {onCloseAnnotation && (
+                <button
+                  onClick={onCloseAnnotation}
+                  className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-colors cursor-pointer border-l border-[#3c4043] pl-2 pr-1"
+                  title="Tutup Anotasi Layar"
+                >
+                  <X className="w-4.5 h-4.5" />
+                </button>
+              )}
+            </>
+          ) : (
+            <div className="flex items-center gap-1">
               <button
                 onClick={() => setIsToolbarCollapsed(false)}
                 className="p-2 text-blue-400 hover:bg-blue-500/20 rounded-xl transition-colors cursor-pointer flex items-center gap-2 text-xs font-semibold"
@@ -386,9 +390,19 @@ export default function ScreenAnnotation({
                 <Pencil className="w-4 h-4" />
                 <span>Screen Annotation</span>
               </button>
-            )}
-          </div>
+              {onCloseAnnotation && (
+                <button
+                  onClick={onCloseAnnotation}
+                  className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-colors cursor-pointer"
+                  title="Tutup Anotasi Layar"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          )}
         </div>
+      </div>
       )}
     </div>
   );

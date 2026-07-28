@@ -2,7 +2,9 @@
 
 import { useRef, useEffect, useState, useMemo, useCallback } from 'react';
 import { BackHand as Hand, MicOffFilled as MicOff } from './icons';
+import { Sparkles, Presentation } from 'lucide-react';
 import VideoPlaceholder from './VideoPlaceholder';
+import ExcalidrawCanvas from './ExcalidrawCanvas';
 
 interface GridLayoutProps {
   streams: MediaStream[];
@@ -14,6 +16,10 @@ interface GridLayoutProps {
   remoteAudioOff?: Record<string, boolean>;
   speaking?: Record<string, boolean>;
   raisedHands?: Record<string, boolean>;
+  isWhiteboardMinimized?: boolean;
+  onOpenWhiteboard?: () => void;
+  hostName?: string;
+  whiteboardSnapshot?: any;
 }
 
 const GROUP_SIZE = 6;
@@ -46,14 +52,18 @@ export default function GridLayout({
   remoteAudioOff = {},
   speaking = {},
   raisedHands = {},
+  isWhiteboardMinimized = false,
+  onOpenWhiteboard,
+  hostName = 'Host',
+  whiteboardSnapshot,
 }: GridLayoutProps) {
   const videoRefs = useRef<Record<string, HTMLVideoElement>>({});
   const [page, setPage] = useState(0);
   const [blockedAutoplay, setBlockedAutoplay] = useState<Record<string, boolean>>({});
 
-
   const allStreams = useMemo(() => {
     const list = [
+      ...(isWhiteboardMinimized ? [{ id: 'whiteboard_tile', stream: null, name: 'Whiteboard (Papan Tulis)' }] : []),
       ...(localStream ? [{ id: 'local', stream: localStream, name: participantNames.local || 'You' }] : []),
       ...streams.map((s, i) => ({
         id: s.id,
@@ -62,7 +72,7 @@ export default function GridLayout({
       })),
     ];
     return list;
-  }, [streams, localStream, participantNames]);
+  }, [streams, localStream, participantNames, isWhiteboardMinimized]);
 
   const attachStream = (id: string, el: HTMLVideoElement) => {
     const entry = allStreams.find((s) => s.id === id);
@@ -271,6 +281,39 @@ export default function GridLayout({
           }}
         >
           {selectedGroup.map(({ id, stream, name }) => {
+            if (id === 'whiteboard_tile') {
+              return (
+                <div
+                  key={id}
+                  onClick={onOpenWhiteboard}
+                  className="relative w-full h-full bg-[#1a1a1a] rounded-3xl overflow-hidden shadow-xl transition-all duration-300 border-2 border-transparent hover:border-blue-500/80 cursor-pointer group"
+                >
+                  {/* Real Live Whiteboard Canvas (Preview Beneran dari Excalidraw) */}
+                  <div className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden select-none">
+                    <ExcalidrawCanvas
+                      isHost={false}
+                      initialSnapshot={whiteboardSnapshot}
+                    />
+                  </div>
+
+                  {/* Gradient Overlay bottom for name tag legibility */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none z-10" />
+
+                  {/* Top Right Live Presenting Icon Badge */}
+                  <div className="absolute top-3 right-3 z-20">
+                    <div className="bg-[#202124]/80 backdrop-blur-md p-1.5 rounded-full text-blue-400 border border-white/10 shadow-md">
+                      <Presentation className="w-4 h-4" />
+                    </div>
+                  </div>
+
+                  {/* Bottom Left Name Tag (Persis seperti Video Camera Tile orang lain) */}
+                  <div className="absolute bottom-3 left-4 z-20 text-white text-[14px] font-medium drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] flex items-center gap-2 max-w-[85%] truncate">
+                    <span className="truncate">{hostName} (Whiteboard)</span>
+                  </div>
+                </div>
+              );
+            }
+
             const isOff = id === 'local' ? isVideoOff : (remoteVideoOff[id] || !hasVideoTrack(stream));
             const isMuted = id === 'local' ? isAudioOff : remoteAudioOff[id];
             const isSpeaking = id === 'local' ? speaking['local'] : speaking[id];

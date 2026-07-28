@@ -51,11 +51,12 @@ interface SpeakerLayoutProps {
   onStopSharing?: () => void;
   remoteVideoOff?: Record<string, boolean>;
   remoteScreenShare?: RemoteScreenShare | null;
-  hidePip?: boolean; // sembunyikan PiP local saat rail sudah tampil
+  hidePip?: boolean;
   raisedHands?: Record<string, boolean>;
   remoteAudioOff?: Record<string, boolean>;
   speaking?: Record<string, boolean>;
   isWhiteboardOpen?: boolean;
+  isWhiteboardMinimized?: boolean;
   isHost?: boolean;
   whiteboardSnapshot?: any;
   onWhiteboardSnapshotChange?: (snapshot: any) => void;
@@ -63,6 +64,7 @@ interface SpeakerLayoutProps {
   screenAnnotations?: any[];
   onChangeScreenAnnotations?: (annotations: any[]) => void;
   onClearScreenAnnotations?: () => void;
+  onCloseScreenAnnotation?: () => void;
 }
 
 export default function SpeakerLayout({
@@ -82,6 +84,7 @@ export default function SpeakerLayout({
   remoteAudioOff = {},
   speaking = {},
   isWhiteboardOpen = false,
+  isWhiteboardMinimized = false,
   isHost = false,
   whiteboardSnapshot,
   onWhiteboardSnapshotChange,
@@ -89,6 +92,7 @@ export default function SpeakerLayout({
   screenAnnotations = [],
   onChangeScreenAnnotations,
   onClearScreenAnnotations,
+  onCloseScreenAnnotation,
 }: SpeakerLayoutProps) {
   const localMainVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRefs = useRef<Record<string, HTMLVideoElement>>({});
@@ -218,7 +222,7 @@ export default function SpeakerLayout({
   };
 
   const getMainContent = () => {
-    if (isWhiteboardOpen) {
+    if (isWhiteboardOpen && !isWhiteboardMinimized) {
       return 'whiteboard';
     }
     if (showScreen) {
@@ -425,7 +429,7 @@ export default function SpeakerLayout({
               <button
                 onClick={onCloseWhiteboard}
                 className="w-7 h-7 flex items-center justify-center rounded-full bg-[#3c4043] hover:bg-white/10 text-gray-300 hover:text-white transition-colors cursor-pointer"
-                title="Tutup Whiteboard"
+                title={isHost ? "Tutup Whiteboard (Untuk Semua Peserta)" : "Sembunyikan Whiteboard (Tampilan Lokal)"}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -452,12 +456,15 @@ export default function SpeakerLayout({
           />
 
           {/* Realtime Screen Annotation Overlay (React Konva) */}
-          <ScreenAnnotation
-            isSharingHost={isLocalScreenSharing}
-            annotations={screenAnnotations}
-            onChangeAnnotations={onChangeScreenAnnotations}
-            onClearAnnotations={onClearScreenAnnotations}
-          />
+          {(screenAnnotations.length > 0 || onCloseScreenAnnotation) && (
+            <ScreenAnnotation
+              isSharingHost={isLocalScreenSharing}
+              annotations={screenAnnotations}
+              onChangeAnnotations={onChangeScreenAnnotations}
+              onClearAnnotations={onClearScreenAnnotations}
+              onCloseAnnotation={onCloseScreenAnnotation}
+            />
+          )}
 
           <div className="absolute top-4 left-4 flex items-center gap-2 bg-[#202124]/80 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-[#3c4043]">
             <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
