@@ -30,6 +30,9 @@ interface ScreenAnnotationProps {
   isSharingHost: boolean;
   annotations: AnnotationItem[];
   onChangeAnnotations?: (annotations: AnnotationItem[]) => void;
+  onAnnotationStart?: (item: AnnotationItem) => void;
+  onAnnotationDraw?: (data: { id: string; points: number[] }) => void;
+  onAnnotationEnd?: (data: { id: string }) => void;
   onClearAnnotations?: () => void;
   onCloseAnnotation?: () => void;
 }
@@ -49,6 +52,9 @@ export default function ScreenAnnotation({
   isSharingHost,
   annotations,
   onChangeAnnotations,
+  onAnnotationStart,
+  onAnnotationDraw,
+  onAnnotationEnd,
   onClearAnnotations,
   onCloseAnnotation,
 }: ScreenAnnotationProps) {
@@ -60,6 +66,9 @@ export default function ScreenAnnotation({
   const [strokeWidth, setStrokeWidth] = useState(4);
   const [isDrawing, setIsDrawing] = useState(false);
   const [isToolbarCollapsed, setIsToolbarCollapsed] = useState(false);
+  const activeItemRef = useRef<AnnotationItem | null>(null);
+  const lastDrawTimeRef = useRef<number>(0);
+  const pendingPointsRef = useRef<number[]>([]);
 
   useEffect(() => {
     const updateSize = () => {
@@ -113,11 +122,19 @@ export default function ScreenAnnotation({
       radius: 0,
     };
 
-    onChangeAnnotations?.([...annotationsRef.current, newItem]);
+    activeItemRef.current = newItem;
+    pendingPointsRef.current = [];
+    lastDrawTimeRef.current = Date.now();
+
+    if (onAnnotationStart) {
+      onAnnotationStart(newItem);
+    } else {
+      onChangeAnnotations?.([...annotationsRef.current, newItem]);
+    }
   };
 
   const handleMouseMove = (e: any) => {
-    if (!isDrawing) return;
+    if (!isDrawing || !activeItemRef.current) return;
     const stage = e.target.getStage();
     const point = stage.getPointerPosition();
     if (!point) return;
@@ -135,38 +152,72 @@ export default function ScreenAnnotation({
       return;
     }
 
-    const currentList = annotationsRef.current;
-    if (currentList.length === 0) return;
-
-    const lastIndex = currentList.length - 1;
-    const lastItem = { ...currentList[lastIndex] };
+    const item = activeItemRef.current;
+    let payloadPoints: number[] = [];
 
     if (activeTool === 'pen') {
-      lastItem.points = [...(lastItem.points || []), normX, normY];
+      pendingPointsRef.current.push(normX, normY);
+      payloadPoints = [...pendingPointsRef.current];
     } else if (activeTool === 'arrow') {
-      const startX = lastItem.points ? lastItem.points[0] : normX;
-      const startY = lastItem.points ? lastItem.points[1] : normY;
-      lastItem.points = [startX, startY, normX, normY];
+      const startX = item.points ? item.points[0] : normX;
+      const startY = item.points ? item.points[1] : normY;
+      payloadPoints = [startX, startY, normX, normY];
     } else if (activeTool === 'rect') {
-      const startX = lastItem.x ?? normX;
-      const startY = lastItem.y ?? normY;
-      lastItem.width = normX - startX;
-      lastItem.height = normY - startY;
+      const startX = item.x ?? normX;
+      const startY = item.y ?? normY;
+      const w = normX - startX;
+      const h = normY - startY;
+      payloadPoints = [w, h, 0];
     } else if (activeTool === 'circle') {
-      const startX = lastItem.x ?? normX;
-      const startY = lastItem.y ?? normY;
+      const startX = item.x ?? normX;
+      const startY = item.y ?? normY;
       const dx = normX - startX;
       const dy = normY - startY;
-      lastItem.radius = Math.sqrt(dx * dx + dy * dy);
+      const r = Math.sqrt(dx * dx + dy * dy);
+      payloadPoints = [0, 0, r];
     }
 
-    const updated = [...currentList];
-    updated[lastIndex] = lastItem;
-    onChangeAnnotations?.(updated);
+    const now = Date.now();
+    // Throttled ~16ms (60fps) delta streaming
+    if (now - lastDrawTimeRef.current >= 16) {
+      lastDrawTimeRef.current = now;
+      if (onAnnotationDraw) {
+        onAnnotationDraw({ id: item.id, points: payloadPoints });
+        if (activeTool === 'pen') {
+          pendingPointsRef.current = [];
+        }
+      } else {
+        const currentList = annotationsRef.current;
+        if (currentList.length > 0) {
+          const lastIndex = currentList.length - 1;
+          const lastItem = { ...currentList[lastIndex] };
+          if (activeTool === 'pen') {
+            lastItem.points = [...(lastItem.points || []), normX, normY];
+          } else if (activeTool === 'arrow') {
+            lastItem.points = payloadPoints;
+          } else if (activeTool === 'rect') {
+            lastItem.width = payloadPoints[0];
+            lastItem.height = payloadPoints[1];
+          } else if (activeTool === 'circle') {
+            lastItem.radius = payloadPoints[2];
+          }
+          const updated = [...currentList];
+          updated[lastIndex] = lastItem;
+          onChangeAnnotations?.(updated);
+        }
+      }
+    }
   };
 
   const handleMouseUp = () => {
+    if (isDrawing && activeItemRef.current) {
+      if (onAnnotationEnd) {
+        onAnnotationEnd({ id: activeItemRef.current.id });
+      }
+    }
     setIsDrawing(false);
+    activeItemRef.current = null;
+    pendingPointsRef.current = [];
   };
 
   const getDenormalizedPoints = (points?: number[]) => {

@@ -97,6 +97,9 @@ export default function MeetingPage() {
     handleWhiteboardSnapshotChange,
     screenAnnotations,
     handleScreenAnnotationChange,
+    handleScreenAnnotationStart,
+    handleScreenAnnotationDraw,
+    handleScreenAnnotationEnd,
     handleClearScreenAnnotations,
     isScreenAnnotationOpen,
     handleToggleScreenAnnotation,
@@ -180,6 +183,9 @@ export default function MeetingPage() {
             onCloseWhiteboard={handleToggleWhiteboard}
             screenAnnotations={screenAnnotations}
             onChangeScreenAnnotations={handleScreenAnnotationChange}
+            onScreenAnnotationStart={handleScreenAnnotationStart}
+            onScreenAnnotationDraw={handleScreenAnnotationDraw}
+            onScreenAnnotationEnd={handleScreenAnnotationEnd}
             onClearScreenAnnotations={handleClearScreenAnnotations}
             isScreenAnnotationOpen={isScreenAnnotationOpen}
             onCloseScreenAnnotation={handleToggleScreenAnnotation}

@@ -56,9 +56,44 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     sendMessage('screen_annotation_update', { annotations });
   };
 
+  const handleScreenAnnotationStart = (item: any) => {
+    setScreenAnnotations((prev) => [...prev, item]);
+    sendMessage('screen_annotation_start', { item });
+  };
+
+  const handleScreenAnnotationDraw = (data: { id: string; points: number[] }) => {
+    setScreenAnnotations((prev) => {
+      if (prev.length === 0) return prev;
+      const lastIndex = prev.length - 1;
+      const lastItem = { ...prev[lastIndex] };
+
+      if (lastItem.id === data.id) {
+        if (lastItem.tool === 'pen') {
+          lastItem.points = [...(lastItem.points || []), ...data.points];
+        } else if (lastItem.tool === 'arrow') {
+          lastItem.points = data.points;
+        } else if (lastItem.tool === 'rect' || lastItem.tool === 'circle') {
+          lastItem.width = data.points[0];
+          lastItem.height = data.points[1];
+          lastItem.radius = data.points[2];
+        }
+        const updated = [...prev];
+        updated[lastIndex] = lastItem;
+        return updated;
+      }
+      return prev;
+    });
+
+    sendMessage('screen_annotation_draw', data);
+  };
+
+  const handleScreenAnnotationEnd = (data: { id: string }) => {
+    sendMessage('screen_annotation_end', data);
+  };
+
   const handleClearScreenAnnotations = () => {
     setScreenAnnotations([]);
-    sendMessage('screen_annotation_update', { annotations: [] });
+    sendMessage('screen_annotation_clear');
   };
 
   const handleToggleScreenAnnotation = () => {
@@ -95,11 +130,9 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     initialCameraOn: !isVideoOff,
     initialMicOn: !isMuted,
     onKicked: () => {
-      alert("Anda telah dikeluarkan dari meeting oleh Host.");
       window.location.href = '/dashboard';
     },
     onCallEnded: () => {
-      alert("Meeting telah diakhiri oleh Host.");
       window.location.href = '/dashboard';
     },
     onChatReceived: (msg: any) => {
@@ -122,6 +155,37 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     onScreenAnnotationUpdate: (annotations: any[]) => {
       setScreenAnnotations(annotations);
     },
+    onScreenAnnotationStart: (item: any) => {
+      setScreenAnnotations((prev) => [...prev, item]);
+    },
+    onScreenAnnotationDraw: (data: { id: string; points: number[] }) => {
+      setScreenAnnotations((prev) => {
+        if (prev.length === 0) return prev;
+        const lastIndex = prev.length - 1;
+        const lastItem = { ...prev[lastIndex] };
+
+        if (lastItem.id === data.id) {
+          if (lastItem.tool === 'pen') {
+            lastItem.points = [...(lastItem.points || []), ...data.points];
+          } else if (lastItem.tool === 'arrow') {
+            lastItem.points = data.points;
+          } else if (lastItem.tool === 'rect' || lastItem.tool === 'circle') {
+            lastItem.width = data.points[0];
+            lastItem.height = data.points[1];
+            lastItem.radius = data.points[2];
+          }
+          const updated = [...prev];
+          updated[lastIndex] = lastItem;
+          return updated;
+        }
+        return prev;
+      });
+    },
+    onScreenAnnotationEnd: () => {},
+    onScreenAnnotationClear: () => {
+      setScreenAnnotations([]);
+    },
+    screenAnnotations,
     isWhiteboardOpen,
     whiteboardSnapshot,
     signalServer: shouldStartWebRTC
@@ -553,6 +617,9 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     handleWhiteboardSnapshotChange,
     screenAnnotations,
     handleScreenAnnotationChange,
+    handleScreenAnnotationStart,
+    handleScreenAnnotationDraw,
+    handleScreenAnnotationEnd,
     handleClearScreenAnnotations,
     isScreenAnnotationOpen,
     handleToggleScreenAnnotation,

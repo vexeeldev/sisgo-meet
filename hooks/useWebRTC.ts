@@ -27,7 +27,12 @@ interface UseWebRTCProps {
   onWhiteboardUpdate?: (snapshot: any) => void;
   isWhiteboardOpen?: boolean;
   whiteboardSnapshot?: any;
+  screenAnnotations?: any[];
   onScreenAnnotationUpdate?: (annotations: any[]) => void;
+  onScreenAnnotationStart?: (item: any) => void;
+  onScreenAnnotationDraw?: (data: { id: string; points: number[] }) => void;
+  onScreenAnnotationEnd?: (data: { id: string }) => void;
+  onScreenAnnotationClear?: () => void;
 }
 
 interface WSMessage {
@@ -83,7 +88,29 @@ const isScreenShareStream = (stream: MediaStream) => {
   return false;
 };
 
-export function useWebRTC({ roomId, participantUUID, userName, userRole, onCallEnded, onKicked, onChatReceived, onHandRaised, onWhiteboardToggle, onWhiteboardUpdate, isWhiteboardOpen, whiteboardSnapshot, onScreenAnnotationUpdate, signalServer = 'wss://backspace-repurpose-fervor.ngrok-free.dev/ws', initialCameraOn = true, initialMicOn = true }: UseWebRTCProps) {
+export function useWebRTC({
+  roomId,
+  participantUUID,
+  userName,
+  userRole,
+  onCallEnded,
+  onKicked,
+  onChatReceived,
+  onHandRaised,
+  onWhiteboardToggle,
+  onWhiteboardUpdate,
+  isWhiteboardOpen,
+  whiteboardSnapshot,
+  screenAnnotations = [],
+  onScreenAnnotationUpdate,
+  onScreenAnnotationStart,
+  onScreenAnnotationDraw,
+  onScreenAnnotationEnd,
+  onScreenAnnotationClear,
+  signalServer = 'wss://backspace-repurpose-fervor.ngrok-free.dev/ws',
+  initialCameraOn = true,
+  initialMicOn = true,
+}: UseWebRTCProps) {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStreams, setRemoteStreams] = useState<MediaStream[]>([]);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
@@ -121,6 +148,11 @@ export function useWebRTC({ roomId, participantUUID, userName, userRole, onCallE
   useEffect(() => {
     whiteboardSnapshotRef.current = whiteboardSnapshot;
   }, [whiteboardSnapshot]);
+
+  const screenAnnotationsRef = useRef(screenAnnotations);
+  useEffect(() => {
+    screenAnnotationsRef.current = screenAnnotations;
+  }, [screenAnnotations]);
 
   const pendingStreamActions = useRef<Array<() => void>>([]);
   const pendingSignals = useRef<Record<string, any[]>>({});
@@ -331,6 +363,9 @@ export function useWebRTC({ roomId, participantUUID, userName, userRole, onCallE
                 sendMessage('whiteboard_update', { snapshot: whiteboardSnapshotRef.current }, connId);
               }
             }
+            if (isScreenSharingRef.current && screenAnnotationsRef.current.length > 0) {
+              sendMessage('screen_annotation_sync', { annotations: screenAnnotationsRef.current }, connId);
+            }
             break;
           }
           
@@ -346,6 +381,9 @@ export function useWebRTC({ roomId, participantUUID, userName, userRole, onCallE
               if (whiteboardSnapshotRef.current) {
                 sendMessage('whiteboard_update', { snapshot: whiteboardSnapshotRef.current }, connId);
               }
+            }
+            if (isScreenSharingRef.current && screenAnnotationsRef.current.length > 0) {
+              sendMessage('screen_annotation_sync', { annotations: screenAnnotationsRef.current }, connId);
             }
             break;
           }
@@ -544,9 +582,38 @@ export function useWebRTC({ roomId, participantUUID, userName, userRole, onCallE
             break;
           }
 
-          case 'screen_annotation_update': {
+          case 'screen_annotation_update':
+          case 'screen_annotation_sync': {
             if (onScreenAnnotationUpdate && Array.isArray(msg.data?.annotations)) {
               onScreenAnnotationUpdate(msg.data.annotations);
+            }
+            break;
+          }
+
+          case 'screen_annotation_start': {
+            if (onScreenAnnotationStart && msg.data?.item) {
+              onScreenAnnotationStart(msg.data.item);
+            }
+            break;
+          }
+
+          case 'screen_annotation_draw': {
+            if (onScreenAnnotationDraw && msg.data?.id && Array.isArray(msg.data?.points)) {
+              onScreenAnnotationDraw(msg.data);
+            }
+            break;
+          }
+
+          case 'screen_annotation_end': {
+            if (onScreenAnnotationEnd && msg.data?.id) {
+              onScreenAnnotationEnd(msg.data);
+            }
+            break;
+          }
+
+          case 'screen_annotation_clear': {
+            if (onScreenAnnotationClear) {
+              onScreenAnnotationClear();
             }
             break;
           }

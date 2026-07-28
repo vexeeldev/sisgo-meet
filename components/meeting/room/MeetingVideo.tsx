@@ -37,6 +37,9 @@ interface MeetingVideoProps {
   onCloseWhiteboard?: () => void;
   screenAnnotations?: any[];
   onChangeScreenAnnotations?: (annotations: any[]) => void;
+  onScreenAnnotationStart?: (item: any) => void;
+  onScreenAnnotationDraw?: (data: { id: string; points: number[] }) => void;
+  onScreenAnnotationEnd?: (data: { id: string }) => void;
   onClearScreenAnnotations?: () => void;
   isScreenAnnotationOpen?: boolean;
   onCloseScreenAnnotation?: () => void;
@@ -67,6 +70,9 @@ export default function MeetingVideo({
   onCloseWhiteboard,
   screenAnnotations = [],
   onChangeScreenAnnotations,
+  onScreenAnnotationStart,
+  onScreenAnnotationDraw,
+  onScreenAnnotationEnd,
   onClearScreenAnnotations,
   isScreenAnnotationOpen = false,
   onCloseScreenAnnotation,
@@ -186,6 +192,9 @@ export default function MeetingVideo({
             onCloseWhiteboard={onCloseWhiteboard}
             screenAnnotations={screenAnnotations}
             onChangeScreenAnnotations={onChangeScreenAnnotations}
+            onScreenAnnotationStart={onScreenAnnotationStart}
+            onScreenAnnotationDraw={onScreenAnnotationDraw}
+            onScreenAnnotationEnd={onScreenAnnotationEnd}
             onClearScreenAnnotations={onClearScreenAnnotations}
             onCloseScreenAnnotation={isScreenAnnotationOpen ? onCloseScreenAnnotation : undefined}
           />

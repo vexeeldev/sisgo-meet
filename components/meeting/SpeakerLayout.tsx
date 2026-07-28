@@ -63,6 +63,9 @@ interface SpeakerLayoutProps {
   onCloseWhiteboard?: () => void;
   screenAnnotations?: any[];
   onChangeScreenAnnotations?: (annotations: any[]) => void;
+  onScreenAnnotationStart?: (item: any) => void;
+  onScreenAnnotationDraw?: (data: { id: string; points: number[] }) => void;
+  onScreenAnnotationEnd?: (data: { id: string }) => void;
   onClearScreenAnnotations?: () => void;
   onCloseScreenAnnotation?: () => void;
 }
@@ -91,6 +94,9 @@ export default function SpeakerLayout({
   onCloseWhiteboard,
   screenAnnotations = [],
   onChangeScreenAnnotations,
+  onScreenAnnotationStart,
+  onScreenAnnotationDraw,
+  onScreenAnnotationEnd,
   onClearScreenAnnotations,
   onCloseScreenAnnotation,
 }: SpeakerLayoutProps) {
@@ -461,6 +467,9 @@ export default function SpeakerLayout({
               isSharingHost={isLocalScreenSharing}
               annotations={screenAnnotations}
               onChangeAnnotations={onChangeScreenAnnotations}
+              onAnnotationStart={onScreenAnnotationStart}
+              onAnnotationDraw={onScreenAnnotationDraw}
+              onAnnotationEnd={onScreenAnnotationEnd}
               onClearAnnotations={onClearScreenAnnotations}
               onCloseAnnotation={onCloseScreenAnnotation}
             />
