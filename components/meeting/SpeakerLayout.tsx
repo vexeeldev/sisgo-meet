@@ -2,9 +2,11 @@
 
 import { useRef, useEffect, useCallback, useState } from 'react';
 import { BackHand as Hand, MicOffFilled as MicOff } from './icons';
+import { NetworkQuality } from '@/hooks/useWebRTC';
+import NetworkIndicator from './room/NetworkIndicator';
 import { getUserColors } from '@/lib/meeting';
 import dynamic from 'next/dynamic';
-import { Sparkles, X, Volume2, VolumeX } from 'lucide-react';
+import { Sparkles, X, Volume2, VolumeX, Pin, PinOff } from 'lucide-react';
 
 const ExcalidrawCanvas = dynamic(() => import('./ExcalidrawCanvas'), {
   ssr: false,
@@ -55,6 +57,7 @@ interface SpeakerLayoutProps {
   raisedHands?: Record<string, boolean>;
   remoteAudioOff?: Record<string, boolean>;
   speaking?: Record<string, boolean>;
+  networkQuality?: Record<string, NetworkQuality>;
   isWhiteboardOpen?: boolean;
   isWhiteboardMinimized?: boolean;
   isHost?: boolean;
@@ -67,7 +70,10 @@ interface SpeakerLayoutProps {
   onScreenAnnotationDraw?: (data: { id: string; points: number[] }) => void;
   onScreenAnnotationEnd?: (data: { id: string }) => void;
   onClearScreenAnnotations?: () => void;
+  isScreenAnnotationOpen?: boolean;
   onCloseScreenAnnotation?: () => void;
+  pinnedParticipants?: string[];
+  onTogglePin?: (id: string) => void;
 }
 
 export default function SpeakerLayout({
@@ -86,6 +92,7 @@ export default function SpeakerLayout({
   raisedHands = {},
   remoteAudioOff = {},
   speaking = {},
+  networkQuality = {},
   isWhiteboardOpen = false,
   isWhiteboardMinimized = false,
   isHost = false,
@@ -98,13 +105,22 @@ export default function SpeakerLayout({
   onScreenAnnotationDraw,
   onScreenAnnotationEnd,
   onClearScreenAnnotations,
+  isScreenAnnotationOpen,
   onCloseScreenAnnotation,
+  pinnedParticipants = [],
+  onTogglePin,
 }: SpeakerLayoutProps) {
   const localMainVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRefs = useRef<Record<string, HTMLVideoElement>>({});
   const screenVideoRef = useRef<HTMLVideoElement>(null);
   const [blockedAutoplay, setBlockedAutoplay] = useState<Record<string, boolean>>({});
   const [isScreenAudioMuted, setIsScreenAudioMuted] = useState(false);
+  const [isInitialMount, setIsInitialMount] = useState(true);
+
+  useEffect(() => {
+    const t = setTimeout(() => setIsInitialMount(false), 2000);
+    return () => clearTimeout(t);
+  }, []);
 
   const isLocalScreenSharing = isScreenSharing && screenStream !== null;
 
@@ -250,7 +266,7 @@ export default function SpeakerLayout({
       const name = participantNames[mainSpeaker.id] || 'Speaker';
       const colors = getUserColors(name);
       return (
-        <div className={`relative w-full h-full rounded-2xl overflow-hidden transition-all duration-300 border-2 border-transparent`}>
+        <div className={`group relative w-full h-full rounded-2xl overflow-hidden transition-all duration-300 border-2 border-transparent`}>
           <video
             ref={(el) => attachRemoteStream(mainSpeaker.id, el)}
             autoPlay
@@ -258,25 +274,42 @@ export default function SpeakerLayout({
             className={`w-full h-full object-cover transition-opacity duration-300 ${isOff ? 'opacity-0' : 'opacity-100'}`}
           />
           {isOff && (
-            <div className="absolute inset-0 w-full h-full bg-[#202124] flex flex-col items-center justify-center">
+            <div
+              className={`absolute inset-0 w-full h-full flex flex-col items-center justify-center transition-opacity duration-300`}
+              style={{ backgroundColor: colors.from, backgroundImage: `radial-gradient(circle farthest-corner at 50% 50%, transparent 0%, rgba(0,0,0,0.35) 120%)` }}
+            >
               <div
-                className="w-28 h-28 sm:w-36 sm:h-36 rounded-full flex items-center justify-center text-white text-5xl sm:text-6xl font-semibold shadow-md"
-                style={{ backgroundColor: colors.from }}
+                className={`w-28 h-28 sm:w-36 sm:h-36 rounded-full flex items-center justify-center text-white text-5xl sm:text-6xl font-normal ${colors.circle} shadow-sm transition-all duration-300 border-2 select-none ${isSpeaking && !isMuted ? 'border-[#8ab4f8] ring-2 ring-[#8ab4f8]/20 scale-105' : 'border-transparent'}`}
               >
                 {name.charAt(0).toUpperCase()}
               </div>
             </div>
           )}
           {raisedHands[mainSpeaker.id] ? (
-            <div className="absolute bottom-4 left-4 bg-[#c4edd0] text-[#072711] px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2.5 shadow-xl z-10 border border-[#072711]/15 animate-in fade-in zoom-in-95 duration-200">
+            <div className="absolute bottom-4 left-4 bg-[#c4edd0] text-[#072711] px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2.5 shadow-xl z-30 border border-[#072711]/15 animate-in fade-in zoom-in-95 duration-200 pointer-events-none">
               <Hand className="w-4.5 h-4.5 text-[#072711]" />
               <span>{name}</span>
+              <NetworkIndicator quality={networkQuality[mainSpeaker.id]} />
+              {pinnedParticipants.includes(mainSpeaker.id) && <Pin className="w-4.5 h-4.5 text-[#072711] ml-1" />}
             </div>
           ) : (
-            <div className="absolute bottom-4 left-4 text-white text-[15px] font-medium drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
+            <div className="absolute bottom-4 left-4 text-white text-[15px] font-medium drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] flex items-center gap-2 z-30 pointer-events-none">
               {name}
+              <NetworkIndicator quality={networkQuality[mainSpeaker.id]} />
+              {pinnedParticipants.includes(mainSpeaker.id) && <Pin className="w-4.5 h-4.5 text-white ml-1 drop-shadow-md" />}
             </div>
           )}
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 flex items-center justify-center z-20 pointer-events-auto">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onTogglePin?.(mainSpeaker.id);
+              }}
+              className="p-3 sm:p-4 rounded-full bg-black/60 text-white hover:bg-blue-500 transition-colors"
+            >
+              {pinnedParticipants.includes(mainSpeaker.id) ? <PinOff className="w-8 h-8" /> : <Pin className="w-8 h-8" />}
+            </button>
+          </div>
           {isMuted && (
             <div className="absolute top-4 right-4 bg-[#202124]/80 backdrop-blur-sm rounded-full p-1.5 z-10">
               <MicOff className="w-4 h-4 text-white" />
@@ -298,7 +331,7 @@ export default function SpeakerLayout({
       const isSpeaking = speaking['local'] && !isAudioOff;
       const colors = getUserColors(participantName);
       return (
-        <div className={`relative w-full h-full rounded-2xl overflow-hidden transition-all duration-300 border-2 border-transparent animate-tile-zoom`}>
+        <div className={`group relative w-full h-full rounded-2xl overflow-hidden transition-all duration-300 border-2 border-transparent animate-tile-zoom`}>
           <style>{`
             @keyframes tileZoomEntry {
               0% {
@@ -354,10 +387,10 @@ export default function SpeakerLayout({
             autoPlay
             playsInline
             muted
-            className={`w-full h-full object-cover scale-x-[-1] transition-opacity duration-300 ${isVideoOff ? 'opacity-0' : 'animate-camera-reveal'}`}
+            className={`w-full h-full object-cover scale-x-[-1] transition-opacity duration-300 ${isVideoOff ? 'opacity-0' : (isInitialMount ? 'animate-camera-reveal' : 'opacity-100')}`}
           />
           <div
-            className={`absolute inset-0 w-full h-full flex flex-col items-center justify-center ${isVideoOff ? 'opacity-100' : 'animate-placeholder-fadeout pointer-events-none'}`}
+            className={`absolute inset-0 w-full h-full flex flex-col items-center justify-center transition-opacity duration-300 ${isVideoOff ? 'opacity-100' : (isInitialMount ? 'animate-placeholder-fadeout pointer-events-none' : 'opacity-0 pointer-events-none')}`}
             style={{ backgroundColor: colors.from, backgroundImage: `radial-gradient(circle farthest-corner at 50% 50%, transparent 0%, rgba(0,0,0,0.35) 120%)` }}
           >
             <div className={`w-28 h-28 sm:w-36 sm:h-36 rounded-full flex items-center justify-center text-white text-5xl sm:text-6xl font-normal ${colors.circle} shadow-sm transition-all duration-300 border-2 select-none ${isSpeaking && !isAudioOff ? 'border-[#8ab4f8] ring-2 ring-[#8ab4f8]/20 scale-105' : 'border-transparent'}`}>
@@ -365,15 +398,29 @@ export default function SpeakerLayout({
             </div>
           </div>
           {raisedHands['local'] ? (
-            <div className="absolute bottom-4 left-4 bg-[#c4edd0] text-[#072711] px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2.5 shadow-xl z-10 border border-[#072711]/15 animate-in fade-in zoom-in-95 duration-200">
+            <div className="absolute bottom-4 left-4 bg-[#c4edd0] text-[#072711] px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2.5 shadow-xl z-30 border border-[#072711]/15 animate-in fade-in zoom-in-95 duration-200 pointer-events-none">
               <Hand className="w-4.5 h-4.5 text-[#072711]" />
               <span>{participantName}</span>
+              {pinnedParticipants.includes('local') && <Pin className="w-4.5 h-4.5 text-[#072711] ml-1" />}
             </div>
           ) : (
-            <div className="absolute bottom-4 left-4 text-white text-[15px] font-medium drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
+            <div className="absolute bottom-4 left-4 text-white text-[15px] font-medium drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] flex items-center gap-2 z-30 pointer-events-none">
               {participantName}
+              <NetworkIndicator quality={networkQuality['local']} />
+              {pinnedParticipants.includes('local') && <Pin className="w-4.5 h-4.5 text-white ml-1 drop-shadow-md" />}
             </div>
           )}
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 flex items-center justify-center z-20 pointer-events-auto">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onTogglePin?.('local');
+              }}
+              className="p-3 sm:p-4 rounded-full bg-black/60 text-white hover:bg-blue-500 transition-colors"
+            >
+              {pinnedParticipants.includes('local') ? <PinOff className="w-8 h-8" /> : <Pin className="w-8 h-8" />}
+            </button>
+          </div>
           {isAudioOff && (
             <div className="absolute top-4 right-4 bg-[#202124]/80 backdrop-blur-sm rounded-full p-1.5 z-10">
               <MicOff className="w-4 h-4 text-white" />
@@ -394,8 +441,9 @@ export default function SpeakerLayout({
           >
             {participantName.charAt(0).toUpperCase()}
           </div>
-          <div className="absolute bottom-4 left-4 text-white text-[15px] font-medium drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
+          <div className="absolute bottom-4 left-4 text-white text-[15px] font-medium drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] flex items-center gap-2">
             {participantName}
+            <NetworkIndicator quality={networkQuality['local']} />
           </div>
           {isAudioOff && (
             <div className={`absolute top-4 ${raisedHands['local'] ? 'right-14' : 'right-4'} bg-[#202124]/80 backdrop-blur-sm rounded-full p-1.5 z-10`}>
@@ -550,28 +598,42 @@ export default function SpeakerLayout({
           />
           {isVideoOff && (() => {
             const colors = getUserColors(participantName);
+            const isSpeaking = speaking['local'] && !isAudioOff;
             return (
               <div
-                className="absolute inset-0 w-full h-full flex flex-col items-center justify-center"
+                className={`absolute inset-0 w-full h-full flex flex-col items-center justify-center transition-opacity duration-300`}
                 style={{
                   backgroundColor: colors.from,
                   backgroundImage: `radial-gradient(circle farthest-corner at 50% 50%, transparent 0%, rgba(0,0,0,0.35) 120%)`
                 }}
               >
-                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white text-lg sm:text-xl font-normal ${colors.circle} shadow-sm`}>
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white text-lg sm:text-xl font-normal ${colors.circle} shadow-sm transition-all duration-300 border-2 select-none ${isSpeaking ? 'border-[#8ab4f8] ring-2 ring-[#8ab4f8]/20 scale-105' : 'border-transparent'}`}>
                   {participantName.charAt(0).toUpperCase()}
                 </div>
               </div>
             );
           })()}
-          <div className="absolute bottom-2 left-2 text-white text-xs font-medium drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
-            {participantName}
+          <div className="absolute bottom-2 left-2 text-white text-xs font-medium drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] flex items-center gap-1.5 z-30 pointer-events-none">
+            Anda
+            <NetworkIndicator quality={networkQuality['local']} />
+            {pinnedParticipants.includes('local') && <Pin className="w-3.5 h-3.5 text-white ml-0.5 drop-shadow-md" />}
           </div>
           {isAudioOff && (
-            <div className="absolute top-2 right-2 bg-[#202124]/80 backdrop-blur-sm rounded-full p-1.5 z-10">
-              <MicOff className="w-3.5 h-3.5 text-white" />
+            <div className="absolute top-2 right-2 bg-[#202124]/80 backdrop-blur-sm rounded-full p-1 z-10">
+              <MicOff className="w-3 h-3 text-white" />
             </div>
           )}
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 flex items-center justify-center z-20 pointer-events-auto">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onTogglePin?.('local');
+              }}
+              className="p-2 sm:p-3 rounded-full bg-black/60 text-white hover:bg-blue-500 transition-colors"
+            >
+              {pinnedParticipants.includes('local') ? <PinOff className="w-5 h-5 sm:w-6 sm:h-6" /> : <Pin className="w-5 h-5 sm:w-6 sm:h-6" />}
+            </button>
+          </div>
         </div>
       )}
     </div>

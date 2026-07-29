@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import VirtualBackgroundProcessor, { VirtualBackgroundMode } from '@/lib/virtual-background';
+import { VirtualBackgroundProcessor, VirtualBackgroundMode } from '@/lib/virtual-background';
 import Peer from 'simple-peer';
 import hark from 'hark';
 import { launchConfetti } from '@/lib/confetti';
@@ -34,6 +34,8 @@ interface UseWebRTCProps {
   onScreenAnnotationEnd?: (data: { id: string }) => void;
   onScreenAnnotationClear?: () => void;
 }
+
+export type NetworkQuality = 'excellent' | 'good' | 'poor' | 'unknown';
 
 interface WSMessage {
   room_id: string;
@@ -126,6 +128,7 @@ export function useWebRTC({
   const [remoteAudioOffByUser, setRemoteAudioOffByUser] = useState<Record<string, boolean>>({});
   const [peerIdToStreamId, setPeerIdToStreamId] = useState<Record<string, string>>({});
   const [speaking, setSpeaking] = useState<Record<string, boolean>>({});
+  const [networkQuality, setNetworkQuality] = useState<Record<string, NetworkQuality>>({ local: 'unknown' });
 
   const ws = useRef<WebSocket | null>(null);
   const peers = useRef<Record<string, Peer.Instance>>({});
@@ -242,6 +245,82 @@ export function useWebRTC({
       }
     });
   }, [remoteStreams]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (Object.keys(peers.current).length === 0) {
+        setNetworkQuality(prev => prev.local === 'excellent' ? prev : { local: 'excellent' });
+        return;
+      }
+      
+      const newQuality: Record<string, NetworkQuality> = {};
+      let totalRtt = 0;
+      let rttCount = 0;
+
+      const promises = Object.keys(peers.current).map(async (userId) => {
+        const peer = peers.current[userId];
+        if (!peer || !(peer as any)._pc) {
+          newQuality[userId] = 'excellent'; // Fallback
+          return;
+        }
+
+        try {
+          const pc = (peer as any)._pc as RTCPeerConnection;
+          const stats = await pc.getStats();
+          let rtt: number | null = null;
+          
+          stats.forEach(report => {
+            if (report.type === 'candidate-pair' && report.state === 'succeeded') {
+              if (report.currentRoundTripTime !== undefined) {
+                // currentRoundTripTime is in seconds, convert to ms
+                rtt = report.currentRoundTripTime * 1000;
+              }
+            }
+          });
+
+          if (rtt !== null) {
+            totalRtt += rtt;
+            rttCount++;
+            if (rtt < 150) newQuality[userId] = 'excellent';
+            else if (rtt < 400) newQuality[userId] = 'good';
+            else newQuality[userId] = 'poor';
+          } else {
+            newQuality[userId] = 'excellent'; // Fallback jika tidak ada data RTT
+          }
+        } catch (e) {
+          console.warn('Error fetching stats for peer', userId, e);
+          newQuality[userId] = 'excellent'; // Fallback
+        }
+      });
+
+      Promise.all(promises).then(() => {
+        // Local network quality based on average RTT of remote peers
+        if (rttCount > 0) {
+          const avgRtt = totalRtt / rttCount;
+          if (avgRtt < 150) newQuality['local'] = 'excellent';
+          else if (avgRtt < 400) newQuality['local'] = 'good';
+          else newQuality['local'] = 'poor';
+        } else {
+          newQuality['local'] = 'excellent';
+        }
+        
+        setNetworkQuality(prev => {
+          // Only update if changed
+          let changed = false;
+          const merged = { ...prev };
+          Object.keys(newQuality).forEach(k => {
+            if (merged[k] !== newQuality[k]) {
+              merged[k] = newQuality[k];
+              changed = true;
+            }
+          });
+          return changed ? merged : prev;
+        });
+      });
+    }, 2500);
+
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (!signalServer || isWebRTCStarted.current) {
@@ -684,7 +763,17 @@ export function useWebRTC({
       setParticipantDetails({});
       clearRemoteScreenShare();
       
-      // 6. Clear pending actions
+      // 6. Clean Virtual Background & Raw Track
+      if (rawVideoTrackRef.current) {
+        rawVideoTrackRef.current.stop();
+        rawVideoTrackRef.current = null;
+      }
+      if (vbProcessorRef.current) {
+        vbProcessorRef.current.destroy();
+        vbProcessorRef.current = null;
+      }
+
+      // 7. Clear pending actions
       pendingStreamActions.current = [];
       pendingSignals.current = {};
       
@@ -1225,7 +1314,6 @@ function preferH264(sdp: string): string {
     switchVideoDevice,
     switchAudioOutputDevice,
     updateDeviceList,
+    networkQuality,
   };
 }
-
-export default useWebRTC;

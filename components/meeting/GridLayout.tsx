@@ -2,7 +2,9 @@
 
 import { useRef, useEffect, useState, useMemo, useCallback } from 'react';
 import { BackHand as Hand, MicOffFilled as MicOff } from './icons';
-import { Sparkles, Presentation } from 'lucide-react';
+import { NetworkQuality } from '@/hooks/useWebRTC';
+import NetworkIndicator from './room/NetworkIndicator';
+import { Sparkles, Presentation, Pin, PinOff } from 'lucide-react';
 import VideoPlaceholder from './VideoPlaceholder';
 import ExcalidrawCanvas from './ExcalidrawCanvas';
 
@@ -16,10 +18,13 @@ interface GridLayoutProps {
   remoteAudioOff?: Record<string, boolean>;
   speaking?: Record<string, boolean>;
   raisedHands?: Record<string, boolean>;
+  networkQuality?: Record<string, NetworkQuality>;
   isWhiteboardMinimized?: boolean;
   onOpenWhiteboard?: () => void;
   hostName?: string;
   whiteboardSnapshot?: any;
+  pinnedParticipants?: string[];
+  onTogglePin?: (id: string) => void;
 }
 
 const GROUP_SIZE = 6;
@@ -52,14 +57,23 @@ export default function GridLayout({
   remoteAudioOff = {},
   speaking = {},
   raisedHands = {},
+  networkQuality = {},
   isWhiteboardMinimized = false,
   onOpenWhiteboard,
   hostName = 'Host',
   whiteboardSnapshot,
+  pinnedParticipants = [],
+  onTogglePin,
 }: GridLayoutProps) {
   const videoRefs = useRef<Record<string, HTMLVideoElement>>({});
   const [page, setPage] = useState(0);
   const [blockedAutoplay, setBlockedAutoplay] = useState<Record<string, boolean>>({});
+  const [isInitialMount, setIsInitialMount] = useState(true);
+
+  useEffect(() => {
+    const t = setTimeout(() => setIsInitialMount(false), 2000);
+    return () => clearTimeout(t);
+  }, []);
 
   const allStreams = useMemo(() => {
     const list = [
@@ -183,7 +197,7 @@ export default function GridLayout({
             return (
               <div
                 key={id}
-                className={`relative rounded-3xl overflow-hidden shadow-2xl bg-[#1a1a1a] transition-all duration-300 border-2 border-transparent m-auto flex-shrink-0 animate-tile-entry`}
+                className={`group relative rounded-3xl overflow-hidden shadow-2xl bg-[#1a1a1a] transition-all duration-300 border-2 border-transparent m-auto flex-shrink-0 animate-tile-entry`}
                 style={{
                   aspectRatio: '16/9',
                   height: '100%',
@@ -237,13 +251,13 @@ export default function GridLayout({
                   autoPlay
                   playsInline
                   muted={id === 'local'}
-                  className={`w-full h-full object-cover transition-opacity duration-300 ${isOff ? 'opacity-0' : 'animate-camera-reveal'} ${id === 'local' ? 'scale-x-[-1]' : ''}`}
+                  className={`w-full h-full object-cover transition-opacity duration-300 ${isOff ? 'opacity-0' : (isInitialMount ? 'animate-camera-reveal' : 'opacity-100')} ${id === 'local' ? 'scale-x-[-1]' : ''}`}
                 />
                 {(() => {
                   const colors = getUserColors(name);
                   return (
                     <div
-                      className={`absolute inset-0 w-full h-full flex flex-col items-center justify-center ${isOff ? 'opacity-100' : 'animate-placeholder-fadeout pointer-events-none'}`}
+                      className={`absolute inset-0 w-full h-full flex flex-col items-center justify-center transition-opacity duration-300 ${isOff ? 'opacity-100' : (isInitialMount ? 'animate-placeholder-fadeout pointer-events-none' : 'opacity-0 pointer-events-none')}`}
                       style={{ backgroundColor: colors.from, backgroundImage: `radial-gradient(circle farthest-corner at 50% 50%, transparent 0%, rgba(0,0,0,0.35) 120%)` }}
                     >
                       <div className={`w-28 h-28 sm:w-36 sm:h-36 rounded-full flex items-center justify-center text-white text-5xl sm:text-6xl font-normal ${colors.circle} shadow-sm transition-all duration-300 border-2 ${isSpeaking && !isMuted ? 'border-[#8ab4f8] ring-2 ring-[#8ab4f8]/20 scale-105' : 'border-transparent'}`}>
@@ -253,15 +267,30 @@ export default function GridLayout({
                   );
                 })()}
                 {raisedHands[id] ? (
-                  <div className="absolute bottom-4 left-4 bg-[#c4edd0] text-[#072711] px-4 py-1.5 rounded-full text-sm font-semibold flex items-center gap-2 shadow-xl z-10 border border-[#072711]/15 animate-in fade-in zoom-in-95 duration-200">
+                  <div className="absolute bottom-4 left-4 bg-[#c4edd0] text-[#072711] px-4 py-1.5 rounded-full text-sm font-semibold flex items-center gap-2 shadow-xl z-30 border border-[#072711]/15 animate-in fade-in zoom-in-95 duration-200 pointer-events-none">
                     <Hand className="w-4 h-4 text-[#072711]" />
                     <span>{name}</span>
+                    <NetworkIndicator quality={networkQuality[id]} />
+                    {pinnedParticipants.includes(id) && <Pin className="w-4 h-4 text-[#072711] ml-1" />}
                   </div>
                 ) : (
-                  <div className="absolute bottom-4 left-4 text-white text-[15px] font-medium drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
+                  <div className="absolute bottom-4 left-4 text-white text-[15px] font-medium drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] flex items-center gap-2 z-30 pointer-events-none">
                     {name}
+                    <NetworkIndicator quality={networkQuality[id]} />
+                    {pinnedParticipants.includes(id) && <Pin className="w-4 h-4 text-white ml-1 drop-shadow-md" />}
                   </div>
                 )}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 flex items-center justify-center z-20 pointer-events-auto">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onTogglePin?.(id);
+                    }}
+                    className="p-3 rounded-full bg-black/60 text-white hover:bg-blue-500 transition-colors"
+                  >
+                    {pinnedParticipants.includes(id) ? <PinOff className="w-6 h-6" /> : <Pin className="w-6 h-6" />}
+                  </button>
+                </div>
                 {isMuted && (
                   <div className="absolute top-3 right-3 bg-[#202124]/80 backdrop-blur-sm rounded-full p-1.5 z-10">
                     <MicOff className="w-4 h-4 text-white" />
@@ -319,7 +348,7 @@ export default function GridLayout({
             const isSpeaking = id === 'local' ? speaking['local'] : speaking[id];
 
             return (
-              <div key={id} className={`relative w-full h-full bg-[#1a1a1a] rounded-3xl overflow-hidden shadow-xl transition-all duration-300 border-2 border-transparent`}>
+              <div key={id} className={`group relative w-full h-full bg-[#1a1a1a] rounded-2xl overflow-hidden shadow-xl transition-all duration-300 border-2 border-transparent`}>
                 <video
                   ref={(el) => registerVideo(id, el)}
                   autoPlay
@@ -341,15 +370,30 @@ export default function GridLayout({
                   );
                 })()}
                 {raisedHands[id] ? (
-                  <div className="absolute bottom-3 left-3 bg-[#c4edd0] text-[#072711] px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2 shadow-xl z-10 border border-[#072711]/15 animate-in fade-in zoom-in-95 duration-200">
+                  <div className="absolute bottom-3 left-3 bg-[#c4edd0] text-[#072711] px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2 shadow-xl z-30 border border-[#072711]/15 animate-in fade-in zoom-in-95 duration-200 pointer-events-none">
                     <Hand className="w-4 h-4 text-[#072711]" />
                     <span>{name}</span>
+                    <NetworkIndicator quality={networkQuality[id]} />
+                    {pinnedParticipants.includes(id) && <Pin className="w-3.5 h-3.5 text-[#072711] ml-0.5" />}
                   </div>
                 ) : (
-                  <div className="absolute bottom-3 left-4 text-white text-[14px] font-medium drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
+                  <div className="absolute bottom-3 left-4 text-white text-[14px] font-medium drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] flex items-center gap-2 z-30 pointer-events-none">
                     {name}
+                    <NetworkIndicator quality={networkQuality[id]} />
+                    {pinnedParticipants.includes(id) && <Pin className="w-3.5 h-3.5 text-white ml-0.5 drop-shadow-md" />}
                   </div>
                 )}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 flex items-center justify-center z-20 pointer-events-auto">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onTogglePin?.(id);
+                    }}
+                    className="p-2 sm:p-3 rounded-full bg-black/60 text-white hover:bg-blue-500 transition-colors"
+                  >
+                    {pinnedParticipants.includes(id) ? <PinOff className="w-5 h-5 sm:w-6 sm:h-6" /> : <Pin className="w-5 h-5 sm:w-6 sm:h-6" />}
+                  </button>
+                </div>
                 {isMuted && (
                   <div className="absolute top-2 right-2 bg-[#202124]/80 backdrop-blur-sm rounded-full p-1.5 z-10">
                     <MicOff className="w-4 h-4 text-white" />

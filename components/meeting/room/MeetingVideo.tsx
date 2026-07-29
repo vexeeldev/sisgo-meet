@@ -5,6 +5,7 @@ import SpeakerLayout from '../SpeakerLayout';
 import GridLayout from '../GridLayout';
 import ParticipantsRail from '../ParticipantsRail';
 import { BackHand } from '../icons';
+import { NetworkQuality } from '@/hooks/useWebRTC';
 
 interface RemoteScreenShare {
   stream: MediaStream;
@@ -20,6 +21,7 @@ interface MeetingVideoProps {
   isVideoOff: boolean;
   isAudioOff?: boolean;
   speaking?: Record<string, boolean>;
+  networkQuality?: Record<string, NetworkQuality>;
   isScreenSharing?: boolean;
   screenStream?: MediaStream | null;
   onStopSharing?: () => void;
@@ -43,6 +45,8 @@ interface MeetingVideoProps {
   onClearScreenAnnotations?: () => void;
   isScreenAnnotationOpen?: boolean;
   onCloseScreenAnnotation?: () => void;
+  pinnedParticipants?: string[];
+  onTogglePin?: (id: string) => void;
 }
 
 export default function MeetingVideo({
@@ -53,6 +57,7 @@ export default function MeetingVideo({
   isVideoOff,
   isAudioOff = false,
   speaking = {},
+  networkQuality = {},
   isScreenSharing = false,
   screenStream = null,
   onStopSharing,
@@ -76,6 +81,8 @@ export default function MeetingVideo({
   onClearScreenAnnotations,
   isScreenAnnotationOpen = false,
   onCloseScreenAnnotation,
+  pinnedParticipants = [],
+  onTogglePin,
 }: MeetingVideoProps) {
   const cameraStreams = useMemo(() => {
     const streams = remoteScreenShare
@@ -115,6 +122,19 @@ export default function MeetingVideo({
   }, [cameraStreams, participantDetails, peerIdToStreamId]);
 
   const isWhiteboardActive = isWhiteboardOpen && !isWhiteboardMinimized;
+  const mappedNetworkQuality = useMemo(() => {
+    const map: Record<string, NetworkQuality> = {};
+    if (networkQuality['local']) {
+      map['local'] = networkQuality['local'];
+    }
+    Object.entries(networkQuality).forEach(([peerId, quality]) => {
+      if (peerId !== 'local' && peerIdToStreamId?.[peerId]) {
+        map[peerIdToStreamId[peerId]] = quality;
+      }
+    });
+    return map;
+  }, [networkQuality, peerIdToStreamId]);
+
   const hasScreenShare = screenStream !== null || remoteScreenShare !== null || isWhiteboardActive; 
 
   const raisedHandsByStreamId = useMemo(() => {
@@ -134,16 +154,31 @@ export default function MeetingVideo({
     activeLayout = 'tiled';
   }
 
+  const isPinnedMode = pinnedParticipants.length > 0;
+  const isLocalPinned = pinnedParticipants.includes('local');
+  
+  const pinnedStreams = useMemo(() => {
+    return cameraStreams.filter(s => pinnedParticipants.includes(s.id));
+  }, [cameraStreams, pinnedParticipants]);
+
+  const unpinnedStreams = useMemo(() => {
+    return cameraStreams.filter(s => !pinnedParticipants.includes(s.id));
+  }, [cameraStreams, pinnedParticipants]);
+
   const isSpeakerMode = ['speaker', 'spotlight', 'sidebar'].includes(activeLayout) || isWhiteboardActive;
 
-  const mainSpeakerId =
-    isSpeakerMode && !hasScreenShare && cameraStreams.length > 0
-      ? cameraStreams[0].id 
-      : null;
+  const showRail = isPinnedMode 
+    ? (unpinnedStreams.length > 0 || !isLocalPinned)
+    : (isSpeakerMode && activeLayout !== 'spotlight' && (hasScreenShare || cameraStreams.length >= 1));
 
-  const showRail = isSpeakerMode && (hasScreenShare || cameraStreams.length >= 1);
-  const railRemoteStreams = showRail ? cameraStreams : [];
-  const mainSpeakerStreamId = showRail && !hasScreenShare && cameraStreams.length > 1 ? cameraStreams[0].id : null;
+  const railRemoteStreams = isPinnedMode ? unpinnedStreams : (showRail ? cameraStreams : []);
+  
+  let mainSpeakerStreamId: string | null = null;
+  if (isPinnedMode) {
+    mainSpeakerStreamId = pinnedStreams.length === 1 && !isLocalPinned ? pinnedStreams[0].id : null;
+  } else {
+    mainSpeakerStreamId = showRail && !hasScreenShare && cameraStreams.length > 0 ? cameraStreams[0].id : null;
+  }
 
   const raisedHandNames = useMemo(() => {
     const names: string[] = [];
@@ -164,13 +199,23 @@ export default function MeetingVideo({
     return names;
   }, [raisedHands, participantName, peerIdToStreamId, participantDetails, remoteNames]);
 
+  const renderMode = isPinnedMode 
+    ? (pinnedStreams.length === 1 && !isLocalPinned ? 'speaker' : 'grid')
+    : (isSpeakerMode ? 'speaker' : 'grid');
+
+  const mainRemoteStreams = isPinnedMode ? pinnedStreams : cameraStreams;
+  
+  const mainLocalStream = isPinnedMode && renderMode === 'grid'
+    ? (isLocalPinned ? localStream : null)
+    : localStream;
+
   return (
     <div className="flex-1 w-full h-full bg-transparent flex justify-center min-h-0 relative">
       <div className="flex-1 h-full relative">
-        {isSpeakerMode ? (
+        {renderMode === 'speaker' ? (
           <SpeakerLayout
-            localStream={activeLayout === 'sidebar' ? null : localStream}
-            remoteStreams={cameraStreams}
+            localStream={activeLayout === 'sidebar' && !isPinnedMode ? null : mainLocalStream}
+            remoteStreams={mainRemoteStreams}
             participantName={`${participantName} (Anda)`}
             participantNames={remoteNames}
             isVideoOff={isVideoOff}
@@ -183,6 +228,7 @@ export default function MeetingVideo({
             remoteScreenShare={remoteScreenShare}
             hidePip={hasScreenShare || showRail}
             speaking={speaking}
+            networkQuality={mappedNetworkQuality}
             raisedHands={raisedHandsByStreamId}
             isWhiteboardOpen={isWhiteboardOpen}
             isWhiteboardMinimized={isWhiteboardMinimized}
@@ -197,11 +243,13 @@ export default function MeetingVideo({
             onScreenAnnotationEnd={onScreenAnnotationEnd}
             onClearScreenAnnotations={onClearScreenAnnotations}
             onCloseScreenAnnotation={isScreenAnnotationOpen ? onCloseScreenAnnotation : undefined}
+            pinnedParticipants={pinnedParticipants}
+            onTogglePin={onTogglePin}
           />
         ) : (
           <GridLayout
-            streams={cameraStreams}
-            localStream={localStream}
+            streams={mainRemoteStreams}
+            localStream={mainLocalStream}
             participantNames={{
               ...remoteNames,
               local: `${participantName} (Anda)`,
@@ -211,11 +259,14 @@ export default function MeetingVideo({
             remoteVideoOff={remoteVideoOff}
             remoteAudioOff={remoteAudioOff}
             speaking={speaking}
+            networkQuality={mappedNetworkQuality}
             raisedHands={raisedHandsByStreamId}
             isWhiteboardMinimized={isWhiteboardOpen && isWhiteboardMinimized}
             onOpenWhiteboard={onCloseWhiteboard}
             hostName={isHost ? participantName : (Object.values(participantDetails).find((p: any) => p.role === 'interviewer' || p.role === 'host')?.name || 'Host')}
             whiteboardSnapshot={whiteboardSnapshot}
+            pinnedParticipants={pinnedParticipants}
+            onTogglePin={onTogglePin}
           />
         )}
       </div>
@@ -223,7 +274,7 @@ export default function MeetingVideo({
       {showRail && (
         <div className="hidden sm:block w-[160px] md:w-[200px] lg:w-[240px] xl:w-[260px] flex-shrink-0 h-full">
           <ParticipantsRail
-            localStream={localStream}
+            localStream={isPinnedMode ? (isLocalPinned ? null : localStream) : localStream}
             remoteStreams={railRemoteStreams}
             participantName={`${participantName} (Anda)`}
             participantNames={remoteNames}
@@ -232,8 +283,11 @@ export default function MeetingVideo({
             remoteVideoOff={remoteVideoOff}
             remoteAudioOff={remoteAudioOff}
             speaking={speaking}
+            networkQuality={mappedNetworkQuality}
             excludeId={mainSpeakerStreamId}
             raisedHands={raisedHandsByStreamId}
+            pinnedParticipants={pinnedParticipants}
+            onTogglePin={onTogglePin}
           />
         </div>
       )}

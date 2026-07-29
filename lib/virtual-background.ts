@@ -259,5 +259,3 @@ export class VirtualBackgroundProcessor {
     this.initPromise = null;
   }
 }
-
-export default VirtualBackgroundProcessor;

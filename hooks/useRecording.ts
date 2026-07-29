@@ -282,5 +282,3 @@ export function useRecording(options: UseRecordingOptions = {}) {
     discardRecording,
   };
 }
-
-export default useRecording;

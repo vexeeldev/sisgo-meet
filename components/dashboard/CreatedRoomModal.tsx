@@ -1,4 +1,5 @@
 'use client';
+import { Copy, Check } from 'lucide-react';
 
 interface CreatedRoomModalProps {
   createdRoom: string | null;
@@ -38,18 +39,9 @@ export default function CreatedRoomModal({ createdRoom, onClose, copied, onCopy 
             title="Salin link"
           >
             {copied === createdRoom ? (
-              <svg className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
+              <Check className="w-5 h-5 text-green-600" />
             ) : (
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                />
-              </svg>
+              <Copy className="w-5 h-5" />
             )}
           </button>
         </div>

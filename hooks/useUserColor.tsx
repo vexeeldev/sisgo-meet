@@ -39,5 +39,3 @@ export function useUserColor() {
 
   return { getColor };
 }
-
-export default useUserColor;

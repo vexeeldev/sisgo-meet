@@ -92,31 +92,26 @@ export function useDashboard() {
 
       const token = localStorage.getItem('token');
       if (!token) {
-        router.push('/auth/login');
+        window.location.href = '/auth/login';
         return;
       }
 
-      let currentUser = api.getCurrentUser();
-      if (!currentUser) {
-        try {
-          const profileRes = await api.getMe();
-          if (profileRes.success && profileRes.data) {
-            currentUser = profileRes.data;
-          }
-        } catch (err) {
-          console.error('Error fetching me:', err);
+      try {
+        // Strictly verify token with backend
+        const profileRes = await api.getMe();
+        if (profileRes.success && profileRes.data) {
+          setUser(profileRes.data);
+          setIsLoading(false);
+          fetchRooms();
+        } else {
+          api.logout();
+          window.location.href = '/auth/login';
         }
-      }
-
-      if (!currentUser || !api.isAdmin()) {
+      } catch (err) {
+        console.error('Auth check failed:', err);
         api.logout();
-        router.push('/auth/login');
-        return;
+        window.location.href = '/auth/login';
       }
-
-      setUser(currentUser);
-      setIsLoading(false);
-      fetchRooms();
     };
 
     checkAuth();

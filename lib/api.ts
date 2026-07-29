@@ -10,7 +10,7 @@ function apiUrl(path: string): string {
   return `${base}${p}`
 }
 
-export default async function APIRequest(
+async function APIRequest(
   url: string,
   method = 'POST',
   body?: unknown,
@@ -49,7 +49,7 @@ export default async function APIRequest(
   return data
 }
 
-export async function GetClientIp() {
+async function GetClientIp() {
   try {
     const res = await fetch('https://api.sisgo.co.id/myip.php', {
       method: 'GET',

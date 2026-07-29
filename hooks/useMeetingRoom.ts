@@ -47,6 +47,7 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
   const [whiteboardSnapshot, setWhiteboardSnapshot] = useState<any>(null);
   const [screenAnnotations, setScreenAnnotations] = useState<any[]>([]);
   const [isScreenAnnotationOpen, setIsScreenAnnotationOpen] = useState(false);
+  const [pinnedParticipants, setPinnedParticipants] = useState<string[]>([]);
 
   const user = getUser();
   const isHost = meetingRole === 'interviewer';
@@ -129,6 +130,7 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     switchAudioDevice,
     switchVideoDevice,
     switchAudioOutputDevice,
+    networkQuality,
   } = useWebRTC({
     roomId,
     participantUUID: participantUUID || '',
@@ -329,6 +331,12 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
 
   const handleToggleLayout = () => {
     setLayout((prev) => (prev === 'speaker' ? 'grid' : 'speaker'));
+  };
+
+  const togglePin = (id: string) => {
+    setPinnedParticipants((prev) =>
+      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
+    );
   };
 
   const handleEndCall = () => {
@@ -597,6 +605,8 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     virtualBgMode,
     joinRequests,
     isScreenSharing,
+    pinnedParticipants,
+    togglePin,
     isRecording,
     isPaused,
     elapsedMs,
@@ -657,5 +667,6 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     switchAudioDevice,
     switchVideoDevice,
     switchAudioOutputDevice,
+    networkQuality,
   };
 }

@@ -17,7 +17,7 @@ export type Settings = {
   header?: HeaderLayout;
 };
 
-export type PageSpecificSettings = {
+type PageSpecificSettings = {
   lang?: "id" | "en";
   header?: HeaderLayout;
 };
@@ -118,4 +118,3 @@ export const SettingsProvider = ({
   );
 };
 
-export const SettingsConsumer = SettingsContext.Consumer;

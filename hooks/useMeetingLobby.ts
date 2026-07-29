@@ -466,7 +466,7 @@ export function useMeetingLobby({ roomId, roomExists, roomType = 'private', onJo
       localStream.getTracks().forEach((track) => track.stop());
     }
 
-    onJoin(result.participant.participant_uuid, result.participant.role, isCameraOn, isMicOn);
+    onJoin(result.participant.participant_uuid, result.participant.role, isCameraOn, isMicOn, activeName);
   };
 
   const handleBackToDashboard = () => {

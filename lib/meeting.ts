@@ -26,7 +26,7 @@ export function stringToColor(str: string): string {
   return colors[Math.abs(hash) % colors.length];
 }
 
-export const palettes = [
+const palettes = [
   { from: '#3f2b96', to: '#281c5f', circle: 'bg-[#5c40d6]' }, // Purple
   { from: '#0f4d44', to: '#0a3630', circle: 'bg-[#156d61]' }, // Teal
   { from: '#0b3d91', to: '#082b66', circle: 'bg-[#1254b0]' }, // Blue

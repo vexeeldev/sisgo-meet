@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { CallEndFilled, KeyboardFilled, MicFilled, MicOffFilled, Videocam, VideocamOff, ExpandLess, Group, Chat, BackHand, MoreVert, PresentToAll, VisualEffects, PersonAdd as UserPlus } from '../icons';
 import { VirtualBackgroundMode } from '@/lib/virtual-background';
-import { Maximize, Check, Volume2 } from 'lucide-react';
+import { Maximize, Check, Volume2, Copy } from 'lucide-react';
 
 interface MeetingControlsProps {
   currentTime: string;
@@ -56,6 +56,7 @@ interface MeetingControlsProps {
   onSwitchAudioDevice?: (deviceId: string) => void;
   onSwitchVideoDevice?: (deviceId: string) => void;
   onSwitchAudioOutputDevice?: (deviceId: string) => void;
+  onCopyLink?: () => void;
 }
 
 /** Tombol panel kanan (People / Chat) — icon-only, bergaya pill Google Meet */
@@ -148,6 +149,7 @@ export default function MeetingControls({
   onSwitchAudioDevice,
   onSwitchVideoDevice,
   onSwitchAudioOutputDevice,
+  onCopyLink,
 }: MeetingControlsProps) {
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const [showLayoutMenu, setShowLayoutMenu] = useState(false);
@@ -155,6 +157,24 @@ export default function MeetingControls({
   const [showVideoMenu, setShowVideoMenu] = useState(false);
   const [showShortcutsMenu, setShowShortcutsMenu] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
+
+  const handleCopy = () => {
+    if (onCopyLink) {
+      onCopyLink();
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      // Fallback toast if onCopyLink isn't provided
+      const toast = document.createElement('div');
+      toast.className =
+        'fixed bottom-24 left-6 bg-[#3c3c3c] text-white px-5 py-3 rounded-full text-sm shadow-xl z-[9999] flex items-center gap-3 border border-[#4a4b4c] transition-all duration-300 animate-in fade-in slide-in-from-bottom-4';
+      toast.innerHTML = `<span class="font-medium whitespace-nowrap">Link copied to clipboard!</span>`;
+      document.body.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-4');
+        setTimeout(() => toast.remove(), 300);
+      }, 5000);
+    }
+  };
 
   const isInterviewCandidate = roomType === 'interview' && !isHost;
 
@@ -176,11 +196,22 @@ export default function MeetingControls({
         return;
       }
 
-      // Keyboard shortcuts popup: 'c'
-      if (key === 'c' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      // Keyboard shortcuts popup: 'c' (or Shift + ?)
+      if ((key === 'c' || key === '?') && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault();
         setShowShortcutsMenu((prev) => !prev);
         return;
+      }
+
+      // Copy meeting link: Ctrl + C
+      if ((e.ctrlKey || e.metaKey) && key === 'c' && !e.shiftKey && !e.altKey) {
+        const selection = window.getSelection();
+        // Only trigger if user hasn't highlighted text to copy
+        if (!selection || selection.toString().trim().length === 0) {
+          e.preventDefault();
+          handleCopy();
+          return;
+        }
       }
 
       // Fullscreen mode: 'f'
@@ -301,7 +332,16 @@ export default function MeetingControls({
       <div className="flex items-center gap-2 sm:gap-4 w-auto sm:w-1/4 min-w-0">
         <span className="text-base sm:text-lg font-medium whitespace-nowrap text-white">{currentTime}</span>
         <div className="hidden sm:block w-px h-5 bg-[#3c4043]" />
-        <span className="hidden sm:block text-base sm:text-lg font-medium truncate max-w-[200px] text-white">{roomId}</span>
+        
+        {/* Info button containing Room ID and Copy icon */}
+        <div 
+          onClick={handleCopy}
+          className="hidden sm:flex items-center gap-2 group cursor-pointer bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-full transition-colors border border-white/5"
+          title="Salin info akses meeting"
+        >
+          <span className="text-sm font-medium truncate max-w-[150px] text-white select-all">{roomId}</span>
+          <Copy className="w-3.5 h-3.5 text-gray-200" />
+        </div>
       </div>
 
       {/* Center Section: Main Controls */}
@@ -644,6 +684,11 @@ export default function MeetingControls({
                     </div>
 
                     <div className="flex items-center justify-between py-1 px-2 rounded-lg hover:bg-white/5 transition-colors">
+                      <span className="font-medium text-gray-300">Salin Link Meeting</span>
+                      <kbd className="px-2 py-0.5 bg-[#3c4043] text-white font-medium rounded-md border border-[#5f6368]/70 font-mono text-[10px] shadow-sm">Ctrl + C</kbd>
+                    </div>
+
+                    <div className="flex items-center justify-between py-1 px-2 rounded-lg hover:bg-white/5 transition-colors">
                       <span className="font-medium text-gray-300">Buka Pintasan Ini</span>
                       <kbd className="px-2 py-0.5 bg-[#3c4043] text-white font-medium rounded-md border border-[#5f6368]/70 font-mono text-[10px] shadow-sm">c</kbd>
                     </div>
@@ -698,7 +743,7 @@ export default function MeetingControls({
                 <div className="fixed inset-0 z-40" onClick={() => setShowMoreOptions(false)} />
                 <div className="absolute bottom-full mb-3 left-0 bg-[#202124] rounded-xl shadow-2xl py-2 min-w-[300px] z-50 border border-[#3c3c3c]">
                   {/* Recording Menu Item */}
-                  {isHost ? (
+                  {isHost && (
                     <button
                       onClick={() => {
                         if (isRecording) {
@@ -717,18 +762,6 @@ export default function MeetingControls({
                       </div>
                       <span className="text-sm font-medium">{isRecording ? 'Berhenti merekam' : 'Rekam panggilan'}</span>
                     </button>
-                  ) : (
-                    <div className="w-full px-4 py-3 text-left flex items-start gap-4 cursor-not-allowed">
-                      <div className="w-5 h-5 flex items-center justify-center mt-0.5 opacity-60">
-                        <div className="w-[18px] h-[18px] rounded-full border-[1.5px] border-gray-400 flex items-center justify-center">
-                          <div className="w-2 h-2 rounded-full bg-gray-400" />
-                        </div>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-sm text-gray-400 font-medium">Perekaman tidak tersedia</span>
-                        <span className="text-[11.5px] text-gray-500 mt-1 leading-snug">Anda tidak diizinkan untuk merekam<br/>panggilan video ini</span>
-                      </div>
-                    </div>
                   )}
 
                   <div className="h-px bg-[#444] my-1 mx-0" />

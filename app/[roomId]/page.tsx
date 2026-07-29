@@ -56,6 +56,8 @@ export default function MeetingPage() {
     virtualBgMode,
     joinRequests,
     isScreenSharing,
+    pinnedParticipants,
+    togglePin,
     isRecording,
     isPaused,
     elapsedMs,
@@ -116,6 +118,7 @@ export default function MeetingPage() {
     switchAudioDevice,
     switchVideoDevice,
     switchAudioOutputDevice,
+    networkQuality,
   } = useMeetingRoom({ roomId });
 
   if (isLoading) {
@@ -185,8 +188,11 @@ export default function MeetingPage() {
             remoteVideoOff={remoteVideoOff}
             remoteAudioOff={remoteAudioOff}
             speaking={speaking}
+            networkQuality={networkQuality}
             remoteScreenShare={remoteScreenShare}
             raisedHands={raisedHands}
+            pinnedParticipants={pinnedParticipants}
+            onTogglePin={togglePin}
             isWhiteboardOpen={isWhiteboardOpen}
             isWhiteboardMinimized={isWhiteboardMinimized}
             isHost={isHost}
@@ -320,6 +326,7 @@ export default function MeetingPage() {
             return !p;
           });
         }}
+        onCopyLink={handleCopyLink}
       />
     </div>
   );
