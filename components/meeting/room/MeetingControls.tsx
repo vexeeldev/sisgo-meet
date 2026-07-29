@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { CallEndFilled, KeyboardFilled, MicFilled, MicOffFilled, Videocam, VideocamOff, ExpandLess, Group, Chat, BackHand, MoreVert, PresentToAll, VisualEffects, PersonAdd as UserPlus } from '../icons';
 import { VirtualBackgroundMode } from '@/lib/virtual-background';
-import { Maximize } from 'lucide-react';
+import { Maximize, Check, Volume2 } from 'lucide-react';
 
 interface MeetingControlsProps {
   currentTime: string;
@@ -47,6 +47,15 @@ interface MeetingControlsProps {
   isWhiteboardOpen?: boolean;
   onToggleScreenAnnotation?: () => void;
   isScreenAnnotationOpen?: boolean;
+  audioInputDevices?: MediaDeviceInfo[];
+  videoInputDevices?: MediaDeviceInfo[];
+  audioOutputDevices?: MediaDeviceInfo[];
+  selectedAudioDeviceId?: string;
+  selectedVideoDeviceId?: string;
+  selectedAudioOutputDeviceId?: string;
+  onSwitchAudioDevice?: (deviceId: string) => void;
+  onSwitchVideoDevice?: (deviceId: string) => void;
+  onSwitchAudioOutputDevice?: (deviceId: string) => void;
 }
 
 /** Tombol panel kanan (People / Chat) — icon-only, bergaya pill Google Meet */
@@ -130,6 +139,15 @@ export default function MeetingControls({
   isWhiteboardOpen = false,
   onToggleScreenAnnotation,
   isScreenAnnotationOpen = false,
+  audioInputDevices = [],
+  videoInputDevices = [],
+  audioOutputDevices = [],
+  selectedAudioDeviceId,
+  selectedVideoDeviceId,
+  selectedAudioOutputDeviceId,
+  onSwitchAudioDevice,
+  onSwitchVideoDevice,
+  onSwitchAudioOutputDevice,
 }: MeetingControlsProps) {
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const [showLayoutMenu, setShowLayoutMenu] = useState(false);
@@ -197,6 +215,20 @@ export default function MeetingControls({
         return;
       }
 
+      // Whiteboard (Papan Tulis): Ctrl + Shift + B (B = Board)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && key === 'b') {
+        e.preventDefault();
+        onToggleWhiteboard?.();
+        return;
+      }
+
+      // Screen Annotation: Ctrl + Shift + A
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && key === 'a') {
+        e.preventDefault();
+        onToggleScreenAnnotation?.();
+        return;
+      }
+
       // Recording history: Ctrl + Shift + R (Host Only)
       if (isHost && (e.ctrlKey || e.metaKey) && e.shiftKey && key === 'r') {
         e.preventDefault();
@@ -207,7 +239,7 @@ export default function MeetingControls({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onToggleHand, onToggleMute, onToggleVideo, onToggleScreenShare, onToggleRecordingsPanel, isHost, isInterviewCandidate]);
+  }, [onToggleHand, onToggleMute, onToggleVideo, onToggleScreenShare, onToggleWhiteboard, onToggleScreenAnnotation, onToggleRecordingsPanel, isHost, isInterviewCandidate]);
 
   useEffect(() => {
     if (isMuted || !localStream) {
@@ -359,15 +391,72 @@ export default function MeetingControls({
             {showAudioMenu && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowAudioMenu(false)} />
-                <div className="absolute bottom-14 left-0 w-64 bg-[#2d2d2d] rounded-lg shadow-xl border border-[#3c3c3c] py-2 z-50">
-                  <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Microphone</div>
-                  <button className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#3c4043] flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-green-500"></span> Default - Microphone
-                  </button>
-                  <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mt-2 border-t border-gray-700 pt-3">Speaker</div>
-                  <button className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#3c4043] flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-green-500"></span> Default - Speaker
-                  </button>
+                <div className="absolute bottom-16 left-0 bg-[#202124] text-white rounded-2xl shadow-2xl border border-[#3c4043] p-2.5 w-80 sm:w-96 z-50 animate-in fade-in slide-in-from-bottom-2 duration-150">
+                  {/* Microphone Section */}
+                  <div className="mb-2">
+                    <div className="flex items-center gap-2 px-2 py-1 mb-0.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                      <MicFilled className="w-3.5 h-3.5 text-gray-400" />
+                      <span>Mikrofon</span>
+                    </div>
+                    <div className="space-y-0.5">
+                      {audioInputDevices && audioInputDevices.length > 0 ? (
+                        audioInputDevices.map((device, idx) => {
+                          const label = device.label || `Mikrofon ${idx + 1}`;
+                          const isSelected = selectedAudioDeviceId ? device.deviceId === selectedAudioDeviceId : idx === 0;
+                          return (
+                            <button
+                              key={device.deviceId || idx}
+                              onClick={() => {
+                                onSwitchAudioDevice?.(device.deviceId);
+                                setShowAudioMenu(false);
+                              }}
+                              className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                                isSelected ? 'bg-white/10 text-white font-semibold' : 'hover:bg-white/5 text-gray-300'
+                              }`}
+                            >
+                              <span className="truncate pr-2">{label}</span>
+                              {isSelected && <Check className="w-4 h-4 text-white flex-shrink-0" />}
+                            </button>
+                          );
+                        })
+                      ) : (
+                        <div className="px-3 py-2 text-xs text-gray-400 italic">Tidak ada mikrofon ditemukan</div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Speaker / Audio Output Section */}
+                  <div className="border-t border-[#3c4043]/80 pt-2">
+                    <div className="flex items-center gap-2 px-2 py-1 mb-0.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                      <Volume2 className="w-3.5 h-3.5 text-gray-400" />
+                      <span>Speaker (Output Suara)</span>
+                    </div>
+                    <div className="space-y-0.5">
+                      {audioOutputDevices && audioOutputDevices.length > 0 ? (
+                        audioOutputDevices.map((device, idx) => {
+                          const label = device.label || `Speaker ${idx + 1}`;
+                          const isSelected = selectedAudioOutputDeviceId ? device.deviceId === selectedAudioOutputDeviceId : idx === 0;
+                          return (
+                            <button
+                              key={device.deviceId || idx}
+                              onClick={() => {
+                                onSwitchAudioOutputDevice?.(device.deviceId);
+                                setShowAudioMenu(false);
+                              }}
+                              className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                                isSelected ? 'bg-white/10 text-white font-semibold' : 'hover:bg-white/5 text-gray-300'
+                              }`}
+                            >
+                              <span className="truncate pr-2">{label}</span>
+                              {isSelected && <Check className="w-4 h-4 text-white flex-shrink-0" />}
+                            </button>
+                          );
+                        })
+                      ) : (
+                        <div className="px-3 py-2 text-xs text-gray-400 italic">Speaker Default Sistem</div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </>
             )}
@@ -416,14 +505,36 @@ export default function MeetingControls({
             {showVideoMenu && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowVideoMenu(false)} />
-                <div className="absolute bottom-14 left-0 w-64 bg-[#2d2d2d] rounded-lg shadow-xl border border-[#3c3c3c] py-2 z-50">
-                  <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Camera</div>
-                  <button className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#3c4043] flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-green-500"></span> Integrated Webcam
-                  </button>
-                  <button className="w-full text-left px-4 py-2 text-sm text-gray-400 hover:bg-[#3c4043] flex items-center gap-2">
-                    OBS Virtual Camera
-                  </button>
+                <div className="absolute bottom-16 left-0 bg-[#202124] text-white rounded-2xl shadow-2xl border border-[#3c4043] p-2.5 w-80 sm:w-96 z-50 animate-in fade-in slide-in-from-bottom-2 duration-150">
+                  <div className="flex items-center gap-2 px-2 py-1 mb-0.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                    <Videocam className="w-3.5 h-3.5 text-gray-400" />
+                    <span>Kamera</span>
+                  </div>
+                  <div className="space-y-0.5">
+                    {videoInputDevices && videoInputDevices.length > 0 ? (
+                      videoInputDevices.map((device, idx) => {
+                        const label = device.label || `Kamera ${idx + 1}`;
+                        const isSelected = selectedVideoDeviceId ? device.deviceId === selectedVideoDeviceId : idx === 0;
+                        return (
+                          <button
+                            key={device.deviceId || idx}
+                            onClick={() => {
+                              onSwitchVideoDevice?.(device.deviceId);
+                              setShowVideoMenu(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                              isSelected ? 'bg-white/10 text-white font-semibold' : 'hover:bg-white/5 text-gray-300'
+                            }`}
+                          >
+                            <span className="truncate pr-2">{label}</span>
+                            {isSelected && <Check className="w-4 h-4 text-white flex-shrink-0" />}
+                          </button>
+                        );
+                      })
+                    ) : (
+                      <div className="px-3 py-2 text-xs text-gray-400 italic">Tidak ada kamera ditemukan</div>
+                    )}
+                  </div>
                 </div>
               </>
             )}
@@ -462,7 +573,7 @@ export default function MeetingControls({
                   className="fixed inset-0 z-40" 
                   onClick={() => setShowShortcutsMenu(false)} 
                 />
-                <div className="absolute bottom-full mb-5 left-1/2 -translate-x-1/2 bg-[#202124] text-white rounded-[24px] shadow-[0_16px_50px_rgba(0,0,0,0.8)] p-5 min-w-[300px] sm:min-w-[340px] z-50 border-none animate-in fade-in slide-in-from-bottom-3 duration-250">
+                <div className="absolute bottom-full mb-5 left-1/2 -translate-x-1/2 bg-[#202124] text-white rounded-[24px] shadow-[0_16px_50px_rgba(0,0,0,0.8)] p-5 w-[92vw] max-w-[560px] z-50 border border-[#3c4043]/80 animate-in fade-in slide-in-from-bottom-3 duration-250">
                   {/* Prominent speech bubble arrow pointing down */}
                   <div className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[14px] border-l-transparent border-r-[14px] border-r-transparent border-t-[14px] border-t-[#202124]" />
 
@@ -483,40 +594,58 @@ export default function MeetingControls({
                     </button>
                   </div>
 
-                  <div className="space-y-2 text-xs text-gray-200">
-                    <div className="flex items-center justify-between py-1 px-2 rounded-xl hover:bg-white/5 transition-colors">
-                      <span className="font-medium text-gray-300">Mute / Unmute Mikrofon</span>
-                      <kbd className="px-2.5 py-0.5 bg-[#3c4043] text-white font-medium rounded-md border border-[#5f6368]/70 font-mono text-[11px] shadow-sm">Ctrl + D</kbd>
+                  {/* 2-Column Grid Layout (Kanan Kiri 2 2 2) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-gray-200">
+                    <div className="flex items-center justify-between py-1 px-2 rounded-lg hover:bg-white/5 transition-colors">
+                      <span className="font-medium text-gray-300">Mute / Unmute Mic</span>
+                      <kbd className="px-2 py-0.5 bg-[#3c4043] text-white font-medium rounded-md border border-[#5f6368]/70 font-mono text-[10px] shadow-sm">Ctrl + D</kbd>
                     </div>
-                    <div className="flex items-center justify-between py-1 px-2 rounded-xl hover:bg-white/5 transition-colors">
-                      <span className="font-medium text-gray-300">Nyalakan / Matikan Kamera</span>
-                      <kbd className="px-2.5 py-0.5 bg-[#3c4043] text-white font-medium rounded-md border border-[#5f6368]/70 font-mono text-[11px] shadow-sm">Ctrl + E</kbd>
+
+                    <div className="flex items-center justify-between py-1 px-2 rounded-lg hover:bg-white/5 transition-colors">
+                      <span className="font-medium text-gray-300">Kamera On / Off</span>
+                      <kbd className="px-2 py-0.5 bg-[#3c4043] text-white font-medium rounded-md border border-[#5f6368]/70 font-mono text-[10px] shadow-sm">Ctrl + E</kbd>
                     </div>
-                    <div className="flex items-center justify-between py-1 px-2 rounded-xl hover:bg-white/5 transition-colors">
+
+                    <div className="flex items-center justify-between py-1 px-2 rounded-lg hover:bg-white/5 transition-colors">
                       <span className="font-medium text-gray-300">Bagikan Layar</span>
-                      <kbd className="px-2.5 py-0.5 bg-[#3c4043] text-white font-medium rounded-md border border-[#5f6368]/70 font-mono text-[11px] shadow-sm">Ctrl + Shift + S</kbd>
+                      <kbd className="px-2 py-0.5 bg-[#3c4043] text-white font-medium rounded-md border border-[#5f6368]/70 font-mono text-[10px] shadow-sm">Ctrl + Shift + S</kbd>
                     </div>
+
+                    <div className="flex items-center justify-between py-1 px-2 rounded-lg hover:bg-white/5 transition-colors">
+                      <span className="font-medium text-gray-300">Papan Tulis</span>
+                      <kbd className="px-2 py-0.5 bg-[#3c4043] text-white font-medium rounded-md border border-[#5f6368]/70 font-mono text-[10px] shadow-sm">Ctrl + Shift + B</kbd>
+                    </div>
+
+                    <div className="flex items-center justify-between py-1 px-2 rounded-lg hover:bg-white/5 transition-colors">
+                      <span className="font-medium text-gray-300">Anotasi Layar</span>
+                      <kbd className="px-2 py-0.5 bg-[#3c4043] text-white font-medium rounded-md border border-[#5f6368]/70 font-mono text-[10px] shadow-sm">Ctrl + Shift + A</kbd>
+                    </div>
+
                     {isHost && (
-                      <div className="flex items-center justify-between py-1 px-2 rounded-xl hover:bg-white/5 transition-colors">
+                      <div className="flex items-center justify-between py-1 px-2 rounded-lg hover:bg-white/5 transition-colors">
                         <span className="font-medium text-gray-300">Riwayat Rekaman</span>
-                        <kbd className="px-2.5 py-0.5 bg-[#3c4043] text-white font-medium rounded-md border border-[#5f6368]/70 font-mono text-[11px] shadow-sm">Ctrl + Shift + R</kbd>
+                        <kbd className="px-2 py-0.5 bg-[#3c4043] text-white font-medium rounded-md border border-[#5f6368]/70 font-mono text-[10px] shadow-sm">Ctrl + Shift + R</kbd>
                       </div>
                     )}
-                    <div className="flex items-center justify-between py-1 px-2 rounded-xl hover:bg-white/5 transition-colors">
-                      <span className="font-medium text-gray-300">Angkat / Turunkan Tangan</span>
-                      <kbd className="px-2.5 py-0.5 bg-[#3c4043] text-white font-medium rounded-md border border-[#5f6368]/70 font-mono text-[11px] shadow-sm">h</kbd>
+
+                    <div className="flex items-center justify-between py-1 px-2 rounded-lg hover:bg-white/5 transition-colors">
+                      <span className="font-medium text-gray-300">Angkat Tangan</span>
+                      <kbd className="px-2 py-0.5 bg-[#3c4043] text-white font-medium rounded-md border border-[#5f6368]/70 font-mono text-[10px] shadow-sm">h</kbd>
                     </div>
-                    <div className="flex items-center justify-between py-1 px-2 rounded-xl hover:bg-white/5 transition-colors">
-                      <span className="font-medium text-gray-300">Layar Penuh (Fullscreen)</span>
-                      <kbd className="px-2.5 py-0.5 bg-[#3c4043] text-white font-medium rounded-md border border-[#5f6368]/70 font-mono text-[11px] shadow-sm">f</kbd>
+
+                    <div className="flex items-center justify-between py-1 px-2 rounded-lg hover:bg-white/5 transition-colors">
+                      <span className="font-medium text-gray-300">Fullscreen</span>
+                      <kbd className="px-2 py-0.5 bg-[#3c4043] text-white font-medium rounded-md border border-[#5f6368]/70 font-mono text-[10px] shadow-sm">f</kbd>
                     </div>
-                    <div className="flex items-center justify-between py-1 px-2 rounded-xl hover:bg-white/5 transition-colors">
+
+                    <div className="flex items-center justify-between py-1 px-2 rounded-lg hover:bg-white/5 transition-colors">
                       <span className="font-medium text-gray-300">Aksi Host</span>
-                      <kbd className="px-2.5 py-0.5 bg-[#3c4043] text-white font-medium rounded-md border border-[#5f6368]/70 font-mono text-[11px] shadow-sm">Ctrl + /</kbd>
+                      <kbd className="px-2 py-0.5 bg-[#3c4043] text-white font-medium rounded-md border border-[#5f6368]/70 font-mono text-[10px] shadow-sm">Ctrl + /</kbd>
                     </div>
-                    <div className="flex items-center justify-between py-1.5 px-2 mt-1 border-t border-[#3c4043]/60 rounded-xl">
-                      <span className="font-medium text-white">Buka Menu Pintasan ini</span>
-                      <kbd className="px-2.5 py-0.5 bg-white text-[#202124] font-bold rounded-md font-mono text-[11px] shadow-sm">c</kbd>
+
+                    <div className="flex items-center justify-between py-1 px-2 rounded-lg hover:bg-white/5 transition-colors">
+                      <span className="font-medium text-gray-300">Buka Pintasan Ini</span>
+                      <kbd className="px-2 py-0.5 bg-[#3c4043] text-white font-medium rounded-md border border-[#5f6368]/70 font-mono text-[10px] shadow-sm">c</kbd>
                     </div>
                   </div>
                 </div>

@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { Stage, Layer, Line, Arrow, Rect, Circle } from 'react-konva';
+import { stringToColor } from '@/lib/meeting';
 import { 
   Pencil, 
   Eraser, 
@@ -28,6 +29,7 @@ export interface AnnotationItem {
 
 interface ScreenAnnotationProps {
   isSharingHost: boolean;
+  participantName?: string;
   annotations: AnnotationItem[];
   onChangeAnnotations?: (annotations: AnnotationItem[]) => void;
   onAnnotationStart?: (item: AnnotationItem) => void;
@@ -48,8 +50,91 @@ const COLOR_PALETTE = [
   '#ffffff',
 ];
 
+const ERASER_RADIUS_PX = 24;
+
+function distToSegment(
+  p: { x: number; y: number },
+  v: { x: number; y: number },
+  w: { x: number; y: number }
+): number {
+  const l2 = (w.x - v.x) ** 2 + (w.y - v.y) ** 2;
+  if (l2 === 0) return Math.hypot(p.x - v.x, p.y - v.y);
+  let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+  t = Math.max(0, Math.min(1, t));
+  return Math.hypot(p.x - (v.x + t * (w.x - v.x)), p.y - (v.y + t * (w.y - v.y)));
+}
+
+function isAnnotationInEraser(
+  item: AnnotationItem,
+  pointerX: number,
+  pointerY: number,
+  stageWidth: number,
+  stageHeight: number,
+  eraserRadius: number
+): boolean {
+  if (stageWidth <= 0 || stageHeight <= 0) return false;
+
+  // Check Pen / Freehand line
+  if (item.tool === 'pen' && item.points) {
+    for (let i = 0; i < item.points.length - 1; i += 2) {
+      const x1 = item.points[i] * stageWidth;
+      const y1 = item.points[i + 1] * stageHeight;
+      if (Math.hypot(x1 - pointerX, y1 - pointerY) <= eraserRadius) return true;
+      if (i + 3 < item.points.length) {
+        const x2 = item.points[i + 2] * stageWidth;
+        const y2 = item.points[i + 3] * stageHeight;
+        if (distToSegment({ x: pointerX, y: pointerY }, { x: x1, y: y1 }, { x: x2, y: y2 }) <= eraserRadius) {
+          return true;
+        }
+      }
+    }
+  }
+
+  // Check Arrow
+  if (item.tool === 'arrow' && item.points && item.points.length >= 4) {
+    const x1 = item.points[0] * stageWidth;
+    const y1 = item.points[1] * stageHeight;
+    const x2 = item.points[2] * stageWidth;
+    const y2 = item.points[3] * stageHeight;
+    if (distToSegment({ x: pointerX, y: pointerY }, { x: x1, y: y1 }, { x: x2, y: y2 }) <= eraserRadius) {
+      return true;
+    }
+  }
+
+  // Check Rectangle
+  if (item.tool === 'rect' && item.x !== undefined && item.y !== undefined && item.points) {
+    const rx = item.x * stageWidth;
+    const ry = item.y * stageHeight;
+    const rw = item.points[0] * stageWidth;
+    const rh = item.points[1] * stageHeight;
+    const minX = Math.min(rx, rx + rw);
+    const maxX = Math.max(rx, rx + rw);
+    const minY = Math.min(ry, ry + rh);
+    const maxY = Math.max(ry, ry + rh);
+
+    const closestX = Math.max(minX, Math.min(pointerX, maxX));
+    const closestY = Math.min(minY, Math.min(pointerY, maxY));
+    if (Math.hypot(pointerX - closestX, pointerY - closestY) <= eraserRadius) {
+      return true;
+    }
+  }
+
+  // Check Circle
+  if (item.tool === 'circle' && item.x !== undefined && item.y !== undefined) {
+    const cx = item.x * stageWidth;
+    const cy = item.y * stageHeight;
+    const avgDim = (stageWidth + stageHeight) / 2;
+    const r = (item.radius ?? item.points?.[2] ?? 0) * avgDim;
+    const dist = Math.hypot(pointerX - cx, pointerY - cy);
+    if (dist <= r + eraserRadius) return true;
+  }
+
+  return false;
+}
+
 export default function ScreenAnnotation({
   isSharingHost,
+  participantName,
   annotations,
   onChangeAnnotations,
   onAnnotationStart,
@@ -61,9 +146,21 @@ export default function ScreenAnnotation({
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const assignedColor = useMemo(() => {
+    const cleanName = (participantName || '').replace(/\s*\(Anda\)\s*/g, '').trim();
+    return stringToColor(cleanName || 'Guest');
+  }, [participantName]);
+
   const [activeTool, setActiveTool] = useState<'pen' | 'arrow' | 'rect' | 'circle' | 'eraser'>('pen');
-  const [activeColor, setActiveColor] = useState('#ef4444');
+  const [activeColor, setActiveColor] = useState(assignedColor);
   const [strokeWidth, setStrokeWidth] = useState(4);
+  const [eraserRadius, setEraserRadius] = useState(14); // 8 = Small, 14 = Medium, 28 = Large
+  const [eraserPos, setEraserPos] = useState<{ x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    setActiveColor(assignedColor);
+  }, [assignedColor]);
+
   const [isDrawing, setIsDrawing] = useState(false);
   const [isToolbarCollapsed, setIsToolbarCollapsed] = useState(false);
   const activeItemRef = useRef<AnnotationItem | null>(null);
@@ -89,6 +186,20 @@ export default function ScreenAnnotation({
     annotationsRef.current = annotations;
   }, [annotations]);
 
+  const eraseInRadius = (pointerX: number, pointerY: number) => {
+    const toRemoveIds = new Set<string>();
+    annotationsRef.current.forEach((item) => {
+      if (isAnnotationInEraser(item, pointerX, pointerY, stageSize.width, stageSize.height, eraserRadius)) {
+        toRemoveIds.add(item.id);
+      }
+    });
+
+    if (toRemoveIds.size > 0) {
+      const filtered = annotationsRef.current.filter((item) => !toRemoveIds.has(item.id));
+      onChangeAnnotations?.(filtered);
+    }
+  };
+
   const handleMouseDown = (e: any) => {
     const stage = e.target.getStage();
     const point = stage.getPointerPosition();
@@ -100,12 +211,8 @@ export default function ScreenAnnotation({
     setIsDrawing(true);
 
     if (activeTool === 'eraser') {
-      const clickedShape = e.target;
-      if (clickedShape && clickedShape.attrs && clickedShape.attrs.id) {
-        const shapeId = clickedShape.attrs.id;
-        const filtered = annotationsRef.current.filter((item) => item.id !== shapeId);
-        onChangeAnnotations?.(filtered);
-      }
+      setEraserPos({ x: point.x, y: point.y });
+      eraseInRadius(point.x, point.y);
       return;
     }
 
@@ -134,23 +241,22 @@ export default function ScreenAnnotation({
   };
 
   const handleMouseMove = (e: any) => {
-    if (!isDrawing || !activeItemRef.current) return;
     const stage = e.target.getStage();
     const point = stage.getPointerPosition();
     if (!point) return;
 
-    const normX = point.x / stageSize.width;
-    const normY = point.y / stageSize.height;
-
     if (activeTool === 'eraser') {
-      const clickedShape = e.target;
-      if (clickedShape && clickedShape.attrs && clickedShape.attrs.id) {
-        const shapeId = clickedShape.attrs.id;
-        const filtered = annotationsRef.current.filter((item) => item.id !== shapeId);
-        onChangeAnnotations?.(filtered);
+      setEraserPos({ x: point.x, y: point.y });
+      if (isDrawing) {
+        eraseInRadius(point.x, point.y);
       }
       return;
     }
+
+    if (!isDrawing || !activeItemRef.current) return;
+
+    const normX = point.x / stageSize.width;
+    const normY = point.y / stageSize.height;
 
     const item = activeItemRef.current;
     let payloadPoints: number[] = [];
@@ -230,6 +336,7 @@ export default function ScreenAnnotation({
   return (
     <div
       ref={containerRef}
+      onMouseLeave={() => setEraserPos(null)}
       className="absolute inset-0 w-full h-full z-20 pointer-events-auto"
     >
       {stageSize.width > 0 && stageSize.height > 0 && (
@@ -242,7 +349,7 @@ export default function ScreenAnnotation({
           onTouchStart={handleMouseDown}
           onTouchMove={handleMouseMove}
           onTouchEnd={handleMouseUp}
-          style={{ cursor: isSharingHost ? (activeTool === 'eraser' ? 'crosshair' : 'crosshair') : 'default' }}
+          style={{ cursor: activeTool === 'eraser' ? 'none' : 'crosshair' }}
         >
           <Layer>
             {annotations.map((item) => {
@@ -307,12 +414,83 @@ export default function ScreenAnnotation({
               }
               return null;
             })}
+
+            {/* Visual Eraser Circle Cursor Ring */}
+            {activeTool === 'eraser' && eraserPos && (
+              <Circle
+                x={eraserPos.x}
+                y={eraserPos.y}
+                radius={eraserRadius}
+                stroke="#ef4444"
+                strokeWidth={2}
+                dash={[4, 4]}
+                fill="rgba(239, 68, 68, 0.2)"
+                listening={false}
+              />
+            )}
           </Layer>
         </Stage>
       )}
 
       {onCloseAnnotation && (
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 pointer-events-auto animate-in fade-in slide-in-from-bottom-4 duration-200">
+          {/* Floating Eraser Radius Size Controller (Appears directly above toolbar when eraser is active) */}
+          {activeTool === 'eraser' && !isToolbarCollapsed && (
+            <div className="absolute -top-13 left-1/2 -translate-x-1/2 bg-[#1e1f22]/95 backdrop-blur-md border border-[#3c4043] rounded-xl shadow-2xl px-3.5 py-2 flex items-center gap-3 text-white animate-in fade-in slide-in-from-bottom-2 duration-150 whitespace-nowrap">
+              <span className="text-xs font-medium text-gray-300 flex items-center gap-1.5">
+                <Eraser className="w-3.5 h-3.5 text-red-400" />
+                <span>Ukuran Penghapus:</span>
+              </span>
+
+              {/* Slider Input (Bisa digeser) */}
+              <div className="flex items-center gap-2.5">
+                <input
+                  type="range"
+                  min="5"
+                  max="45"
+                  value={eraserRadius}
+                  onChange={(e) => setEraserRadius(Number(e.target.value))}
+                  onInput={(e: any) => setEraserRadius(Number(e.target.value))}
+                  className="w-28 h-1.5 bg-[#3c4043] rounded-lg appearance-none cursor-pointer accent-red-500 hover:accent-red-400 transition-all"
+                />
+                
+                {/* Live Circle Preview Dot */}
+                <div className="w-6 h-6 flex items-center justify-center bg-[#2b2c30] rounded-md border border-[#3c4043]">
+                  <div 
+                    className="rounded-full bg-red-500/80 border border-red-300 transition-all duration-75"
+                    style={{ 
+                      width: `${Math.max(4, Math.min(20, eraserRadius * 0.5))}px`,
+                      height: `${Math.max(4, Math.min(20, eraserRadius * 0.5))}px` 
+                    }}
+                  />
+                </div>
+
+                <span className="text-xs font-bold text-red-400 min-w-[32px] text-right">{eraserRadius * 2}px</span>
+              </div>
+
+              {/* Quick Presets */}
+              <div className="flex items-center gap-1 border-l border-[#3c4043] pl-2.5">
+                {[
+                  { label: 'S', r: 8 },
+                  { label: 'M', r: 14 },
+                  { label: 'L', r: 24 },
+                  { label: 'XL', r: 36 },
+                ].map((preset) => (
+                  <button
+                    key={preset.label}
+                    onClick={() => setEraserRadius(preset.r)}
+                    className={`w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold transition cursor-pointer ${
+                      eraserRadius === preset.r ? 'bg-red-600 text-white shadow-sm ring-1 ring-red-400' : 'hover:bg-[#3c4043] text-gray-400'
+                    }`}
+                    title={`Ukuran ${preset.label} (${preset.r * 2}px)`}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="bg-[#1e1f22]/90 backdrop-blur-md border border-[#3c4043] rounded-2xl shadow-2xl p-2 flex items-center gap-1.5 text-white">
           {!isToolbarCollapsed ? (
             <>
@@ -392,17 +570,28 @@ export default function ScreenAnnotation({
               </div>
 
               <div className="flex items-center gap-1 px-2 border-r border-[#3c4043]">
-                {[2, 4, 8].map((w) => (
-                  <button
-                    key={w}
-                    onClick={() => setStrokeWidth(w)}
-                    className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-semibold cursor-pointer transition ${
-                      strokeWidth === w ? 'bg-blue-500 text-white' : 'hover:bg-[#3c4043] text-gray-400'
-                    }`}
-                  >
-                    {w === 2 ? 'S' : w === 4 ? 'M' : 'L'}
-                  </button>
-                ))}
+                {[2, 4, 8].map((w) => {
+                  const targetRadius = w === 2 ? 8 : w === 4 ? 14 : 28;
+                  const isActive = activeTool === 'eraser' ? eraserRadius === targetRadius : strokeWidth === w;
+                  return (
+                    <button
+                      key={w}
+                      onClick={() => {
+                        if (activeTool === 'eraser') {
+                          setEraserRadius(targetRadius);
+                        } else {
+                          setStrokeWidth(w);
+                        }
+                      }}
+                      className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-semibold cursor-pointer transition ${
+                        isActive ? 'bg-blue-500 text-white shadow-md' : 'hover:bg-[#3c4043] text-gray-400'
+                      }`}
+                      title={activeTool === 'eraser' ? `Ukuran Penghapus: ${w === 2 ? 'Kecil' : w === 4 ? 'Sedang' : 'Besar'}` : `Ketebalan Garis`}
+                    >
+                      {w === 2 ? 'S' : w === 4 ? 'M' : 'L'}
+                    </button>
+                  );
+                })}
               </div>
 
               <button

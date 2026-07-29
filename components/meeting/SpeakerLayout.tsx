@@ -446,6 +446,7 @@ export default function SpeakerLayout({
           <div className="flex-1 w-full h-full relative overflow-hidden bg-white">
             <ExcalidrawCanvas
               isHost={!!isHost}
+              participantName={participantName}
               initialSnapshot={whiteboardSnapshot}
               onSnapshotChange={onWhiteboardSnapshotChange}
             />
@@ -465,6 +466,7 @@ export default function SpeakerLayout({
           {(screenAnnotations.length > 0 || onCloseScreenAnnotation) && (
             <ScreenAnnotation
               isSharingHost={isLocalScreenSharing}
+              participantName={participantName}
               annotations={screenAnnotations}
               onChangeAnnotations={onChangeScreenAnnotations}
               onAnnotationStart={onScreenAnnotationStart}

@@ -96,9 +96,7 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     sendMessage('screen_annotation_clear');
   };
 
-  const handleToggleScreenAnnotation = () => {
-    setIsScreenAnnotationOpen((prev) => !prev);
-  };
+  const [showScreenAnnotationPrompt, setShowScreenAnnotationPrompt] = useState(false);
 
   const {
     localStream,
@@ -122,6 +120,15 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     toggleVideo: toggleVideoStream,
     setVirtualBackground,
     sendMessage,
+    audioInputDevices,
+    videoInputDevices,
+    audioOutputDevices,
+    selectedAudioDeviceId,
+    selectedVideoDeviceId,
+    selectedAudioOutputDeviceId,
+    switchAudioDevice,
+    switchVideoDevice,
+    switchAudioOutputDevice,
   } = useWebRTC({
     roomId,
     participantUUID: participantUUID || '',
@@ -192,6 +199,21 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
       ? process.env.NEXT_PUBLIC_SIGNAL_SERVER || 'wss://backspace-repurpose-fervor.ngrok-free.dev/ws'
       : '',
   });
+
+  const handleToggleScreenAnnotation = () => {
+    const isAnyScreenSharing = isScreenSharing || !!remoteScreenStream;
+    if (isAnyScreenSharing || isScreenAnnotationOpen) {
+      setIsScreenAnnotationOpen((prev) => !prev);
+    } else {
+      setShowScreenAnnotationPrompt(true);
+    }
+  };
+
+  const handleConfirmScreenAnnotationShare = () => {
+    setShowScreenAnnotationPrompt(false);
+    setIsScreenAnnotationOpen(true);
+    startScreenSharing();
+  };
 
   const {
     isRecording,
@@ -623,5 +645,17 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     handleClearScreenAnnotations,
     isScreenAnnotationOpen,
     handleToggleScreenAnnotation,
+    showScreenAnnotationPrompt,
+    setShowScreenAnnotationPrompt,
+    handleConfirmScreenAnnotationShare,
+    audioInputDevices,
+    videoInputDevices,
+    audioOutputDevices,
+    selectedAudioDeviceId,
+    selectedVideoDeviceId,
+    selectedAudioOutputDeviceId,
+    switchAudioDevice,
+    switchVideoDevice,
+    switchAudioOutputDevice,
   };
 }

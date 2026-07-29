@@ -1055,6 +1055,144 @@ function preferH264(sdp: string): string {
 
     setVirtualBgModeState(mode);
   };
+  const [audioInputDevices, setAudioInputDevices] = useState<MediaDeviceInfo[]>([]);
+  const [videoInputDevices, setVideoInputDevices] = useState<MediaDeviceInfo[]>([]);
+  const [audioOutputDevices, setAudioOutputDevices] = useState<MediaDeviceInfo[]>([]);
+  const [selectedAudioDeviceId, setSelectedAudioDeviceId] = useState<string>('');
+  const [selectedVideoDeviceId, setSelectedVideoDeviceId] = useState<string>('');
+  const [selectedAudioOutputDeviceId, setSelectedAudioOutputDeviceId] = useState<string>('');
+
+  const updateDeviceList = async () => {
+    try {
+      if (typeof window === 'undefined' || !navigator?.mediaDevices?.enumerateDevices) return;
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const aInputs = devices.filter((d) => d.kind === 'audioinput');
+      const vInputs = devices.filter((d) => d.kind === 'videoinput');
+      const aOutputs = devices.filter((d) => d.kind === 'audiooutput');
+
+      setAudioInputDevices(aInputs);
+      setVideoInputDevices(vInputs);
+      setAudioOutputDevices(aOutputs);
+
+      setSelectedAudioDeviceId((prev) => prev || (aInputs[0]?.deviceId ?? ''));
+      setSelectedVideoDeviceId((prev) => prev || (vInputs[0]?.deviceId ?? ''));
+      setSelectedAudioOutputDeviceId((prev) => prev || (aOutputs[0]?.deviceId ?? ''));
+    } catch (err) {
+      console.error('Error enumerating devices:', err);
+    }
+  };
+
+  useEffect(() => {
+    updateDeviceList();
+    if (typeof window !== 'undefined' && navigator?.mediaDevices) {
+      navigator.mediaDevices.addEventListener('devicechange', updateDeviceList);
+      return () => {
+        navigator.mediaDevices.removeEventListener('devicechange', updateDeviceList);
+      };
+    }
+  }, []);
+
+  const switchAudioDevice = async (deviceId: string) => {
+    try {
+      setSelectedAudioDeviceId(deviceId);
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          deviceId: { exact: deviceId },
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
+      const newAudioTrack = newStream.getAudioTracks()[0];
+      if (!newAudioTrack || !localStreamRef.current) return;
+
+      const oldAudioTrack = localStreamRef.current.getAudioTracks()[0];
+
+      Object.values(peers.current).forEach((peer: any) => {
+        if (oldAudioTrack) {
+          try {
+            peer.replaceTrack(oldAudioTrack, newAudioTrack, localStreamRef.current!);
+          } catch (e) {
+            console.warn('Failed to replace audio track in peer:', e);
+          }
+        }
+      });
+
+      if (oldAudioTrack) {
+        localStreamRef.current.removeTrack(oldAudioTrack);
+        oldAudioTrack.stop();
+      }
+      localStreamRef.current.addTrack(newAudioTrack);
+
+      const updatedStream = new MediaStream(localStreamRef.current.getTracks());
+      localStreamRef.current = updatedStream;
+      setLocalStream(updatedStream);
+
+      await updateDeviceList();
+    } catch (err) {
+      console.error('Error switching audio device:', err);
+    }
+  };
+
+  const switchVideoDevice = async (deviceId: string) => {
+    try {
+      setSelectedVideoDeviceId(deviceId);
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          deviceId: { exact: deviceId },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+        },
+      });
+      const newVideoTrack = newStream.getVideoTracks()[0];
+      if (!newVideoTrack || !localStreamRef.current) return;
+
+      const oldVideoTrack = localStreamRef.current.getVideoTracks()[0];
+
+      Object.values(peers.current).forEach((peer: any) => {
+        if (oldVideoTrack) {
+          try {
+            peer.replaceTrack(oldVideoTrack, newVideoTrack, localStreamRef.current!);
+          } catch (e) {
+            console.warn('Failed to replace video track in peer:', e);
+          }
+        }
+      });
+
+      if (oldVideoTrack) {
+        localStreamRef.current.removeTrack(oldVideoTrack);
+        oldVideoTrack.stop();
+      }
+      localStreamRef.current.addTrack(newVideoTrack);
+
+      const updatedStream = new MediaStream(localStreamRef.current.getTracks());
+      localStreamRef.current = updatedStream;
+      setLocalStream(updatedStream);
+
+      await updateDeviceList();
+    } catch (err) {
+      console.error('Error switching video device:', err);
+    }
+  };
+
+  const switchAudioOutputDevice = async (deviceId: string) => {
+    try {
+      setSelectedAudioOutputDeviceId(deviceId);
+      const mediaElements = document.querySelectorAll('audio, video');
+      for (const elem of Array.from(mediaElements) as any[]) {
+        if (typeof elem.setSinkId === 'function') {
+          try {
+            await elem.setSinkId(deviceId);
+          } catch (e) {
+            console.warn('Error setting sinkId on media element:', e);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error switching audio output device:', err);
+    }
+  };
+
   return {
     localStream,
     remoteStreams,
@@ -1077,6 +1215,16 @@ function preferH264(sdp: string): string {
     toggleMute,
     toggleVideo,
     sendMessage,
+    audioInputDevices,
+    videoInputDevices,
+    audioOutputDevices,
+    selectedAudioDeviceId,
+    selectedVideoDeviceId,
+    selectedAudioOutputDeviceId,
+    switchAudioDevice,
+    switchVideoDevice,
+    switchAudioOutputDevice,
+    updateDeviceList,
   };
 }
 

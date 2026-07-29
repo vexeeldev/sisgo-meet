@@ -4,21 +4,29 @@ import React, { useEffect, useRef, useCallback, useMemo } from 'react';
 import { Excalidraw } from '@excalidraw/excalidraw';
 import '@excalidraw/excalidraw/index.css';
 import { Lock } from 'lucide-react';
+import { stringToColor } from '@/lib/meeting';
 
 interface ExcalidrawCanvasProps {
   isHost: boolean;
+  participantName?: string;
   initialSnapshot?: any;
   onSnapshotChange?: (snapshot: any) => void;
 }
 
 export default function ExcalidrawCanvas({
   isHost,
+  participantName,
   initialSnapshot,
   onSnapshotChange,
 }: ExcalidrawCanvasProps) {
   const isUpdatingFromRemote = useRef(false);
   const excalidrawAPIRef = useRef<any>(null);
   const lastEmittedSnapshotStr = useRef<string>('');
+
+  const assignedColor = useMemo(() => {
+    const cleanName = (participantName || '').replace(/\s*\(Anda\)\s*/g, '').trim();
+    return stringToColor(cleanName || 'Guest');
+  }, [participantName]);
 
   // Apply remote snapshot updates for non-hosts
   useEffect(() => {
@@ -68,14 +76,24 @@ export default function ExcalidrawCanvas({
       appState: {
         theme: 'light' as const,
         viewBackgroundColor: '#ffffff',
+        currentItemStrokeColor: assignedColor,
         viewModeEnabled: !isHost,
       },
     };
-  }, []); // Computed once on mount
+  }, [assignedColor]); // Computed once or when assignedColor updates
 
   const setApi = useCallback((api: any) => {
     excalidrawAPIRef.current = api;
-  }, []);
+    if (api) {
+      try {
+        api.updateScene({
+          appState: {
+            currentItemStrokeColor: assignedColor,
+          },
+        });
+      } catch (_) {}
+    }
+  }, [assignedColor]);
 
   return (
     <div className="w-full h-full relative overflow-hidden bg-white excalidraw-whiteboard-container">
@@ -100,6 +118,21 @@ export default function ExcalidrawCanvas({
         onChange={handleChange}
         initialData={initialData}
       />
+
+      {/* Host color indicator badge */}
+      {isHost && (
+        <div className="absolute bottom-4 left-4 z-[500] pointer-events-none">
+          <div className="bg-[#202124]/90 backdrop-blur-md text-white text-xs font-semibold px-3 py-1.5 rounded-full border border-[#3c4043] shadow-xl flex items-center gap-2">
+            <span
+              className="w-3 h-3 rounded-full border border-white/60 shadow-sm shrink-0"
+              style={{ backgroundColor: assignedColor }}
+            />
+            <span className="text-gray-200">
+              Warna Otomatis: <strong className="text-white">{assignedColor}</strong>
+            </span>
+          </div>
+        </div>
+      )}
 
       {!isHost && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[500] pointer-events-none">

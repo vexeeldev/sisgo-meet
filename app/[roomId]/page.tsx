@@ -8,6 +8,7 @@ import MeetingControls from '@/components/meeting/room/MeetingControls';
 import MeetingSidebar from '@/components/meeting/room/MeetingSidebarBackground';
 import MeetingSidebarRecordings from '@/components/meeting/room/MeetingSidebarRecordings';
 import EndCallModal from '@/components/meeting/room/EndCallModal';
+import ScreenAnnotationPromptModal from '@/components/meeting/room/ScreenAnnotationPromptModal';
 import HostActionMenuModal from '@/components/meeting/HostActionMenuModal';
 import WhiteboardModal from '@/components/meeting/WhiteboardModal';
 import MeetingLobby from './lobby/page';
@@ -103,6 +104,18 @@ export default function MeetingPage() {
     handleClearScreenAnnotations,
     isScreenAnnotationOpen,
     handleToggleScreenAnnotation,
+    showScreenAnnotationPrompt,
+    setShowScreenAnnotationPrompt,
+    handleConfirmScreenAnnotationShare,
+    audioInputDevices,
+    videoInputDevices,
+    audioOutputDevices,
+    selectedAudioDeviceId,
+    selectedVideoDeviceId,
+    selectedAudioOutputDeviceId,
+    switchAudioDevice,
+    switchVideoDevice,
+    switchAudioOutputDevice,
   } = useMeetingRoom({ roomId });
 
   if (isLoading) {
@@ -153,7 +166,6 @@ export default function MeetingPage() {
         onDiscardRecording={discardRecording}
       />
 
-      {/* Main Content Area */}
       <div className={`flex-1 flex gap-2 sm:gap-4 relative min-h-0 ${(isScreenSharing || remoteScreenShare) ? 'p-1 sm:p-2' : 'p-2 sm:p-4'}`}>
         <div className={`flex-1 transition-all duration-300 relative ${
           (showChat || showParticipants || showRequests || showBgPanel) ? 'hidden sm:block' : ''
@@ -192,7 +204,6 @@ export default function MeetingPage() {
           />
         </div>
 
-        {/* Sidebar */}
         {(showChat || showParticipants || showRequests || showBgPanel) && (
           <MeetingSidebar
             showChat={showChat}
@@ -223,7 +234,6 @@ export default function MeetingPage() {
           />
         )}
 
-        {/* Recording History Sidebar (Host Only) */}
         {isHost && showRecordingsPanel && (
           <MeetingSidebarRecordings
             roomId={roomId}
@@ -238,6 +248,12 @@ export default function MeetingPage() {
         onClose={() => setShowEndCallModal(false)}
         onEndForAll={handleEndForAll}
         onLeaveCall={leaveCall}
+      />
+
+      <ScreenAnnotationPromptModal
+        isOpen={showScreenAnnotationPrompt}
+        onClose={() => setShowScreenAnnotationPrompt(false)}
+        onConfirm={handleConfirmScreenAnnotationShare}
       />
 
       <MeetingControls
@@ -262,6 +278,15 @@ export default function MeetingPage() {
         isWhiteboardOpen={isWhiteboardOpen}
         onToggleScreenAnnotation={handleToggleScreenAnnotation}
         isScreenAnnotationOpen={isScreenAnnotationOpen}
+        audioInputDevices={audioInputDevices}
+        videoInputDevices={videoInputDevices}
+        audioOutputDevices={audioOutputDevices}
+        selectedAudioDeviceId={selectedAudioDeviceId}
+        selectedVideoDeviceId={selectedVideoDeviceId}
+        selectedAudioOutputDeviceId={selectedAudioOutputDeviceId}
+        onSwitchAudioDevice={switchAudioDevice}
+        onSwitchVideoDevice={switchVideoDevice}
+        onSwitchAudioOutputDevice={switchAudioOutputDevice}
         layout={layout as any}
         onChangeLayout={setLayout as any}
         virtualBgMode={virtualBgMode}
