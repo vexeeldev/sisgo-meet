@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { IconGoogle } from "@/components/ui/iconGoogle";
 import IconEye from "@/components/ui/IconEye";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/node_modules/react-i18next";
 import { SISGOPasswordStrengthIndicator } from "./SISGOPasswordStrengIndicator";
 import { useState, useEffect, useRef } from "react";
 import { useFormContext } from "react-hook-form";
@@ -32,10 +32,10 @@ export default function RegisterForm(props: RegisterFormProps) {
     setShowPw,
     setShowConfirmPw,
     onRegister,
-    onGoogle,           
+    onGoogle,
   } = props;
 
-  const maxlength = props.maxlength ?? 64;  
+  const maxlength = props.maxlength ?? 64;
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const { register, watch, formState: { errors }, setFocus, clearErrors } = useFormContext();
   const emailLocalStore = typeof window !== "undefined" ? localStorage.getItem("email") : null;

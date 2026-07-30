@@ -1,0 +1,20 @@
+directories:
+  output: dist
+  buildResources: build
+appId: com.sisgo.meet
+productName: SISGO Meet
+files:
+  - filter:
+      - dist-electron/**/*
+      - .next/**/*
+      - public/**/*
+      - package.json
+win:
+  target: nsis
+  icon: public/icon.ico
+linux:
+  target: AppImage
+  category: Network
+mac:
+  target: dmg
+electronVersion: 43.2.0

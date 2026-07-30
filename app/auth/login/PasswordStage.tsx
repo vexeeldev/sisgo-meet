@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { IconSpinner } from "@/components/ui/iconSpinner";
 import { IconBack } from "@/components/ui/iconBacnk";
 import IconEye from "@/components/ui/IconEye";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/node_modules/react-i18next";
 
 type PasswordStageProps = {
   direction: number;

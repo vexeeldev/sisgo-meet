@@ -8,7 +8,7 @@ import { usePathname } from "next/navigation";
 import { Icon } from "../icon";
 import { useContext } from "react";
 import { SettingsContext } from "../../context/SettingsContext";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/node_modules/react-i18next";
 import "@/lib/i18n";
 
 type LanguageCode = "id" | "en";
@@ -18,9 +18,9 @@ const languages: {
   flagUrl: string;
   label: string;
 }[] = [
-  { code: "id", flagUrl: "https://flagcdn.com/id.svg", label: "ID" },
-  { code: "en", flagUrl: "https://flagcdn.com/us.svg", label: "EN" },
-];
+    { code: "id", flagUrl: "https://flagcdn.com/id.svg", label: "ID" },
+    { code: "en", flagUrl: "https://flagcdn.com/us.svg", label: "EN" },
+  ];
 
 export function Navbar() {
   const pathname = usePathname();
@@ -172,11 +172,10 @@ export function Navbar() {
           <div className="relative">
             <button
               onClick={() => setLangDropdownOpen(!langDropdownOpen)}
-              className={`flex items-center gap-2 w-full px-2 py-1.5 rounded-lg transition-colors ${
-                isAuthPage && !isScrolled
+              className={`flex items-center gap-2 w-full px-2 py-1.5 rounded-lg transition-colors ${isAuthPage && !isScrolled
                   ? "hover:bg-white/10 text-white"
                   : "hover:bg-slate-100 text-slate-800"
-              }`}
+                }`}
             >
               <Image
                 src={currentLanguage.flagUrl}
@@ -186,11 +185,9 @@ export function Navbar() {
                 className="rounded-[2px] shadow-sm"
               />
               <ChevronDown
-                className={`w-4 h-4 transition-transform duration-200 ${
-                  langDropdownOpen ? "rotate-180" : ""
-                } ${
-                  isAuthPage && !isScrolled ? "text-white/70" : "text-slate-500"
-                }`}
+                className={`w-4 h-4 transition-transform duration-200 ${langDropdownOpen ? "rotate-180" : ""
+                  } ${isAuthPage && !isScrolled ? "text-white/70" : "text-slate-500"
+                  }`}
               />
             </button>
 
@@ -206,11 +203,10 @@ export function Navbar() {
                     <button
                       key={lang.code}
                       onClick={() => changeLanguage(lang.code)}
-                      className={`flex items-center space-x-3 w-full px-4 py-2 text-left text-sm hover:bg-slate-50 transition-colors ${
-                        i18n.language === lang.code
+                      className={`flex items-center space-x-3 w-full px-4 py-2 text-left text-sm hover:bg-slate-50 transition-colors ${i18n.language === lang.code
                           ? "text-primary-blue font-bold bg-blue-50/50"
                           : "text-slate-600"
-                      }`}
+                        }`}
                     >
                       <Image
                         src={lang.flagUrl}
@@ -280,11 +276,10 @@ export function Navbar() {
                     <button
                       key={lang.code}
                       onClick={() => changeLanguage(lang.code)}
-                      className={`flex items-center justify-center gap-2 rounded-xl border py-3 transition ${
-                        i18n.language === lang.code
+                      className={`flex items-center justify-center gap-2 rounded-xl border py-3 transition ${i18n.language === lang.code
                           ? "border-primary-blue bg-blue-50 text-primary-blue font-semibold"
                           : "border-slate-200 text-slate-600 hover:bg-slate-50"
-                      }`}
+                        }`}
                     >
                       <Image
                         src={lang.flagUrl}

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { CallEndFilled, KeyboardFilled, MicFilled, MicOffFilled, Videocam, VideocamOff, ExpandLess, Group, Chat, BackHand, MoreVert, PresentToAll, VisualEffects, PersonAdd as UserPlus } from '../icons';
 import { VirtualBackgroundMode } from '@/lib/virtual-background';
 import { Maximize, Check, Volume2, Copy } from 'lucide-react';
+import AnnotationTriggerButton from '../AnnotationTriggerButton';
 
 interface MeetingControlsProps {
   currentTime: string;
@@ -727,6 +728,9 @@ export default function MeetingControls({
               </svg>
             </button>
           )}
+
+          {/* Desktop Overlay Coret-Coret (Electron Only) */}
+          <AnnotationTriggerButton />
 
           {/* More Options */}
           <div className="relative">

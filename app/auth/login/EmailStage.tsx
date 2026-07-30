@@ -7,7 +7,7 @@ import { IconGoogle } from "@/components/ui/iconGoogle";
 import { IconSpinner } from "@/components/ui/iconSpinner";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api-new";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/node_modules/react-i18next";
 
 type EmailStageProps = {
   direction: number;

@@ -1,7 +1,7 @@
 "use client";
 
 import i18n from "i18next";
-import { initReactI18next } from "react-i18next";
+import { initReactI18next } from "@/node_modules/react-i18next";
 
 // 1. Import HANYA SATU file json yang baru dibuat
 import translationsData from "@/public/locales/lang.json";
@@ -16,12 +16,12 @@ const resources = {
 const processTranslations = (obj: any, prefix = "") => {
   for (const key in obj) {
     const value = obj[key];
-    
+
     // Jika menemukan node yang memiliki terjemahan id & en
     if (value && typeof value === "object" && "id" in value && "en" in value) {
       resources.id.common[prefix + key] = value.id;
       resources.en.common[prefix + key] = value.en;
-    } 
+    }
     // Jika masih berupa grup (seperti "navbar"), telusuri lebih dalam (rekursif)
     else if (value && typeof value === "object") {
       processTranslations(value, prefix + key + ".");

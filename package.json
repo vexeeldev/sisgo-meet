@@ -4,9 +4,39 @@
   "private": true,
   "scripts": {
     "dev": "next dev --port 3001",
+    "electron": "DISPLAY=:1 electron --no-sandbox --ozone-platform=x11 -r ts-node/register electron/main.ts",
+    "desktop:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3001 && npm run electron\"",
     "build": "next build",
     "start": "next start --port 3001",
-    "lint": "eslint"
+    "lint": "eslint",
+    "desktop:build": "next build && electron-builder",
+    "desktop:build:win": "next build && electron-builder --win",
+    "desktop:build:linux": "next build && electron-builder --linux"
+  },
+  "main": "dist-electron/main.js",
+  "build": {
+    "appId": "com.sisgo.meet",
+    "productName": "SISGO Meet",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "dist-electron/**/*",
+      ".next/**/*",
+      "public/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "public/icon.ico"
+    },
+    "linux": {
+      "target": "AppImage",
+      "category": "Network"
+    },
+    "mac": {
+      "target": "dmg"
+    }
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -39,9 +69,15 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/simple-peer": "^9.11.9",
+    "concurrently": "^10.0.4",
+    "electron": "^43.2.0",
+    "electron-builder": "^26.15.3",
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "ts-node": "^10.9.2",
+    "tsx": "^4.23.1",
+    "typescript": "^5",
+    "wait-on": "^9.1.0"
   }
 }
