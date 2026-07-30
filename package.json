@@ -12,6 +12,7 @@
     "build:electron": "tsc -p electron/tsconfig.json && cp electron/preload.js dist-electron/",
     "desktop:build": "npm run build:electron && electron-builder",
     "desktop:build:win": "npm run build:electron && electron-builder --win",
+    "desktop:build:mac": "npm run build:electron && electron-builder --mac",
     "desktop:build:linux": "npm run build:electron && electron-builder --linux"
   },
   "main": "dist-electron/main.js",
@@ -23,13 +24,21 @@
     },
     "files": [
       "dist-electron/**/*",
-      ".next/**/*",
-      "public/**/*",
       "package.json"
     ],
     "win": {
-      "target": "nsis",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
       "icon": "public/icon.ico"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "differentialPackage": false
     },
     "linux": {
       "target": "AppImage",
