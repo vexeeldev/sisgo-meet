@@ -9,9 +9,10 @@
     "build": "next build",
     "start": "next start --port 3001",
     "lint": "eslint",
-    "desktop:build": "next build && electron-builder",
-    "desktop:build:win": "next build && electron-builder --win",
-    "desktop:build:linux": "next build && electron-builder --linux"
+    "build:electron": "tsc -p electron/tsconfig.json && cp electron/preload.js dist-electron/",
+    "desktop:build": "npm run build:electron && electron-builder",
+    "desktop:build:win": "npm run build:electron && electron-builder --win",
+    "desktop:build:linux": "npm run build:electron && electron-builder --linux"
   },
   "main": "dist-electron/main.js",
   "build": {

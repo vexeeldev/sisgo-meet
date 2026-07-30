@@ -2,8 +2,7 @@ import { app, BrowserWindow, ipcMain, screen, session, desktopCapturer, Menu } f
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const _dirname = typeof __dirname !== "undefined" ? __dirname : process.cwd();
 
 // Linux: paksa X11 mode via XWayland untuk transparency yang stabil
 if (process.platform === "linux") {
@@ -64,7 +63,7 @@ function createWindows() {
         height: 900,
         autoHideMenuBar: true,
         webPreferences: {
-            preload: path.join(__dirname, "preload.js"),
+            preload: path.join(_dirname, "preload.js"),
             contextIsolation: true,
             nodeIntegration: false,
             devTools: isDev, // DevTools/Inspect Element hanya aktif di development mode
@@ -105,7 +104,7 @@ function createWindows() {
         hasShadow: false,
         show: false, // Mulai tersembunyi
         webPreferences: {
-            preload: path.join(__dirname, "preload.js"),
+            preload: path.join(_dirname, "preload.js"),
             contextIsolation: true,
             nodeIntegration: false,
             devTools: isDev,
@@ -135,7 +134,7 @@ function createWindows() {
         show: false, // Muncul hanya ketika overlay aktif
         resizable: false,
         webPreferences: {
-            preload: path.join(__dirname, "preload.js"),
+            preload: path.join(_dirname, "preload.js"),
             contextIsolation: true,
             nodeIntegration: false,
             devTools: isDev,
