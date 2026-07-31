@@ -6,16 +6,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const electron_1 = require("electron");
 const node_path_1 = __importDefault(require("node:path"));
 const _dirname = typeof __dirname !== "undefined" ? __dirname : process.cwd();
-// Linux: paksa X11 mode via XWayland untuk transparency yang stabil
+
 if (process.platform === "linux") {
     electron_1.app.commandLine.appendSwitch("enable-transparent-visuals");
     electron_1.app.commandLine.appendSwitch("ozone-platform", "x11");
     electron_1.app.disableHardwareAcceleration();
 }
+
 let mainWindow = null;
-let overlayWindow = null; // Canvas coret-coret (fullscreen)
-let miniWindow = null; // Tombol mungil yang selalu bisa diklik
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+let overlayWindow = null;
+let miniWindow = null;
+
 function getVirtualScreenBounds() {
     const displays = electron_1.screen.getAllDisplays();
     let minX = displays[0].bounds.x;
