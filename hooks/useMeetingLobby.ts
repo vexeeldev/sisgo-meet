@@ -361,6 +361,7 @@ export function useMeetingLobby({ roomId, roomExists, roomType = 'private', onJo
           name: activeName,
           role: roleRef.current || 'candidate',
           participant_uuid: participantUUID,
+    
         }
       }));
     };
