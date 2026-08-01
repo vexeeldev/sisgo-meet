@@ -360,6 +360,7 @@ export function useMeetingLobby({ roomId, roomExists, roomType = 'private', onJo
         data: {
           name: activeName,
           role: roleRef.current || 'candidate',
+          participant_uuid: participantUUID,
         }
       }));
     };

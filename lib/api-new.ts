@@ -544,9 +544,6 @@ export const api = {
       return { success: false, data: null };
     }
   },
-
-  // ── Room Management ────────────────────────────────────────────
-  // ── Room Management ────────────────────────────────────────────
   createRoom: async (roomName: string, notes?: string, roomType: string = 'private') => {
     try {
       const token = localStorage.getItem('token');
@@ -565,7 +562,6 @@ export const api = {
       if (!res.ok) {
         return { success: false, message: result?.message || 'Gagal membuat room' };
       }
-
       return {
         success: true,
         data: result?.data,
