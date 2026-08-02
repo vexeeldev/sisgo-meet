@@ -7,6 +7,7 @@ import NetworkIndicator from './room/NetworkIndicator';
 import { getUserColors } from '@/lib/meeting';
 import dynamic from 'next/dynamic';
 import { Sparkles, X, Volume2, VolumeX, Pin, PinOff } from 'lucide-react';
+import ParticipantsRail from './ParticipantsRail';
 
 const ExcalidrawCanvas = dynamic(() => import('./ExcalidrawCanvas'), {
   ssr: false,
@@ -72,6 +73,8 @@ interface SpeakerLayoutProps {
   onClearScreenAnnotations?: () => void;
   isScreenAnnotationOpen?: boolean;
   onCloseScreenAnnotation?: () => void;
+  onOpenWhiteboard?: () => void;
+  hostName?: string;
   pinnedParticipants?: string[];
   onTogglePin?: (id: string) => void;
 }
@@ -105,8 +108,10 @@ export default function SpeakerLayout({
   onScreenAnnotationDraw,
   onScreenAnnotationEnd,
   onClearScreenAnnotations,
-  isScreenAnnotationOpen,
+  isScreenAnnotationOpen = false,
   onCloseScreenAnnotation,
+  onOpenWhiteboard,
+  hostName = 'Host',
   pinnedParticipants = [],
   onTogglePin,
 }: SpeakerLayoutProps) {

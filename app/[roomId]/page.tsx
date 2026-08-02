@@ -9,6 +9,7 @@ import MeetingSidebar from '@/components/meeting/room/MeetingSidebarBackground';
 import MeetingSidebarRecordings from '@/components/meeting/room/MeetingSidebarRecordings';
 import EndCallModal from '@/components/meeting/room/EndCallModal';
 import ScreenAnnotationPromptModal from '@/components/meeting/room/ScreenAnnotationPromptModal';
+import CloseWhiteboardModal from '@/components/meeting/CloseWhiteboardModal';
 import HostActionMenuModal from '@/components/meeting/HostActionMenuModal';
 import WhiteboardModal from '@/components/meeting/WhiteboardModal';
 import MeetingLobby from './lobby/page';
@@ -19,6 +20,7 @@ export default function MeetingPage() {
   const params = useParams();
   const roomId = params.roomId as string;
   const [showRecordingsPanel, setShowRecordingsPanel] = useState(false);
+  const [showCloseWhiteboardModal, setShowCloseWhiteboardModal] = useState(false);
 
   const {
     showLobby,
@@ -97,6 +99,8 @@ export default function MeetingPage() {
     isWhiteboardMinimized,
     whiteboardSnapshot,
     handleToggleWhiteboard,
+    handleCloseWhiteboardForAll,
+    handleMinimizeWhiteboard,
     handleWhiteboardSnapshotChange,
     screenAnnotations,
     handleScreenAnnotationChange,
@@ -198,7 +202,14 @@ export default function MeetingPage() {
             isHost={isHost}
             whiteboardSnapshot={whiteboardSnapshot}
             onWhiteboardSnapshotChange={handleWhiteboardSnapshotChange}
-            onCloseWhiteboard={handleToggleWhiteboard}
+            onCloseWhiteboard={() => {
+              if (isHost) {
+                setShowCloseWhiteboardModal(true);
+              } else {
+                handleMinimizeWhiteboard();
+              }
+            }}
+            onOpenWhiteboard={handleToggleWhiteboard}
             screenAnnotations={screenAnnotations}
             onChangeScreenAnnotations={handleScreenAnnotationChange}
             onScreenAnnotationStart={handleScreenAnnotationStart}
@@ -254,6 +265,13 @@ export default function MeetingPage() {
         onClose={() => setShowEndCallModal(false)}
         onEndForAll={handleEndForAll}
         onLeaveCall={leaveCall}
+      />
+
+      <CloseWhiteboardModal
+        isOpen={showCloseWhiteboardModal}
+        onClose={() => setShowCloseWhiteboardModal(false)}
+        onConfirmCloseAll={handleCloseWhiteboardForAll}
+        onConfirmMinimize={handleMinimizeWhiteboard}
       />
 
       <ScreenAnnotationPromptModal

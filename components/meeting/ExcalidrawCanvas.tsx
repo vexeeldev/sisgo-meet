@@ -11,6 +11,7 @@ interface ExcalidrawCanvasProps {
   participantName?: string;
   initialSnapshot?: any;
   onSnapshotChange?: (snapshot: any) => void;
+  isMinimized?: boolean;
 }
 
 export default function ExcalidrawCanvas({
@@ -18,6 +19,7 @@ export default function ExcalidrawCanvas({
   participantName,
   initialSnapshot,
   onSnapshotChange,
+  isMinimized = false,
 }: ExcalidrawCanvasProps) {
   const isUpdatingFromRemote = useRef(false);
   const excalidrawAPIRef = useRef<any>(null);
@@ -120,7 +122,7 @@ export default function ExcalidrawCanvas({
       />
 
       {/* Host color indicator badge */}
-      {isHost && (
+      {isHost && !isMinimized && (
         <div className="absolute bottom-4 left-4 z-[500] pointer-events-none">
           <div className="bg-[#202124]/90 backdrop-blur-md text-white text-xs font-semibold px-3 py-1.5 rounded-full border border-[#3c4043] shadow-xl flex items-center gap-2">
             <span
@@ -134,7 +136,7 @@ export default function ExcalidrawCanvas({
         </div>
       )}
 
-      {!isHost && (
+      {!isHost && !isMinimized && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[500] pointer-events-none">
           <div className="bg-[#202124]/90 backdrop-blur-md text-white text-xs font-semibold px-4 py-2 rounded-full border border-[#3c4043] shadow-xl flex items-center gap-2">
             <Lock className="w-3.5 h-3.5 text-amber-400" />

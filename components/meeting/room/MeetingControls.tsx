@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { CallEndFilled, KeyboardFilled, MicFilled, MicOffFilled, Videocam, VideocamOff, ExpandLess, Group, Chat, BackHand, MoreVert, PresentToAll, VisualEffects, PersonAdd as UserPlus } from '../icons';
 import { VirtualBackgroundMode } from '@/lib/virtual-background';
-import { Maximize, Check, Volume2, Copy } from 'lucide-react';
+import { Maximize, Check, Volume2, Copy, Pencil, Presentation } from 'lucide-react';
 import AnnotationTriggerButton from '../AnnotationTriggerButton';
 
 interface MeetingControlsProps {
@@ -712,7 +712,7 @@ export default function MeetingControls({
             <BackHand className="w-6 h-6 sm:w-7 sm:h-7" />
           </button>
 
-          {/* Screen Annotation Toggle (Di samping Raise Hand) */}
+          {/* Screen Annotation Toggle (Di samping Raise Hand - Icon Pensil/Anotasi Coret Layar) */}
           {onToggleScreenAnnotation && (
             <button
               onClick={onToggleScreenAnnotation}
@@ -723,9 +723,7 @@ export default function MeetingControls({
               }`}
               title={isScreenAnnotationOpen ? 'Sembunyikan Anotasi Layar' : 'Buka Anotasi Layar'}
             >
-              <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-              </svg>
+              <Pencil className="w-6 h-6 sm:w-7 sm:h-7" />
             </button>
           )}
 
@@ -748,27 +746,28 @@ export default function MeetingControls({
                 <div className="absolute bottom-full mb-3 left-0 bg-[#202124] rounded-xl shadow-2xl py-2 min-w-[300px] z-50 border border-[#3c3c3c]">
                   {/* Recording Menu Item */}
                   {isHost && (
-                    <button
-                      onClick={() => {
-                        if (isRecording) {
-                          onStopRecording?.();
-                        } else {
-                          onStartRecording?.();
-                        }
-                        setShowMoreOptions(false);
-                      }}
-                      className="w-full px-4 py-3 text-left text-white hover:bg-[#3c4043] flex items-center gap-4 transition-colors cursor-pointer"
-                    >
-                      <div className="w-5 h-5 flex items-center justify-center">
-                        <div className={`w-[18px] h-[18px] rounded-full border-[1.5px] flex items-center justify-center ${isRecording ? 'border-red-500' : 'border-gray-300'}`}>
-                          <div className={`w-2 h-2 rounded-full ${isRecording ? 'bg-red-500 animate-pulse' : 'bg-gray-300'}`} />
+                    <>
+                      <button
+                        onClick={() => {
+                          if (isRecording) {
+                            onStopRecording?.();
+                          } else {
+                            onStartRecording?.();
+                          }
+                          setShowMoreOptions(false);
+                        }}
+                        className="w-full px-4 py-3 text-left text-white hover:bg-[#3c4043] flex items-center gap-4 transition-colors cursor-pointer"
+                      >
+                        <div className="w-5 h-5 flex items-center justify-center">
+                          <div className={`w-[18px] h-[18px] rounded-full border-[1.5px] flex items-center justify-center ${isRecording ? 'border-red-500' : 'border-gray-300'}`}>
+                            <div className={`w-2 h-2 rounded-full ${isRecording ? 'bg-red-500 animate-pulse' : 'bg-gray-300'}`} />
+                          </div>
                         </div>
-                      </div>
-                      <span className="text-sm font-medium">{isRecording ? 'Berhenti merekam' : 'Rekam panggilan'}</span>
-                    </button>
+                        <span className="text-sm font-medium">{isRecording ? 'Berhenti merekam' : 'Rekam panggilan'}</span>
+                      </button>
+                      <div className="h-px bg-[#444] my-1 mx-0" />
+                    </>
                   )}
-
-                  <div className="h-px bg-[#444] my-1 mx-0" />
 
                   {/* Adjust View */}
                   <button
@@ -800,24 +799,24 @@ export default function MeetingControls({
                     <span className="text-sm">Layar penuh</span>
                   </button>
 
-                  {/* Whiteboard */}
-                  <button
-                    onClick={() => {
-                      onToggleWhiteboard?.();
-                      setShowMoreOptions(false);
-                    }}
-                    className="w-full px-4 py-3 text-left text-white hover:bg-[#3c4043] flex items-center gap-4 transition-colors cursor-pointer"
-                  >
-                    <svg className="w-5 h-5 text-[#8ab4f8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium flex items-center gap-2">
-                        Papan Tulis (Whiteboard)
-                        {isWhiteboardOpen && <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />}
-                      </span>
-                    </div>
-                  </button>
+                  {/* Whiteboard - Only available for Host to initiate */}
+                  {isHost && (
+                    <button
+                      onClick={() => {
+                        onToggleWhiteboard?.();
+                        setShowMoreOptions(false);
+                      }}
+                      className="w-full px-4 py-3 text-left text-white hover:bg-[#3c4043] flex items-center gap-4 transition-colors cursor-pointer"
+                    >
+                      <Presentation className="w-5 h-5 text-[#8ab4f8]" />
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium flex items-center gap-2">
+                          Papan Tulis (Whiteboard)
+                          {isWhiteboardOpen && <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />}
+                        </span>
+                      </div>
+                    </button>
+                  )}
 
                   {/* Background and Effects */}
                   <button

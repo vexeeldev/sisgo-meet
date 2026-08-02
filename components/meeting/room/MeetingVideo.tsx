@@ -37,6 +37,8 @@ interface MeetingVideoProps {
   whiteboardSnapshot?: any;
   onWhiteboardSnapshotChange?: (snapshot: any) => void;
   onCloseWhiteboard?: () => void;
+  onOpenWhiteboard?: () => void;
+  hostName?: string;
   screenAnnotations?: any[];
   onChangeScreenAnnotations?: (annotations: any[]) => void;
   onScreenAnnotationStart?: (item: any) => void;
@@ -73,6 +75,8 @@ export default function MeetingVideo({
   whiteboardSnapshot,
   onWhiteboardSnapshotChange,
   onCloseWhiteboard,
+  onOpenWhiteboard,
+  hostName,
   screenAnnotations = [],
   onChangeScreenAnnotations,
   onScreenAnnotationStart,
@@ -236,6 +240,8 @@ export default function MeetingVideo({
             whiteboardSnapshot={whiteboardSnapshot}
             onWhiteboardSnapshotChange={onWhiteboardSnapshotChange}
             onCloseWhiteboard={onCloseWhiteboard}
+            onOpenWhiteboard={onOpenWhiteboard}
+            hostName={hostName || (isHost ? participantName : 'Host')}
             screenAnnotations={screenAnnotations}
             onChangeScreenAnnotations={onChangeScreenAnnotations}
             onScreenAnnotationStart={onScreenAnnotationStart}
@@ -288,6 +294,11 @@ export default function MeetingVideo({
             raisedHands={raisedHandsByStreamId}
             pinnedParticipants={pinnedParticipants}
             onTogglePin={onTogglePin}
+            isWhiteboardOpen={isWhiteboardOpen}
+            isWhiteboardMinimized={isWhiteboardMinimized}
+            whiteboardSnapshot={whiteboardSnapshot}
+            onOpenWhiteboard={onOpenWhiteboard}
+            hostName={hostName || (isHost ? participantName : 'Host')}
           />
         </div>
       )}

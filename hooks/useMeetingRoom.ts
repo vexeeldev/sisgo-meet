@@ -546,16 +546,28 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
 
   const handleToggleWhiteboard = () => {
     if (isHost) {
-      setIsWhiteboardOpen((prev) => {
-        const nextState = !prev;
-        sendMessage('whiteboard_toggle', { isOpen: nextState });
-        if (!nextState) setIsWhiteboardMinimized(false);
-        return nextState;
-      });
+      if (isWhiteboardOpen && !isWhiteboardMinimized) {
+        setIsWhiteboardMinimized(true);
+      } else if (isWhiteboardOpen && isWhiteboardMinimized) {
+        setIsWhiteboardMinimized(false);
+      } else {
+        setIsWhiteboardOpen(true);
+        setIsWhiteboardMinimized(false);
+        sendMessage('whiteboard_toggle', { isOpen: true });
+      }
     } else {
-      // Untuk peserta biasa (non-host), klik close/toggle hanya me-minimize/maximize preview box lokal
       setIsWhiteboardMinimized((prev) => !prev);
     }
+  };
+
+  const handleCloseWhiteboardForAll = () => {
+    setIsWhiteboardOpen(false);
+    setIsWhiteboardMinimized(false);
+    sendMessage('whiteboard_toggle', { isOpen: false });
+  };
+
+  const handleMinimizeWhiteboard = () => {
+    setIsWhiteboardMinimized(true);
   };
 
   const handleWhiteboardSnapshotChange = (snapshot: any) => {
@@ -646,6 +658,8 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     isWhiteboardMinimized,
     whiteboardSnapshot,
     handleToggleWhiteboard,
+    handleCloseWhiteboardForAll,
+    handleMinimizeWhiteboard,
     handleWhiteboardSnapshotChange,
     screenAnnotations,
     handleScreenAnnotationChange,

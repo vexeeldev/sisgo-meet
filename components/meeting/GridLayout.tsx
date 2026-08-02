@@ -322,6 +322,7 @@ export default function GridLayout({
                     <ExcalidrawCanvas
                       isHost={false}
                       initialSnapshot={whiteboardSnapshot}
+                      isMinimized={true}
                     />
                   </div>
 

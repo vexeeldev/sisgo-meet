@@ -116,10 +116,45 @@ export function useMeetingLobby({ roomId, roomExists, roomType = 'private', onJo
   };
 
   useEffect(() => {
-    try {
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) setUser(JSON.parse(storedUser));
-    } catch (e) {}
+    const clearAuthSessionData = () => {
+      if (typeof window === 'undefined') return;
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      localStorage.removeItem("userUuid");
+      localStorage.removeItem("email");
+      sessionStorage.removeItem("redirectAfterLogin");
+      setUser(null);
+    };
+
+    const validateAuthSession = async () => {
+      if (typeof window === 'undefined') return;
+
+      const token = localStorage.getItem("token");
+      if (!token) {
+        clearAuthSessionData();
+        return;
+      }
+
+      // Jika ada token, coba validasi langsung ke backend (/auth/me)
+      try {
+        const res = await api.getMe();
+        if (res.success && res.data) {
+          setUser(res.data);
+        } else {
+          // Token expired: Bersihkan seluruh storage & sesi secara diam-diam agar otomatis masuk Guest Mode
+          console.warn("Token expired / invalid di lobby, otomatis membersihkan sesi & beralih ke Guest Mode.");
+          clearAuthSessionData();
+        }
+      } catch (e) {
+        // Fallback dari localStorage jika offline
+        try {
+          const storedUser = localStorage.getItem("user");
+          if (storedUser) setUser(JSON.parse(storedUser));
+        } catch (_) {}
+      }
+    };
+
+    validateAuthSession();
 
     if (typeof window !== 'undefined') {
       const savedGuestName =
@@ -203,10 +238,12 @@ export function useMeetingLobby({ roomId, roomExists, roomType = 'private', onJo
       try {
         stream = await navigator.mediaDevices.getUserMedia({
           video: {
-          width: { ideal: 1920, min: 1280 },
-          height: { ideal: 1080, min: 720 },
-          frameRate: { ideal: 60, min: 30 },
-          aspectRatio: { ideal: 1.7777777778 },
+          // width: { ideal: 1920, min: 1280 },
+          // height: { ideal: 1080, min: 720 },
+          // frameRate: { ideal: 60, min: 30 },
+          // aspectRatio: { ideal: 1.7777777778 },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
           },
           audio: {
             echoCancellation: true,

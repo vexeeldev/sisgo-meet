@@ -399,8 +399,17 @@ export const api = {
     }
     
     removeToken();
-    localStorage.removeItem('userUuid');
-    localStorage.removeItem('email');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('userUuid');
+      localStorage.removeItem('email');
+      sessionStorage.clear();
+      // Remove any meeting specific guest name keys if needed
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith('guestName_')) {
+          localStorage.removeItem(key);
+        }
+      });
+    }
     
     return { success: true };
   },
