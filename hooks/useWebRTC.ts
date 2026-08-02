@@ -609,9 +609,18 @@ export function useWebRTC({
 
           case 'join_request': {
             if (msg.data && msg.data.participant_uuid) {
+              const reqData = {
+                ...msg.data,
+                name: msg.data.name && msg.data.name.trim() ? msg.data.name.trim() : 'Guest',
+              };
               setJoinRequests(prev => {
-                if (prev.find(r => r.participant_uuid === msg.data.participant_uuid)) return prev;
-                return [...prev, msg.data];
+                const existingIndex = prev.findIndex(r => r.participant_uuid === reqData.participant_uuid);
+                if (existingIndex >= 0) {
+                  const updated = [...prev];
+                  updated[existingIndex] = reqData;
+                  return updated;
+                }
+                return [...prev, reqData];
               });
             }
             break;

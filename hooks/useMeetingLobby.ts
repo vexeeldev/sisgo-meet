@@ -199,30 +199,49 @@ export function useMeetingLobby({ roomId, roomExists, roomType = 'private', onJo
     setIsStarting(true);
     setError('');
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
           width: { ideal: 1920, min: 1280 },
           height: { ideal: 1080, min: 720 },
           frameRate: { ideal: 60, min: 30 },
           aspectRatio: { ideal: 1.7777777778 },
-        },
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        },
-      });
+          },
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+          },
+        });
+      } catch (err: any) {
+        if (err.name === 'NotAllowedError') throw err;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: true,
+          });
+        } catch (err2: any) {
+          if (err2.name === 'NotAllowedError') throw err2;
+          stream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+          });
+        }
+      }
 
       if (!isMountedRef.current) {
         stream.getTracks().forEach(track => track.stop());
         return;
       }
 
+      const hasVideo = stream.getVideoTracks().length > 0;
+      const hasAudio = stream.getAudioTracks().length > 0;
+
       setLocalStream(stream);
       localStreamRef.current = stream;
       setHasPermission(true);
-      setIsCameraOn(true);
-      setIsMicOn(true);
+      setIsCameraOn(hasVideo);
+      setIsMicOn(hasAudio);
 
       const devices = await navigator.mediaDevices.enumerateDevices();
       const cameras = devices.filter((d) => d.kind === 'videoinput');
@@ -354,20 +373,38 @@ export function useMeetingLobby({ roomId, roomExists, roomType = 'private', onJo
     );
 
     ws.onopen = () => {
-      const activeName = getResolvedName();
+      const activeName = getResolvedName(providedName);
       ws.send(JSON.stringify({
         type: 'join_request',
         data: {
           name: activeName,
           role: roleRef.current || 'candidate',
           participant_uuid: participantUUID,
-    
         }
       }));
     };
 
     ws.onmessage = (event) => {
-      const msg = JSON.parse(event.data);
+      let msg: any = {};
+      try {
+        msg = JSON.parse(event.data);
+      } catch (e) {
+        return;
+      }
+
+      if (msg.type === 'host_joined') {
+        const activeName = getResolvedName(providedName);
+        ws.send(JSON.stringify({
+          type: 'join_request',
+          data: {
+            name: activeName,
+            role: roleRef.current || 'candidate',
+            participant_uuid: participantUUID,
+          }
+        }));
+        return;
+      }
+
       if (msg.type === 'approved' && msg.data?.participant_uuid === participantUUID) {
         setWaitingApproval(false);
         setError('');
@@ -426,7 +463,19 @@ export function useMeetingLobby({ roomId, roomExists, roomType = 'private', onJo
     let result;
     if (token) {
       result = await api.joinRoom(roomId);
-      if (!result.success && (result.message?.toLowerCase().includes("token") || result.message?.includes("401") || result.message?.toLowerCase().includes("unauthorized"))) {
+      const isAuthError =
+        !result.success &&
+        (result.message?.toLowerCase().includes("token") ||
+         result.message?.toLowerCase().includes("session") ||
+         result.message?.toLowerCase().includes("expired") ||
+         result.message?.toLowerCase().includes("unauthenticated") ||
+         result.message?.toLowerCase().includes("unauthorized") ||
+         result.message?.includes("401"));
+
+      if (isAuthError) {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem("token");
+        }
         result = await api.joinRoomGuest(roomId, activeName);
       }
     } else {
