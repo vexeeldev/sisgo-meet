@@ -15,9 +15,16 @@ export function getUser(): User | null {
 /** Generate a consistent avatar background color from a name string */
 export function stringToColor(str: string): string {
   const colors = [
-    '#1a73e8', '#0f9d58', '#f29900', '#d93025',
-    '#7627bb', '#00897b', '#e37400', '#c2185b',
-    '#1565c0', '#2e7d32',
+    '#e53935', // Red
+    '#d81b60', // Pink
+    '#8e24aa', // Purple
+    '#3949ab', // Indigo
+    '#1e88e5', // Blue
+    '#00897b', // Teal
+    '#43a047', // Green
+    '#fb8c00', // Orange
+    '#795548', // Brown
+    '#546e7a', // Blue Grey
   ];
   let hash = 0;
   for (let i = 0; i < str.length; i++) {

@@ -116,6 +116,9 @@ export default function MeetingPage() {
     showScreenAnnotationPrompt,
     setShowScreenAnnotationPrompt,
     handleConfirmScreenAnnotationShare,
+    canDrawOnWhiteboard,
+    whiteboardAllowedIds,
+    handleToggleWhiteboardPermission,
     audioInputDevices,
     videoInputDevices,
     audioOutputDevices,
@@ -221,6 +224,7 @@ export default function MeetingPage() {
             onClearScreenAnnotations={handleClearScreenAnnotations}
             isScreenAnnotationOpen={isScreenAnnotationOpen}
             onCloseScreenAnnotation={handleToggleScreenAnnotation}
+            canDrawOnWhiteboard={canDrawOnWhiteboard}
           />
         </div>
 
@@ -251,6 +255,8 @@ export default function MeetingPage() {
             handleRejectJoin={handleRejectJoin}
             handleChangeVirtualBg={handleChangeVirtualBg}
             stringToColor={stringToColor}
+            whiteboardAllowedIds={whiteboardAllowedIds}
+            onToggleWhiteboardPermission={handleToggleWhiteboardPermission}
           />
         )}
 

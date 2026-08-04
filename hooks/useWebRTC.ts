@@ -27,12 +27,14 @@ interface UseWebRTCProps {
   onWhiteboardUpdate?: (snapshot: any) => void;
   isWhiteboardOpen?: boolean;
   whiteboardSnapshot?: any;
+  whiteboardAllowedIds?: string[];
   screenAnnotations?: any[];
   onScreenAnnotationUpdate?: (annotations: any[]) => void;
   onScreenAnnotationStart?: (item: any) => void;
   onScreenAnnotationDraw?: (data: { id: string; points: number[] }) => void;
   onScreenAnnotationEnd?: (data: { id: string }) => void;
   onScreenAnnotationClear?: () => void;
+  onWhiteboardPermissionUpdate?: (allowedIds: string[]) => void;
 }
 
 export type NetworkQuality = 'excellent' | 'good' | 'poor' | 'unknown';
@@ -103,12 +105,14 @@ export function useWebRTC({
   onWhiteboardUpdate,
   isWhiteboardOpen,
   whiteboardSnapshot,
+  whiteboardAllowedIds = [],
   screenAnnotations = [],
   onScreenAnnotationUpdate,
   onScreenAnnotationStart,
   onScreenAnnotationDraw,
   onScreenAnnotationEnd,
   onScreenAnnotationClear,
+  onWhiteboardPermissionUpdate,
   signalServer = 'wss://backspace-repurpose-fervor.ngrok-free.dev/ws',
   initialCameraOn = true,
   initialMicOn = true,
@@ -129,6 +133,7 @@ export function useWebRTC({
   const [peerIdToStreamId, setPeerIdToStreamId] = useState<Record<string, string>>({});
   const [speaking, setSpeaking] = useState<Record<string, boolean>>({});
   const [networkQuality, setNetworkQuality] = useState<Record<string, NetworkQuality>>({ local: 'unknown' });
+  const [myConnId, setMyConnId] = useState<string | null>(null);
 
   const ws = useRef<WebSocket | null>(null);
   const peers = useRef<Record<string, Peer.Instance>>({});
@@ -141,16 +146,16 @@ export function useWebRTC({
   const remoteScreenSharerIdRef = useRef<string | null>(null);
   const remoteScreenStreamRef = useRef<MediaStream | null>(null);
   const isScreenSharingRef = useRef(false);
+  const whiteboardAllowedIdsRef = useRef(whiteboardAllowedIds);
 
   const isWhiteboardOpenRef = useRef(isWhiteboardOpen);
+  const whiteboardSnapshotRef = useRef(whiteboardSnapshot);
+
   useEffect(() => {
     isWhiteboardOpenRef.current = isWhiteboardOpen;
-  }, [isWhiteboardOpen]);
-
-  const whiteboardSnapshotRef = useRef(whiteboardSnapshot);
-  useEffect(() => {
     whiteboardSnapshotRef.current = whiteboardSnapshot;
-  }, [whiteboardSnapshot]);
+    whiteboardAllowedIdsRef.current = whiteboardAllowedIds;
+  }, [isWhiteboardOpen, whiteboardSnapshot, whiteboardAllowedIds]);
 
   const screenAnnotationsRef = useRef(screenAnnotations);
   useEffect(() => {
@@ -401,13 +406,12 @@ export function useWebRTC({
       ws.current = new WebSocket(wsUrl);
 
     ws.current.onopen = () => {
-      // Beritahu semua orang siapa kita
       sendMessage('profile', { name: userName, role: userRole });
       
       if (userRole === 'host' || userRole === 'interviewer') {
         sendMessage('host_joined');
       }
-      playSound(); // Entry chime sound (first 2 seconds of brimo.mp3)
+      playSound();
     };
 
     ws.current.onmessage = (event) => {
@@ -416,6 +420,7 @@ export function useWebRTC({
 
         switch (msg.type) {
           case 'room-info': {
+            setMyConnId(msg.sender_id);
             const list: RoomInfoParticipant[] = msg.data?.participants ?? [];
             setParticipants(prev => {
               const ids = list.map(p => p.id);
@@ -441,6 +446,9 @@ export function useWebRTC({
               sendMessage('whiteboard_toggle', { isOpen: true }, connId);
               if (whiteboardSnapshotRef.current) {
                 sendMessage('whiteboard_update', { snapshot: whiteboardSnapshotRef.current }, connId);
+              }
+              if (whiteboardAllowedIdsRef.current.length > 0) {
+                sendMessage('whiteboard_permission_update', { allowedIds: whiteboardAllowedIdsRef.current }, connId);
               }
             }
             if (isScreenSharingRef.current && screenAnnotationsRef.current.length > 0) {
@@ -667,6 +675,13 @@ export function useWebRTC({
           case 'whiteboard_update': {
             if (onWhiteboardUpdate && msg.data?.snapshot) {
               onWhiteboardUpdate(msg.data.snapshot);
+            }
+            break;
+          }
+
+          case 'whiteboard_permission_update': {
+            if (onWhiteboardPermissionUpdate && Array.isArray(msg.data?.allowedIds)) {
+              onWhiteboardPermissionUpdate(msg.data.allowedIds);
             }
             break;
           }
@@ -1344,5 +1359,6 @@ function preferH264(sdp: string): string {
     switchAudioOutputDevice,
     updateDeviceList,
     networkQuality,
+    myConnId,
   };
 }

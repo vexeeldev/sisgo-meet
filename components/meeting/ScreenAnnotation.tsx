@@ -196,6 +196,7 @@ export default function ScreenAnnotation({
 
     if (toRemoveIds.size > 0) {
       const filtered = annotationsRef.current.filter((item) => !toRemoveIds.has(item.id));
+      annotationsRef.current = filtered;
       onChangeAnnotations?.(filtered);
     }
   };

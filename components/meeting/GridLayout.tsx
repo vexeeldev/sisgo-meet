@@ -23,6 +23,7 @@ interface GridLayoutProps {
   onOpenWhiteboard?: () => void;
   hostName?: string;
   whiteboardSnapshot?: any;
+  canDraw?: boolean;
   pinnedParticipants?: string[];
   onTogglePin?: (id: string) => void;
 }
@@ -62,6 +63,7 @@ export default function GridLayout({
   onOpenWhiteboard,
   hostName = 'Host',
   whiteboardSnapshot,
+  canDraw = false,
   pinnedParticipants = [],
   onTogglePin,
 }: GridLayoutProps) {
@@ -203,6 +205,7 @@ export default function GridLayout({
                       isHost={false}
                       initialSnapshot={whiteboardSnapshot}
                       isMinimized={true}
+                      canDraw={canDraw}
                     />
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none z-10" />
@@ -350,6 +353,7 @@ export default function GridLayout({
                       isHost={false}
                       initialSnapshot={whiteboardSnapshot}
                       isMinimized={true}
+                      canDraw={canDraw}
                     />
                   </div>
 

@@ -65,6 +65,7 @@ interface SpeakerLayoutProps {
   whiteboardSnapshot?: any;
   onWhiteboardSnapshotChange?: (snapshot: any) => void;
   onCloseWhiteboard?: () => void;
+  canDraw?: boolean;
   screenAnnotations?: any[];
   onChangeScreenAnnotations?: (annotations: any[]) => void;
   onScreenAnnotationStart?: (item: any) => void;
@@ -102,6 +103,7 @@ export default function SpeakerLayout({
   whiteboardSnapshot,
   onWhiteboardSnapshotChange,
   onCloseWhiteboard,
+  canDraw = false,
   screenAnnotations = [],
   onChangeScreenAnnotations,
   onScreenAnnotationStart,
@@ -502,6 +504,7 @@ export default function SpeakerLayout({
               participantName={participantName}
               initialSnapshot={whiteboardSnapshot}
               onSnapshotChange={onWhiteboardSnapshotChange}
+              canDraw={canDraw}
             />
           </div>
         </div>

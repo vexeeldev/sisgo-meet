@@ -1,6 +1,6 @@
 'use client';
 
-import { LoaderCircle, UserX } from 'lucide-react';
+import { LoaderCircle, UserX, MessageSquare, PenTool } from 'lucide-react';
 import VirtualBackgroundPanel from '../VirtualBackgroundPanel';
 import ChatPopup from '../ChatPopup';
 import { VirtualBackgroundMode } from '@/lib/virtual-background';
@@ -31,6 +31,8 @@ interface MeetingSidebarProps {
   handleRejectJoin: (uuid: string) => void;
   handleChangeVirtualBg: (mode: VirtualBackgroundMode, image?: string) => void | Promise<void>;
   stringToColor: (str: string) => string;
+  whiteboardAllowedIds?: string[];
+  onToggleWhiteboardPermission?: (connId: string) => void;
 }
 
 export default function MeetingSidebar({
@@ -59,6 +61,8 @@ export default function MeetingSidebar({
   handleRejectJoin,
   handleChangeVirtualBg,
   stringToColor,
+  whiteboardAllowedIds = [],
+  onToggleWhiteboardPermission,
 }: MeetingSidebarProps) {
   return (
     <div className="fixed inset-0 sm:relative sm:inset-auto sm:w-[320px] md:w-[360px] h-full bg-[#17181a] sm:rounded-2xl overflow-hidden flex flex-col shadow-2xl z-20 sm:z-auto animate-sidebar-entry">
@@ -272,13 +276,28 @@ export default function MeetingSidebar({
                         {isRemoteHost && <p className="text-[11px] text-[#9aa0a6]">Host</p>}
                       </div>
                       {isHost && !isRemoteHost && (
-                        <button
-                          onClick={() => handleKickParticipant(connId)}
-                          className="p-1.5 text-[#9aa0a6] hover:text-red-500 hover:bg-red-500/10 rounded-lg opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
-                          title="Keluarkan peserta"
-                        >
-                          <UserX className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {onToggleWhiteboardPermission && (
+                            <button
+                              onClick={() => onToggleWhiteboardPermission(connId)}
+                              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                                whiteboardAllowedIds.includes(connId) 
+                                  ? 'text-blue-400 bg-blue-500/20 hover:bg-blue-500/30' 
+                                  : 'text-[#9aa0a6] hover:text-white hover:bg-[#4a4b4c]'
+                              }`}
+                              title={whiteboardAllowedIds.includes(connId) ? "Cabut Izin Whiteboard" : "Beri Izin Whiteboard"}
+                            >
+                              <PenTool className="w-4 h-4" />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleKickParticipant(connId)}
+                            className="p-1.5 text-[#9aa0a6] hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer"
+                            title="Keluarkan peserta"
+                          >
+                            <UserX className="w-4 h-4" />
+                          </button>
+                        </div>
                       )}
                     </div>
                   );

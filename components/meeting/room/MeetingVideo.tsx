@@ -45,6 +45,7 @@ interface MeetingVideoProps {
   onScreenAnnotationDraw?: (data: { id: string; points: number[] }) => void;
   onScreenAnnotationEnd?: (data: { id: string }) => void;
   onClearScreenAnnotations?: () => void;
+  canDrawOnWhiteboard?: boolean;
   isScreenAnnotationOpen?: boolean;
   onCloseScreenAnnotation?: () => void;
   pinnedParticipants?: string[];
@@ -83,6 +84,7 @@ export default function MeetingVideo({
   onScreenAnnotationDraw,
   onScreenAnnotationEnd,
   onClearScreenAnnotations,
+  canDrawOnWhiteboard = false,
   isScreenAnnotationOpen = false,
   onCloseScreenAnnotation,
   pinnedParticipants = [],
@@ -248,6 +250,7 @@ export default function MeetingVideo({
             onScreenAnnotationDraw={onScreenAnnotationDraw}
             onScreenAnnotationEnd={onScreenAnnotationEnd}
             onClearScreenAnnotations={onClearScreenAnnotations}
+            canDraw={canDrawOnWhiteboard}
             onCloseScreenAnnotation={isScreenAnnotationOpen ? onCloseScreenAnnotation : undefined}
             pinnedParticipants={pinnedParticipants}
             onTogglePin={onTogglePin}
@@ -302,7 +305,6 @@ export default function MeetingVideo({
           />
         </div>
       )}
-      {/* Raised Hand Top-Right Notification Badge (Google Meet Style) */}
       {raisedHandNames.length > 0 && (
         <div className="absolute top-4 right-4 z-[90] flex flex-col gap-2 pointer-events-none">
           {raisedHandNames.map((name, idx) => (

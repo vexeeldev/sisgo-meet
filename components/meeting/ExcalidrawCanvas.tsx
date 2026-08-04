@@ -8,6 +8,7 @@ import { stringToColor } from '@/lib/meeting';
 
 interface ExcalidrawCanvasProps {
   isHost: boolean;
+  canDraw?: boolean;
   participantName?: string;
   initialSnapshot?: any;
   onSnapshotChange?: (snapshot: any) => void;
@@ -16,6 +17,7 @@ interface ExcalidrawCanvasProps {
 
 export default function ExcalidrawCanvas({
   isHost,
+  canDraw = false,
   participantName,
   initialSnapshot,
   onSnapshotChange,
@@ -30,9 +32,9 @@ export default function ExcalidrawCanvas({
     return stringToColor(cleanName || 'Guest');
   }, [participantName]);
 
-  // Apply remote snapshot updates for non-hosts
+  // Apply remote snapshot updates for all users
   useEffect(() => {
-    if (excalidrawAPIRef.current && initialSnapshot && !isHost) {
+    if (excalidrawAPIRef.current && initialSnapshot) {
       try {
         const snapshotStr = JSON.stringify(initialSnapshot.elements || []);
         if (snapshotStr !== lastEmittedSnapshotStr.current) {
@@ -50,11 +52,11 @@ export default function ExcalidrawCanvas({
         }, 50);
       }
     }
-  }, [initialSnapshot, isHost]);
+  }, [initialSnapshot]);
 
   const handleChange = useCallback(
     (elements: readonly any[], appState: any) => {
-      if (isUpdatingFromRemote.current || !isHost || !onSnapshotChange) return;
+      if (isUpdatingFromRemote.current || !canDraw || !onSnapshotChange) return;
 
       try {
         const currentStr = JSON.stringify(elements);
@@ -111,18 +113,20 @@ export default function ExcalidrawCanvas({
         .excalidraw-whiteboard-container .excalidraw .footer-center {
           background-color: #ffffff !important;
           background: #ffffff !important;
+          pointer-events: ${canDraw ? 'auto' : 'none'};
+          touch-action: ${canDraw ? 'auto' : 'none'};
         }
       `}</style>
       <Excalidraw
         excalidrawAPI={setApi}
-        viewModeEnabled={!isHost}
+        viewModeEnabled={!canDraw}
         theme="light"
         onChange={handleChange}
         initialData={initialData}
       />
 
-      {/* Host color indicator badge */}
-      {isHost && !isMinimized && (
+      {/* Penanda warna (hanya untuk yang bisa menggambar) */}
+      {canDraw && !isMinimized && (
         <div className="absolute bottom-4 left-4 z-[500] pointer-events-none">
           <div className="bg-[#202124]/90 backdrop-blur-md text-white text-xs font-semibold px-3 py-1.5 rounded-full border border-[#3c4043] shadow-xl flex items-center gap-2">
             <span
@@ -136,11 +140,11 @@ export default function ExcalidrawCanvas({
         </div>
       )}
 
-      {!isHost && !isMinimized && (
+      {!canDraw && !isMinimized && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[500] pointer-events-none">
-          <div className="bg-[#202124]/90 backdrop-blur-md text-white text-xs font-semibold px-4 py-2 rounded-full border border-[#3c4043] shadow-xl flex items-center gap-2">
-            <Lock className="w-3.5 h-3.5 text-amber-400" />
-            <span>Mode Lihat Saja (Hanya Host yang dapat menggambar)</span>
+          <div className="bg-[#202124]/90 backdrop-blur-md text-white text-[10px] sm:text-xs font-semibold px-4 py-2 rounded-full border border-[#3c4043] shadow-xl flex items-center gap-2 whitespace-nowrap">
+            <Lock className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400" />
+            <span>Mode Lihat Saja</span>
           </div>
         </div>
       )}

@@ -62,6 +62,7 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
   const [screenAnnotations, setScreenAnnotations] = useState<any[]>([]);
   const [isScreenAnnotationOpen, setIsScreenAnnotationOpen] = useState(false);
   const [pinnedParticipants, setPinnedParticipants] = useState<string[]>([]);
+  const [whiteboardAllowedIds, setWhiteboardAllowedIds] = useState<string[]>([]);
 
   const user = getUser();
   const isHost = meetingRole === 'interviewer';
@@ -111,6 +112,15 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     sendMessage('screen_annotation_clear');
   };
 
+  const handleToggleWhiteboardPermission = (participantConnId: string) => {
+    setWhiteboardAllowedIds(prev => {
+      const isAllowed = prev.includes(participantConnId);
+      const updated = isAllowed ? prev.filter(id => id !== participantConnId) : [...prev, participantConnId];
+      sendMessage('whiteboard_permission_update', { allowedIds: updated });
+      return updated;
+    });
+  };
+
   const [showScreenAnnotationPrompt, setShowScreenAnnotationPrompt] = useState(false);
 
   const {
@@ -145,6 +155,7 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     switchVideoDevice,
     switchAudioOutputDevice,
     networkQuality,
+    myConnId,
   } = useWebRTC({
     roomId,
     participantUUID: participantUUID || '',
@@ -174,6 +185,9 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     },
     onWhiteboardUpdate: (snapshot: any) => {
       setWhiteboardSnapshot(snapshot);
+    },
+    onWhiteboardPermissionUpdate: (allowedIds: string[]) => {
+      setWhiteboardAllowedIds(allowedIds);
     },
     onScreenAnnotationUpdate: (annotations: any[]) => {
       setScreenAnnotations(annotations);
@@ -219,7 +233,12 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
   const handleToggleScreenAnnotation = () => {
     const isAnyScreenSharing = isScreenSharing || !!remoteScreenStream;
     if (isAnyScreenSharing || isScreenAnnotationOpen) {
-      setIsScreenAnnotationOpen((prev) => !prev);
+      setIsScreenAnnotationOpen((prev) => {
+        if (prev) {
+          handleClearScreenAnnotations();
+        }
+        return !prev;
+      });
     } else {
       setShowScreenAnnotationPrompt(true);
     }
@@ -230,6 +249,8 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     setIsScreenAnnotationOpen(true);
     startScreenSharing();
   };
+
+  const canDrawOnWhiteboard = isHost || (!!myConnId && whiteboardAllowedIds.includes(myConnId));
 
   const {
     isRecording,
@@ -408,6 +429,13 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
       });
     }
   }, [result, roomId]);
+
+  useEffect(() => {
+    const hasScreenShare = isScreenSharing || !!remoteScreenStream;
+    if (hasScreenShare && isWhiteboardOpen && !isWhiteboardMinimized) {
+      setIsWhiteboardMinimized(true);
+    }
+  }, [isScreenSharing, remoteScreenStream, isWhiteboardOpen, isWhiteboardMinimized]);
 
   const handleEndForAll = () => {
     sendMessage('end_call', {});
@@ -699,6 +727,9 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     handleCloseWhiteboardForAll,
     handleMinimizeWhiteboard,
     handleWhiteboardSnapshotChange,
+    canDrawOnWhiteboard,
+    whiteboardAllowedIds,
+    handleToggleWhiteboardPermission,
     screenAnnotations,
     handleScreenAnnotationChange,
     handleScreenAnnotationStart,
