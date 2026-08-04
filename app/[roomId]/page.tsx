@@ -8,6 +8,7 @@ import MeetingControls from '@/components/meeting/room/MeetingControls';
 import MeetingSidebar from '@/components/meeting/room/MeetingSidebarBackground';
 import MeetingSidebarRecordings from '@/components/meeting/room/MeetingSidebarRecordings';
 import EndCallModal from '@/components/meeting/room/EndCallModal';
+import ConfirmDialog from '@/components/meeting/room/ConfirmDialog';
 import ScreenAnnotationPromptModal from '@/components/meeting/room/ScreenAnnotationPromptModal';
 import CloseWhiteboardModal from '@/components/meeting/CloseWhiteboardModal';
 import HostActionMenuModal from '@/components/meeting/HostActionMenuModal';
@@ -70,6 +71,8 @@ export default function MeetingPage() {
     setShowRequests,
     setShowBgPanel,
     setShowEndCallModal,
+    confirmDialog,
+    setConfirmDialog,
     setShowActionMenu,
     handleJoinFromLobby,
     handleToggleLayout,
@@ -265,6 +268,17 @@ export default function MeetingPage() {
         onClose={() => setShowEndCallModal(false)}
         onEndForAll={handleEndForAll}
         onLeaveCall={leaveCall}
+      />
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        confirmText={confirmDialog.confirmText}
+        cancelText={confirmDialog.cancelText}
+        isDestructive={confirmDialog.isDestructive}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
       />
 
       <CloseWhiteboardModal

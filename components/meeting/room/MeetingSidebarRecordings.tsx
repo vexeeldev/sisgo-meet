@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { FileVideo, Trash2, Download, Clock, Play } from 'lucide-react';
 import { 
   getRecordingsFromStorage, 
   deleteRecordingFromStorage, 
   SavedRecording 
 } from '@/lib/recording-storage';
+import ConfirmDialog from './ConfirmDialog';
 
 interface MeetingSidebarRecordingsProps {
   roomId: string;
@@ -20,6 +22,7 @@ export default function MeetingSidebarRecordings({
 }: MeetingSidebarRecordingsProps) {
   const [recordings, setRecordings] = useState<SavedRecording[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const loadRecordings = async () => {
     setLoading(true);
@@ -38,9 +41,14 @@ export default function MeetingSidebarRecordings({
   }, [roomId, latestRecordingResult]);
 
   const handleDelete = async (id: string) => {
-    if (confirm('Apakah Anda yakin ingin menghapus video rekaman ini dari riwayat?')) {
-      await deleteRecordingFromStorage(id);
-      setRecordings((prev) => prev.filter((item) => item.id !== id));
+    setDeleteConfirmId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (deleteConfirmId) {
+      await deleteRecordingFromStorage(deleteConfirmId);
+      setRecordings((prev) => prev.filter((item) => item.id !== deleteConfirmId));
+      setDeleteConfirmId(null);
     }
   };
 
@@ -167,6 +175,15 @@ export default function MeetingSidebarRecordings({
           ))
         )}
       </div>
+      
+      <ConfirmDialog
+        isOpen={deleteConfirmId !== null}
+        title="Hapus Rekaman"
+        message="Apakah Anda yakin ingin menghapus video rekaman ini dari riwayat?"
+        isDestructive={true}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteConfirmId(null)}
+      />
     </div>
   );
 }

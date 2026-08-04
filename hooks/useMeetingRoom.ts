@@ -30,6 +30,20 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
   const [unreadChatCount, setUnreadChatCount] = useState(0);
   const [layout, setLayout] = useState<'auto' | 'tiled' | 'spotlight' | 'sidebar' | 'speaker' | 'grid'>('tiled');
   const [showEndCallModal, setShowEndCallModal] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    isDestructive?: boolean;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
   const [currentTime, setCurrentTime] = useState('');
   const [isHandRaised, setIsHandRaised] = useState(false);
   const [raisedHands, setRaisedHands] = useState<Record<string, boolean>>({});
@@ -341,22 +355,37 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
 
   const handleEndCall = () => {
     if (isRecording || isPaused) {
-      const confirmLeave = confirm(
-        'Kamu masih dalam sesi recording. Meninggalkan meeting akan menghentikan dan membuang rekaman yang belum di-download. Yakin mau keluar?'
-      );
-      if (!confirmLeave) return;
-      stopRecording();
+      setConfirmDialog({
+        isOpen: true,
+        title: 'Konfirmasi',
+        message: 'Kamu masih dalam sesi recording. Meninggalkan meeting akan menghentikan dan membuang rekaman yang belum di-download. Yakin mau keluar?',
+        isDestructive: true,
+        onConfirm: () => {
+          stopRecording();
+          setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+          if (isHost) setShowEndCallModal(true);
+          else leaveCall();
+        }
+      });
+      return;
     } else if (result) {
-      const confirmLeave = confirm(
-        'Ada hasil rekaman yang belum di-download. Meninggalkan meeting akan membuang rekaman ini. Yakin mau keluar?'
-      );
-      if (!confirmLeave) return;
+      setConfirmDialog({
+        isOpen: true,
+        title: 'Konfirmasi',
+        message: 'Ada hasil rekaman yang belum di-download. Meninggalkan meeting akan membuang rekaman ini. Yakin mau keluar?',
+        isDestructive: true,
+        onConfirm: () => {
+          setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+          if (isHost) setShowEndCallModal(true);
+          else leaveCall();
+        }
+      });
+      return;
     }
 
     if (isHost) {
       setShowEndCallModal(true);
     } else {
-      if (!confirm('Are you sure you want to leave the meeting?')) return;
       leaveCall();
     }
   };
@@ -386,9 +415,16 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
   };
 
   const handleKickParticipant = (connId: string) => {
-    if (confirm('Yakin ingin mengeluarkan peserta ini?')) {
-      sendMessage('kick', {}, connId);
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Keluarkan Peserta',
+      message: 'Yakin ingin mengeluarkan peserta ini?',
+      isDestructive: true,
+      onConfirm: () => {
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+        sendMessage('kick', {}, connId);
+      }
+    });
   };
 
   const showToast = (message: string, type: 'info' | 'hand' = 'info') => {
@@ -628,6 +664,8 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     setShowRequests,
     setShowBgPanel,
     setShowEndCallModal,
+    confirmDialog,
+    setConfirmDialog,
     setShowActionMenu,
     handleJoinFromLobby,
     handleToggleLayout,
