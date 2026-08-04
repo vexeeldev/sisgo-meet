@@ -113,7 +113,7 @@ export function useWebRTC({
   onScreenAnnotationEnd,
   onScreenAnnotationClear,
   onWhiteboardPermissionUpdate,
-  signalServer = process.env.NEXT_PUBLIC_SIGNAL_SERVER || 'wss://7eu69jz6o739.share.zrok.io/ws',
+  signalServer = process.env.NEXT_PUBLIC_SIGNAL_SERVER || 'wss://verified-democratic-shaw-vsnet.trycloudflare.com/ws',
   initialCameraOn = true,
   initialMicOn = true,
 }: UseWebRTCProps) {
