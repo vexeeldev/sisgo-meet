@@ -62,19 +62,19 @@ const ICE_SERVERS: RTCIceServer[] = [
   { urls: 'stun:stun1.l.google.com:19302' },
   { urls: 'stun:stun2.l.google.com:19302' },
   {
-    urls: 'turn:openrelay.metered.ca:80',
-    username: 'openrelayproject',
-    credential: 'openrelayproject',
+    urls: 'turn:meetgp.metered.live:80',
+    username: '7616f2a029cf2aeedf140af2',
+    credential: '6YV3iLwOUqSNc5ul',
   },
   {
-    urls: 'turn:openrelay.metered.ca:443',
-    username: 'openrelayproject',
-    credential: 'openrelayproject',
+    urls: 'turn:meetgp.metered.live:443',
+    username: '7616f2a029cf2aeedf140af2',
+    credential: '6YV3iLwOUqSNc5ul',
   },
   {
-    urls: 'turn:openrelay.metered.ca:443?transport=tcp',
-    username: 'openrelayproject',
-    credential: 'openrelayproject',
+    urls: 'turn:meetgp.metered.live:443?transport=tcp',
+    username: '7616f2a029cf2aeedf140af2',
+    credential: '6YV3iLwOUqSNc5ul',
   },
 ];
 
