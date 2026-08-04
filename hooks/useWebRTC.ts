@@ -113,7 +113,7 @@ export function useWebRTC({
   onScreenAnnotationEnd,
   onScreenAnnotationClear,
   onWhiteboardPermissionUpdate,
-  signalServer = 'wss://backspace-repurpose-fervor.ngrok-free.dev/ws',
+  signalServer = process.env.NEXT_PUBLIC_SIGNAL_SERVER || 'wss://7eu69jz6o739.share.zrok.io/ws',
   initialCameraOn = true,
   initialMicOn = true,
 }: UseWebRTCProps) {
