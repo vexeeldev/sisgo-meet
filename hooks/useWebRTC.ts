@@ -58,9 +58,10 @@ export interface JoinRequest {
 }
 
 const ICE_SERVERS: RTCIceServer[] = [
-  { urls: 'stun:stun.l.google.com:19302' },
-  { urls: 'stun:stun1.l.google.com:19302' },
-  { urls: 'stun:stun2.l.google.com:19302' },
+  // Hapus komentar di bawah ini jika ingin mengaktifkan P2P kembali
+  // { urls: 'stun:stun.l.google.com:19302' },
+  // { urls: 'stun:stun1.l.google.com:19302' },
+  // { urls: 'stun:stun2.l.google.com:19302' },
   {
     urls: 'turn:meetgp.metered.live:80',
     username: '7616f2a029cf2aeedf140af2',
