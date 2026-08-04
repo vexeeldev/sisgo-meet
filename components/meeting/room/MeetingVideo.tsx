@@ -268,7 +268,7 @@ export default function MeetingVideo({
             networkQuality={mappedNetworkQuality}
             raisedHands={raisedHandsByStreamId}
             isWhiteboardMinimized={isWhiteboardOpen && isWhiteboardMinimized}
-            onOpenWhiteboard={onCloseWhiteboard}
+            onOpenWhiteboard={onOpenWhiteboard}
             hostName={isHost ? participantName : (Object.values(participantDetails).find((p: any) => p.role === 'interviewer' || p.role === 'host')?.name || 'Host')}
             whiteboardSnapshot={whiteboardSnapshot}
             pinnedParticipants={pinnedParticipants}

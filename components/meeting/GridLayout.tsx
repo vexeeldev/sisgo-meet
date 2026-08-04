@@ -191,6 +191,33 @@ export default function GridLayout({
       {selectedGroup.length === 1 ? (
         <div className="w-full h-full p-0 flex items-center justify-center">
           {selectedGroup.map(({ id, stream, name }) => {
+            if (id === 'whiteboard_tile') {
+              return (
+                <div
+                  key={id}
+                  onClick={onOpenWhiteboard}
+                  className="relative w-full h-full bg-[#1a1a1a] rounded-3xl overflow-hidden shadow-xl transition-all duration-300 border-2 border-transparent hover:border-blue-500/80 cursor-pointer group"
+                >
+                  <div className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden select-none">
+                    <ExcalidrawCanvas
+                      isHost={false}
+                      initialSnapshot={whiteboardSnapshot}
+                      isMinimized={true}
+                    />
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none z-10" />
+                  <div className="absolute top-4 right-4 z-20">
+                    <div className="bg-[#202124]/80 backdrop-blur-md p-2 rounded-full text-blue-400 border border-white/10 shadow-md">
+                      <Presentation className="w-5 h-5" />
+                    </div>
+                  </div>
+                  <div className="absolute bottom-4 left-4 z-20 text-white text-[15px] font-medium drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] flex items-center gap-2">
+                    <span className="bg-black/40 px-2 py-1 rounded-md">{name}</span>
+                  </div>
+                </div>
+              );
+            }
+
             const isOff = id === 'local' ? isVideoOff : (remoteVideoOff[id] || !hasVideoTrack(stream));
             const isMuted = id === 'local' ? isAudioOff : remoteAudioOff[id];
             const isSpeaking = id === 'local' ? speaking['local'] : speaking[id];

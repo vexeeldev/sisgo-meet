@@ -178,7 +178,12 @@ export default function ParticipantsRail({
         return (
           <div
             key={tile.id}
-            className={`group relative w-full aspect-video flex-shrink-0 bg-transparent rounded-2xl overflow-hidden shadow-2xl transition-all duration-300 hover:border-[#3a3a3a] border-2 border-[#2a2a2a]`}
+            onClick={() => {
+              if (isWhiteboardOpen && !isWhiteboardMinimized) {
+                onOpenWhiteboard?.();
+              }
+            }}
+            className={`group relative w-full aspect-video flex-shrink-0 bg-transparent rounded-2xl overflow-hidden shadow-2xl transition-all duration-300 border-2 ${isWhiteboardOpen && !isWhiteboardMinimized ? 'cursor-pointer hover:border-blue-500/80 border-[#2a2a2a]' : 'hover:border-[#3a3a3a] border-[#2a2a2a]'}`}
           >
             <video
               ref={(el) => registerVideo(tile.id, tile.stream, !!tile.isLocal, el)}

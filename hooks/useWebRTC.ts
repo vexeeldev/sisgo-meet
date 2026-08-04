@@ -328,6 +328,7 @@ export function useWebRTC({
     }
 
     isWebRTCStarted.current = true;
+    let isUnmounted = false;
 
     const startLocalStream = async () => {
       try {
@@ -395,9 +396,9 @@ export function useWebRTC({
     };
     startLocalStream();
 
-    const wsUrl = `${signalServer}?room=${roomId}&participant_uuid=${participantUUID}&status=approved`;
-
-    ws.current = new WebSocket(wsUrl);
+    const connectWebSocket = () => {
+      const wsUrl = `${signalServer}?room=${roomId}&participant_uuid=${participantUUID}&status=approved`;
+      ws.current = new WebSocket(wsUrl);
 
     ws.current.onopen = () => {
       // Beritahu semua orang siapa kita
@@ -718,10 +719,29 @@ export function useWebRTC({
     };
 
     ws.current.onclose = (event) => {
+      if (!isUnmounted) {
+        console.warn('WebSocket closed, attempting to reconnect in 3s...');
+        Object.keys(peers.current).forEach(key => {
+          try {
+            peers.current[key]?.destroy();
+            delete peers.current[key];
+          } catch (e) {}
+        });
+        peers.current = {};
+        setParticipants([]);
+        setRemoteStreams([]);
+        setParticipantDetails({});
+        clearRemoteScreenShare();
+        setTimeout(connectWebSocket, 3000);
+      }
     };
 
+    };
+    
+    connectWebSocket();
+
     return () => {
-      
+      isUnmounted = true;
       if (ws.current) {
         try {
           ws.current.close();
