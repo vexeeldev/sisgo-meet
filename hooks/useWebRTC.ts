@@ -58,24 +58,26 @@ export interface JoinRequest {
 }
 
 const ICE_SERVERS: RTCIceServer[] = [
-  // Hapus komentar di bawah ini jika ingin mengaktifkan P2P kembali
-  // { urls: 'stun:stun.l.google.com:19302' },
-  // { urls: 'stun:stun1.l.google.com:19302' },
-  // { urls: 'stun:stun2.l.google.com:19302' },
+  { urls: "stun:stun.relay.metered.ca:80" },
   {
-    urls: 'turn:meetgp.metered.live:80',
-    username: '7616f2a029cf2aeedf140af2',
-    credential: '6YV3iLwOUqSNc5ul',
+    urls: "turn:global.relay.metered.ca:80",
+    username: "7616f2a029cf2aeedf140af2",
+    credential: "6YV3iLwOUqSNc5uI",
   },
   {
-    urls: 'turn:meetgp.metered.live:443',
-    username: '7616f2a029cf2aeedf140af2',
-    credential: '6YV3iLwOUqSNc5ul',
+    urls: "turn:global.relay.metered.ca:80?transport=tcp",
+    username: "7616f2a029cf2aeedf140af2",
+    credential: "6YV3iLwOUqSNc5uI",
   },
   {
-    urls: 'turn:meetgp.metered.live:443?transport=tcp',
-    username: '7616f2a029cf2aeedf140af2',
-    credential: '6YV3iLwOUqSNc5ul',
+    urls: "turn:global.relay.metered.ca:443",
+    username: "7616f2a029cf2aeedf140af2",
+    credential: "6YV3iLwOUqSNc5uI",
+  },
+  {
+    urls: "turns:global.relay.metered.ca:443?transport=tcp",
+    username: "7616f2a029cf2aeedf140af2",
+    credential: "6YV3iLwOUqSNc5uI",
   },
 ];
 
