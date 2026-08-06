@@ -1052,7 +1052,7 @@ function preferH264(sdp: string): string {
           video: {
             width: { ideal: 1920, max: 1920 },
             height: { ideal: 1080, max: 1080 },
-            frameRate: { ideal: 30, max: 60 },
+            frameRate: { ideal: 15, max: 30 }, // Turunkan FPS agar bitrate fokus ke ketajaman gambar
           },
           audio: {
             echoCancellation: true,
@@ -1066,12 +1066,17 @@ function preferH264(sdp: string): string {
           video: {
             width: { ideal: 1920, max: 1920 },
             height: { ideal: 1080, max: 1080 },
-            frameRate: { ideal: 30, max: 60 },
+            frameRate: { ideal: 15, max: 30 },
           },
           audio: true,
         });
       }
 
+      // Paksa encoder memprioritaskan ketajaman teks (mengorbankan FPS jika perlu)
+      const videoTrackToHint = stream.getVideoTracks()[0];
+      if (videoTrackToHint && 'contentHint' in videoTrackToHint) {
+        videoTrackToHint.contentHint = 'detail';
+      }
 
       screenStreamRef.current = stream;
       setScreenStream(stream);
