@@ -58,26 +58,45 @@ export interface JoinRequest {
 }
 
 const ICE_SERVERS: RTCIceServer[] = [
-  { urls: "stun:stun.relay.metered.ca:80" },
+  { urls: 'stun:stun.l.google.com:19302' },
+  { urls: 'stun:stun1.l.google.com:19302' },
+  { urls: 'stun:stun2.l.google.com:19302' },
+  { urls: 'stun:stun.relay.metered.ca:80' },
+  {
+    urls: 'turn:openrelay.metered.ca:80',
+    username: 'openrelayproject',
+    credential: 'openrelayproject',
+  },
+  {
+    urls: 'turn:openrelay.metered.ca:443',
+    username: 'openrelayproject',
+    credential: 'openrelayproject',
+  },
+  {
+    urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+    username: 'openrelayproject',
+    credential: 'openrelayproject',
+  },
+  // Akun Cadangan (Baru)
   {
     urls: "turn:global.relay.metered.ca:80",
-    username: "7616f2a029cf2aeedf140af2",
-    credential: "6YV3iLwOUqSNc5uI",
+    username: "2886ed052ac9b632beb00a11",
+    credential: "W6fkXa4N3EawIeQa",
   },
   {
     urls: "turn:global.relay.metered.ca:80?transport=tcp",
-    username: "7616f2a029cf2aeedf140af2",
-    credential: "6YV3iLwOUqSNc5uI",
+    username: "2886ed052ac9b632beb00a11",
+    credential: "W6fkXa4N3EawIeQa",
   },
   {
     urls: "turn:global.relay.metered.ca:443",
-    username: "7616f2a029cf2aeedf140af2",
-    credential: "6YV3iLwOUqSNc5uI",
+    username: "2886ed052ac9b632beb00a11",
+    credential: "W6fkXa4N3EawIeQa",
   },
   {
     urls: "turns:global.relay.metered.ca:443?transport=tcp",
-    username: "7616f2a029cf2aeedf140af2",
-    credential: "6YV3iLwOUqSNc5uI",
+    username: "2886ed052ac9b632beb00a11",
+    credential: "W6fkXa4N3EawIeQa",
   },
 ];
 
