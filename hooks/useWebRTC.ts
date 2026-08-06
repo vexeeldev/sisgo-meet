@@ -77,7 +77,6 @@ const ICE_SERVERS: RTCIceServer[] = [
     username: 'openrelayproject',
     credential: 'openrelayproject',
   },
-  // Akun Cadangan (Baru)
   {
     urls: "turn:global.relay.metered.ca:80",
     username: "2886ed052ac9b632beb00a11",
@@ -1050,7 +1049,11 @@ function preferH264(sdp: string): string {
       let stream: MediaStream;
       try {
         stream = await navigator.mediaDevices.getDisplayMedia({
-          video: true,
+          video: {
+            width: { ideal: 1920, max: 1920 },
+            height: { ideal: 1080, max: 1080 },
+            frameRate: { ideal: 30, max: 60 },
+          },
           audio: {
             echoCancellation: true,
             noiseSuppression: true,
@@ -1060,7 +1063,11 @@ function preferH264(sdp: string): string {
       } catch (err: any) {
         if (err?.name === 'NotAllowedError') throw err;
         stream = await navigator.mediaDevices.getDisplayMedia({
-          video: true,
+          video: {
+            width: { ideal: 1920, max: 1920 },
+            height: { ideal: 1080, max: 1080 },
+            frameRate: { ideal: 30, max: 60 },
+          },
           audio: true,
         });
       }
@@ -1079,6 +1086,30 @@ function preferH264(sdp: string): string {
             stream.getTracks().forEach(track => {
               peer.addTrack(track, stream);
             });
+            
+            // Konfigurasi Bitrate Tinggi (5 Mbps) khusus untuk Screen Share
+            const pc: RTCPeerConnection | undefined = (peer as any)._pc;
+            if (pc) {
+              const videoTrackId = stream.getVideoTracks()[0]?.id;
+              pc.getSenders().forEach(sender => {
+                if (sender.track?.kind === 'video' && sender.track?.id === videoTrackId) {
+                  try {
+                    const params = sender.getParameters();
+                    (params as any).degradationPreference = 'maintain-resolution';
+                    if (!params.encodings) {
+                      params.encodings = [{}];
+                    }
+                    if (params.encodings.length > 0) {
+                      params.encodings[0].maxBitrate = 5000000; // 5 Mbps
+                      params.encodings[0].maxFramerate = 60;
+                    }
+                    sender.setParameters(params).catch(err => console.warn('Gagal set parameter bitrate screen share:', err));
+                  } catch (err) {
+                    console.warn('Error saat konfigurasi bitrate screen share:', err);
+                  }
+                }
+              });
+            }
           } catch (err) {
             console.error('Failed to add stream:', err);
           }
