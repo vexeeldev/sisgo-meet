@@ -1105,8 +1105,8 @@ function preferH264(sdp: string): string {
                       params.encodings = [{}];
                     }
                     if (params.encodings.length > 0) {
-                      params.encodings[0].maxBitrate = 5000000; // 5 Mbps
-                      params.encodings[0].maxFramerate = 60;
+                      params.encodings[0].maxBitrate = 5000000;
+                      params.encodings[0].maxFramerate = 15; 
                     }
                     sender.setParameters(params).catch(err => console.warn('Gagal set parameter bitrate screen share:', err));
                   } catch (err) {

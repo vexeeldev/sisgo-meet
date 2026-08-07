@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Pencil, Eraser, Trash2, X, Hand } from "lucide-react";
+import { Pencil, Eraser, Trash2, X, Hand, AppWindow } from "lucide-react";
 
 interface Point { x: number; y: number }
 interface Stroke { points: Point[]; color: string; size: number; eraser: boolean }
@@ -17,8 +17,8 @@ export default function OverlayPage() {
   const [size, setSize] = useState(4);
   const [tool, setTool] = useState<"pencil" | "eraser">("pencil");
   const toolRef = useRef<"pencil" | "eraser">("pencil");
+  const [isPaused, setIsPaused] = useState(false);
 
-  // ─── Canvas helpers ────────────────────────────────────────────────────────
 
   const redraw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -90,6 +90,9 @@ export default function OverlayPage() {
     }
     if (api.onDoClearCanvas) {
       cleanups.push(api.onDoClearCanvas(() => doClear()));
+    }
+    if (api.onTogglePauseState) {
+      cleanups.push(api.onTogglePauseState((paused: boolean) => setIsPaused(paused)));
     }
     return () => cleanups.forEach((fn) => fn());
   }, [doClear, redraw]);
@@ -168,11 +171,18 @@ export default function OverlayPage() {
     toolRef.current = t;
   };
 
-  const pause = () => window.electronAPI?.pauseDrawing?.();
+  const pause = () => {
+    setIsPaused(true);
+    window.electronAPI?.pauseDrawing?.();
+  };
+  
+  const resume = () => {
+    setIsPaused(false);
+    window.electronAPI?.resumeDrawing?.();
+  };
+
   const close = () => window.electronAPI?.toggleOverlay?.(false);
-
-  // ─── Design tokens ─────────────────────────────────────────────────────────
-
+  const returnToApp = () => window.electronAPI?.returnToApp?.();
   const COLORS = [
     { hex: "#e05c5c", label: "Red" },
     { hex: "#4f8ef7", label: "Blue" },
@@ -218,7 +228,6 @@ export default function OverlayPage() {
         button:hover { opacity: 0.85; }
       `}</style>
 
-      {/* Drawing canvas */}
       <canvas
         ref={canvasRef}
         onMouseDown={startDrawing}
@@ -236,6 +245,7 @@ export default function OverlayPage() {
           inset: 0,
           cursor: tool === "eraser" ? "none" : "crosshair",
           touchAction: "none",
+          pointerEvents: isPaused ? "none" : "auto",
         }}
       />
 
@@ -261,6 +271,12 @@ export default function OverlayPage() {
 
       {/* Toolbar */}
       <div
+        onMouseEnter={() => {
+          if (isPaused) window.electronAPI?.setIgnoreMouse?.(false);
+        }}
+        onMouseLeave={() => {
+          if (isPaused) window.electronAPI?.setIgnoreMouse?.(true);
+        }}
         style={{
           position: "fixed",
           top: 18,
@@ -357,17 +373,32 @@ export default function OverlayPage() {
 
         <div style={sep} />
 
-        {/* Pause — hide canvas so user can interact with OS */}
+        {/* Pause/Resume Toggle */}
         <button
-          onClick={pause}
+          onClick={isPaused ? resume : pause}
+          style={{
+            ...iconBtn(isPaused),
+            background: isPaused ? "rgba(224, 92, 92, 0.2)" : "rgba(255,255,255,0.06)",
+            color: isPaused ? "#e05c5c" : "rgba(255,255,255,0.7)",
+          }}
+          title={isPaused ? "Resume drawing" : "Pause — interact with your screen"}
+        >
+          <Hand size={15} />
+        </button>
+
+        <div style={sep} />
+
+        {/* Return to App */}
+        <button
+          onClick={returnToApp}
           style={{
             ...iconBtn(false),
             background: "rgba(255,255,255,0.06)",
-            color: "rgba(255,255,255,0.7)",
+            color: "rgba(255,255,255,0.9)",
           }}
-          title="Pause — interact with your screen"
+          title="Return to Meetgo App"
         >
-          <Hand size={15} />
+          <AppWindow size={15} />
         </button>
 
         {/* Close */}

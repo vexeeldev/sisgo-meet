@@ -6,12 +6,12 @@ contextBridge.exposeInMainWorld("electronAPI", {
   // ─── Overlay on/off (dari tombol di Main App) ───────────────────────────
   toggleOverlay: (show) => ipcRenderer.send("toggle-overlay", show),
 
-  // ─── Pause / Resume drawing (dari canvas / mini button) ─────────────────
   pauseDrawing: () => ipcRenderer.send("pause-drawing"),
   resumeDrawing: () => ipcRenderer.send("resume-drawing"),
 
   // ─── Tool / Clear ────────────────────────────────────────────────────────
   clearCanvas: () => ipcRenderer.send("clear-canvas"),
+  returnToApp: () => ipcRenderer.send("return-to-app"),
 
   // ─── Listeners: Main App menerima state overlay ──────────────────────────
   onOverlayStateChange: (callback) => {
@@ -49,7 +49,11 @@ contextBridge.exposeInMainWorld("electronAPI", {
   sendRemoteStroke: (stroke) => ipcRenderer.send("annotation-stroke-remote", stroke),
   clearOverlayRemote: () => ipcRenderer.send("annotation-clear-remote"),
 
-  // ─── Legacy compat ───────────────────────────────────────────────────────
-  setIgnoreMouse: () => {}, // no-op — tidak lagi diperlukan
-  setDrawMode: () => {},    // no-op
+  // ─── Dynamic Click-Through ───────────────────────────────────────────────
+  setIgnoreMouse: (ignore) => ipcRenderer.send("set-ignore-mouse", ignore),
+  onTogglePauseState: (callback) => {
+    const handler = (_event, isPaused) => callback(isPaused);
+    ipcRenderer.on("toggle-pause-state", handler);
+    return () => ipcRenderer.removeListener("toggle-pause-state", handler);
+  },
 });

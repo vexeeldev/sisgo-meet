@@ -17,11 +17,13 @@ declare global {
       pauseDrawing: () => void;
       resumeDrawing: () => void;
       clearCanvas: () => void;
+      returnToApp: () => void;
 
       // State listeners
       onOverlayStateChange: (cb: (visible: boolean) => void) => () => void;
       onMiniState: (cb: (state: string) => void) => () => void;
       onDoClearCanvas: (cb: () => void) => () => void;
+      onTogglePauseState?: (cb: (isPaused: boolean) => void) => () => void;
 
       // Annotation WebRTC sync
       sendLocalStroke: (stroke: AnnotationStroke) => void;

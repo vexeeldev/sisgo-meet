@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, screen, session, desktopCapturer, Menu } from "electron";
+import { app, BrowserWindow, ipcMain, screen, session, desktopCapturer, Menu, globalShortcut } from "electron";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -13,7 +13,7 @@ if (process.platform === "linux") {
 
 let mainWindow: BrowserWindow | null = null;
 let overlayWindow: BrowserWindow | null = null; // Canvas coret-coret (fullscreen)
-let miniWindow: BrowserWindow | null = null;    // Tombol mungil yang selalu bisa diklik
+let isPausedMain = false; // State pelacak pause/resume untuk shortcut
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -85,7 +85,6 @@ function createWindows() {
     mainWindow.loadURL(BASE_URL);
     mainWindow.on("closed", () => {
         overlayWindow?.close();
-        miniWindow?.close();
         mainWindow = null;
     });
 
@@ -117,31 +116,6 @@ function createWindows() {
     screen.on("display-added", updateOverlayBounds);
     screen.on("display-removed", updateOverlayBounds);
     screen.on("display-metrics-changed", updateOverlayBounds);
-
-    // 3. Mini Button — tombol kecil di sudut kanan atas, SELALU tampil & bisa diklik
-    //    Ini jendela TERPISAH dari canvas → selalu interaktif apapun kondisi canvas
-    const miniPos = getMiniWindowPos();
-    miniWindow = new BrowserWindow({
-        x: miniPos.x,
-        y: miniPos.y,
-        width: 64,
-        height: 64,
-        transparent: true,
-        frame: false,
-        alwaysOnTop: true,
-        skipTaskbar: true,
-        hasShadow: false,
-        show: false, // Muncul hanya ketika overlay aktif
-        resizable: false,
-        webPreferences: {
-            preload: path.join(_dirname, "preload.js"),
-            contextIsolation: true,
-            nodeIntegration: false,
-            devTools: isDev,
-        },
-    });
-    miniWindow.loadURL(`${BASE_URL}/overlay-mini`);
-    miniWindow.on("closed", () => { miniWindow = null; });
 }
 
 // ─── IPC Handlers ─────────────────────────────────────────────────────────────
@@ -149,28 +123,58 @@ function createWindows() {
 // Nyalakan / matikan seluruh overlay
 ipcMain.on("toggle-overlay", (_event, show: boolean) => {
     if (show) {
+        overlayWindow?.setIgnoreMouseEvents(false);
         overlayWindow?.show();
-        miniWindow?.show();
-        // Saat baru dibuka: canvas tampil = Draw mode
-        miniWindow?.webContents.send("mini-state", "drawing");
+        isPausedMain = false;
+        
+        // Sembunyikan main window agar tidak menghalangi proses coret-coret
+        mainWindow?.minimize();
+        
+        // Daftarkan global shortcut (misal: Ctrl/Cmd + Shift + P)
+        globalShortcut.register("CommandOrControl+Shift+P", () => {
+            isPausedMain = !isPausedMain;
+            if (isPausedMain) {
+                overlayWindow?.setIgnoreMouseEvents(true, { forward: true });
+            } else {
+                overlayWindow?.setIgnoreMouseEvents(false);
+            }
+            overlayWindow?.webContents.send("toggle-pause-state", isPausedMain);
+        });
     } else {
         overlayWindow?.hide();
-        miniWindow?.hide();
+        globalShortcut.unregister("CommandOrControl+Shift+P");
+        
+        // Kembalikan main window ke depan
+        mainWindow?.restore();
+        mainWindow?.focus();
     }
     mainWindow?.webContents.send("overlay-state-change", show);
 });
 
-// Pause drawing (sembunyikan canvas agar user bisa interaksi dengan OS)
-// Mini button tetap muncul — user bisa klik untuk resume
 ipcMain.on("pause-drawing", () => {
-    overlayWindow?.hide();
-    miniWindow?.webContents.send("mini-state", "paused");
+    isPausedMain = true;
+    overlayWindow?.setIgnoreMouseEvents(true, { forward: true });
 });
 
 // Resume drawing (tampilkan canvas kembali)
 ipcMain.on("resume-drawing", () => {
-    overlayWindow?.show();
-    miniWindow?.webContents.send("mini-state", "drawing");
+    isPausedMain = false;
+    overlayWindow?.setIgnoreMouseEvents(false);
+});
+
+// Kembali ke aplikasi utama (tanpa mematikan overlay)
+ipcMain.on("return-to-app", () => {
+    mainWindow?.restore();
+    mainWindow?.focus();
+});
+
+// Dynamic click-through toggle dari UI overlay
+ipcMain.on("set-ignore-mouse", (_event, ignore: boolean) => {
+    if (ignore) {
+        overlayWindow?.setIgnoreMouseEvents(true, { forward: true });
+    } else {
+        overlayWindow?.setIgnoreMouseEvents(false);
+    }
 });
 
 // Hapus semua coretan
@@ -205,6 +209,10 @@ function setupScreenShareHandler() {
 app.whenReady().then(() => {
     setupScreenShareHandler();
     createWindows();
+});
+
+app.on("will-quit", () => {
+    globalShortcut.unregisterAll();
 });
 
 app.on("window-all-closed", () => {

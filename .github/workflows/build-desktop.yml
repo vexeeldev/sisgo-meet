@@ -20,9 +20,7 @@ jobs:
             build_cmd: npx electron-builder --win --publish always
           - os: macos-latest
             build_cmd: npx electron-builder --mac --publish always
-          - os: ubuntu-latest
-            build_cmd: npx electron-builder --linux --publish always
-
+          
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
