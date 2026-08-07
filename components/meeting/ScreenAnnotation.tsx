@@ -37,6 +37,9 @@ interface ScreenAnnotationProps {
   onAnnotationEnd?: (data: { id: string }) => void;
   onClearAnnotations?: () => void;
   onCloseAnnotation?: () => void;
+  videoRef?: React.RefObject<HTMLVideoElement | null>;
+  hideToolbar?: boolean;
+  extraToolbarButtons?: React.ReactNode;
 }
 
 const COLOR_PALETTE = [
@@ -142,6 +145,9 @@ export default function ScreenAnnotation({
   onAnnotationEnd,
   onClearAnnotations,
   onCloseAnnotation,
+  videoRef,
+  hideToolbar,
+  extraToolbarButtons,
 }: ScreenAnnotationProps) {
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
@@ -167,19 +173,63 @@ export default function ScreenAnnotation({
   const lastDrawTimeRef = useRef<number>(0);
   const pendingPointsRef = useRef<number[]>([]);
 
+  const [videoRect, setVideoRect] = useState({ x: 0, y: 0, width: 0, height: 0 });
+
   useEffect(() => {
     const updateSize = () => {
       if (containerRef.current) {
-        setStageSize({
-          width: containerRef.current.offsetWidth,
-          height: containerRef.current.offsetHeight,
-        });
+        const cWidth = containerRef.current.offsetWidth;
+        const cHeight = containerRef.current.offsetHeight;
+        setStageSize({ width: cWidth, height: cHeight });
+
+        // Calculate actual video bounding box (object-fit: contain)
+        const videoElement = videoRef?.current;
+        if (videoElement && videoElement.videoWidth && videoElement.videoHeight) {
+          const vWidth = videoElement.videoWidth;
+          const vHeight = videoElement.videoHeight;
+          const containerRatio = cWidth / cHeight;
+          const videoRatio = vWidth / vHeight;
+
+          let renderWidth = cWidth;
+          let renderHeight = cHeight;
+          let renderX = 0;
+          let renderY = 0;
+
+          if (videoRatio > containerRatio) {
+            // Letterboxing (black bars top/bottom)
+            renderHeight = cWidth / videoRatio;
+            renderY = (cHeight - renderHeight) / 2;
+          } else {
+            // Pillarboxing (black bars left/right)
+            renderWidth = cHeight * videoRatio;
+            renderX = (cWidth - renderWidth) / 2;
+          }
+
+          setVideoRect({ x: renderX, y: renderY, width: renderWidth, height: renderHeight });
+        } else {
+          setVideoRect({ x: 0, y: 0, width: cWidth, height: cHeight });
+        }
       }
     };
+
     updateSize();
     window.addEventListener('resize', updateSize);
+    
+    // Also update when video metadata loads (resolution becomes available)
+    const videoEl = videoRef?.current;
+    if (videoEl) {
+      videoEl.addEventListener('loadedmetadata', updateSize);
+      // Fallback polling in case we missed it or it changes
+      const interval = setInterval(updateSize, 1000);
+      return () => {
+        window.removeEventListener('resize', updateSize);
+        videoEl.removeEventListener('loadedmetadata', updateSize);
+        clearInterval(interval);
+      };
+    }
+
     return () => window.removeEventListener('resize', updateSize);
-  }, []);
+  }, [videoRef]);
 
   const annotationsRef = useRef(annotations);
   useEffect(() => {
@@ -206,8 +256,23 @@ export default function ScreenAnnotation({
     const point = stage.getPointerPosition();
     if (!point) return;
 
-    const normX = point.x / stageSize.width;
-    const normY = point.y / stageSize.height;
+    // Use videoRect to calculate true normalized coordinates
+    let normX = 0;
+    let normY = 0;
+    
+    if (videoRect.width > 0 && videoRect.height > 0) {
+      // Offset point by the letterbox margins
+      const trueX = point.x - videoRect.x;
+      const trueY = point.y - videoRect.y;
+      
+      // Normalize against the actual video bounding box
+      normX = trueX / videoRect.width;
+      normY = trueY / videoRect.height;
+    } else {
+      // Fallback if video isn't loaded
+      normX = point.x / stageSize.width;
+      normY = point.y / stageSize.height;
+    }
 
     setIsDrawing(true);
 
@@ -256,8 +321,18 @@ export default function ScreenAnnotation({
 
     if (!isDrawing || !activeItemRef.current) return;
 
-    const normX = point.x / stageSize.width;
-    const normY = point.y / stageSize.height;
+    let normX = 0;
+    let normY = 0;
+    
+    if (videoRect.width > 0 && videoRect.height > 0) {
+      const trueX = point.x - videoRect.x;
+      const trueY = point.y - videoRect.y;
+      normX = trueX / videoRect.width;
+      normY = trueY / videoRect.height;
+    } else {
+      normX = point.x / stageSize.width;
+      normY = point.y / stageSize.height;
+    }
 
     const item = activeItemRef.current;
     let payloadPoints: number[] = [];
@@ -329,8 +404,13 @@ export default function ScreenAnnotation({
 
   const getDenormalizedPoints = (points?: number[]) => {
     if (!points) return [];
+    const vWidth = videoRect.width > 0 ? videoRect.width : stageSize.width;
+    const vHeight = videoRect.height > 0 ? videoRect.height : stageSize.height;
+    const vX = videoRect.width > 0 ? videoRect.x : 0;
+    const vY = videoRect.height > 0 ? videoRect.y : 0;
+
     return points.map((val, idx) =>
-      idx % 2 === 0 ? val * stageSize.width : val * stageSize.height
+      idx % 2 === 0 ? (val * vWidth) + vX : (val * vHeight) + vY
     );
   };
 
@@ -385,14 +465,18 @@ export default function ScreenAnnotation({
                 );
               }
               if (item.tool === 'rect') {
+                const vWidth = videoRect.width > 0 ? videoRect.width : stageSize.width;
+                const vHeight = videoRect.height > 0 ? videoRect.height : stageSize.height;
+                const vX = videoRect.width > 0 ? videoRect.x : 0;
+                const vY = videoRect.height > 0 ? videoRect.y : 0;
                 return (
                   <Rect
                     key={item.id}
                     id={item.id}
-                    x={(item.x ?? 0) * stageSize.width}
-                    y={(item.y ?? 0) * stageSize.height}
-                    width={(item.width ?? 0) * stageSize.width}
-                    height={(item.height ?? 0) * stageSize.height}
+                    x={(item.x ?? 0) * vWidth + vX}
+                    y={(item.y ?? 0) * vHeight + vY}
+                    width={(item.width ?? 0) * vWidth}
+                    height={(item.height ?? 0) * vHeight}
                     stroke={item.color}
                     strokeWidth={item.strokeWidth}
                     cornerRadius={4}
@@ -400,13 +484,17 @@ export default function ScreenAnnotation({
                 );
               }
               if (item.tool === 'circle') {
-                const avgDim = (stageSize.width + stageSize.height) / 2;
+                const vWidth = videoRect.width > 0 ? videoRect.width : stageSize.width;
+                const vHeight = videoRect.height > 0 ? videoRect.height : stageSize.height;
+                const vX = videoRect.width > 0 ? videoRect.x : 0;
+                const vY = videoRect.height > 0 ? videoRect.y : 0;
+                const avgDim = (vWidth + vHeight) / 2;
                 return (
                   <Circle
                     key={item.id}
                     id={item.id}
-                    x={(item.x ?? 0) * stageSize.width}
-                    y={(item.y ?? 0) * stageSize.height}
+                    x={(item.x ?? 0) * vWidth + vX}
+                    y={(item.y ?? 0) * vHeight + vY}
                     radius={(item.radius ?? 0) * avgDim}
                     stroke={item.color}
                     strokeWidth={item.strokeWidth}
@@ -433,7 +521,7 @@ export default function ScreenAnnotation({
         </Stage>
       )}
 
-      {onCloseAnnotation && (
+      {!hideToolbar && onCloseAnnotation && (
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 pointer-events-auto animate-in fade-in slide-in-from-bottom-4 duration-200">
           {/* Floating Eraser Radius Size Controller (Appears directly above toolbar when eraser is active) */}
           {activeTool === 'eraser' && !isToolbarCollapsed && (
@@ -620,6 +708,8 @@ export default function ScreenAnnotation({
                   <X className="w-4.5 h-4.5" />
                 </button>
               )}
+
+              {extraToolbarButtons}
             </>
           ) : (
             <div className="flex items-center gap-1">

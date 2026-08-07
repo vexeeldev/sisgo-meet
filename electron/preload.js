@@ -49,6 +49,20 @@ contextBridge.exposeInMainWorld("electronAPI", {
   sendRemoteStroke: (stroke) => ipcRenderer.send("annotation-stroke-remote", stroke),
   clearOverlayRemote: () => ipcRenderer.send("annotation-clear-remote"),
 
+  // ─── Full Sync ─────────────────────────────────────────────────────────────
+  syncAnnotationsToOverlay: (annotations) => ipcRenderer.send("sync-annotations-to-overlay", annotations),
+  onSyncAnnotationsToOverlay: (callback) => {
+    const handler = (_event, annotations) => callback(annotations);
+    ipcRenderer.on("sync-annotations-to-overlay", handler);
+    return () => ipcRenderer.removeListener("sync-annotations-to-overlay", handler);
+  },
+  syncAnnotationsToMain: (annotations) => ipcRenderer.send("sync-annotations-to-main", annotations),
+  onSyncAnnotationsToMain: (callback) => {
+    const handler = (_event, annotations) => callback(annotations);
+    ipcRenderer.on("sync-annotations-to-main", handler);
+    return () => ipcRenderer.removeListener("sync-annotations-to-main", handler);
+  },
+
   // ─── Dynamic Click-Through ───────────────────────────────────────────────
   setIgnoreMouse: (ignore) => ipcRenderer.send("set-ignore-mouse", ignore),
   onTogglePauseState: (callback) => {

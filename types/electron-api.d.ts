@@ -1,10 +1,18 @@
 // Global type declaration for Electron API (preload.js contextBridge)
 
 interface AnnotationStroke {
-  points: { x: number; y: number }[];
+  id?: string;
+  tool?: string;
+  points?: number[];
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  radius?: number;
   color: string;
-  size: number;
-  eraser?: boolean;
+  strokeWidth?: number;
+  size?: number; // Legacy
+  eraser?: boolean; // Legacy
 }
 
 declare global {
@@ -31,6 +39,12 @@ declare global {
       onClearOverlayRemote: (cb: () => void) => () => void;
       sendRemoteStroke?: (stroke: AnnotationStroke) => void;
       clearOverlayRemote?: () => void;
+      
+      // Full Sync
+      syncAnnotationsToOverlay?: (annotations: any[]) => void;
+      onSyncAnnotationsToOverlay?: (cb: (annotations: any[]) => void) => () => void;
+      syncAnnotationsToMain?: (annotations: any[]) => void;
+      onSyncAnnotationsToMain?: (cb: (annotations: any[]) => void) => () => void;
 
       // Legacy no-ops
       setIgnoreMouse?: (ignore: boolean) => void;

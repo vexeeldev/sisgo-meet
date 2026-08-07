@@ -6,17 +6,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const electron_1 = require("electron");
 const node_path_1 = __importDefault(require("node:path"));
 const _dirname = typeof __dirname !== "undefined" ? __dirname : process.cwd();
-
+// Linux: paksa X11 mode via XWayland untuk transparency yang stabil
 if (process.platform === "linux") {
     electron_1.app.commandLine.appendSwitch("enable-transparent-visuals");
     electron_1.app.commandLine.appendSwitch("ozone-platform", "x11");
     electron_1.app.disableHardwareAcceleration();
 }
-
 let mainWindow = null;
-let overlayWindow = null;
-let miniWindow = null;
-
+let overlayWindow = null; // Canvas coret-coret (fullscreen)
+let isPausedMain = false; // State pelacak pause/resume untuk shortcut
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 function getVirtualScreenBounds() {
     const displays = electron_1.screen.getAllDisplays();
     let minX = displays[0].bounds.x;
@@ -82,7 +81,6 @@ function createWindows() {
     mainWindow.loadURL(BASE_URL);
     mainWindow.on("closed", () => {
         overlayWindow?.close();
-        miniWindow?.close();
         mainWindow = null;
     });
     // 2. Canvas Overlay — fullscreen, tampil saat Draw mode, disembunyikan saat Pointer mode
@@ -112,56 +110,59 @@ function createWindows() {
     electron_1.screen.on("display-added", updateOverlayBounds);
     electron_1.screen.on("display-removed", updateOverlayBounds);
     electron_1.screen.on("display-metrics-changed", updateOverlayBounds);
-    // 3. Mini Button — tombol kecil di sudut kanan atas, SELALU tampil & bisa diklik
-    //    Ini jendela TERPISAH dari canvas → selalu interaktif apapun kondisi canvas
-    const miniPos = getMiniWindowPos();
-    miniWindow = new electron_1.BrowserWindow({
-        x: miniPos.x,
-        y: miniPos.y,
-        width: 64,
-        height: 64,
-        transparent: true,
-        frame: false,
-        alwaysOnTop: true,
-        skipTaskbar: true,
-        hasShadow: false,
-        show: false, // Muncul hanya ketika overlay aktif
-        resizable: false,
-        webPreferences: {
-            preload: node_path_1.default.join(_dirname, "preload.js"),
-            contextIsolation: true,
-            nodeIntegration: false,
-            devTools: isDev,
-        },
-    });
-    miniWindow.loadURL(`${BASE_URL}/overlay-mini`);
-    miniWindow.on("closed", () => { miniWindow = null; });
 }
 // ─── IPC Handlers ─────────────────────────────────────────────────────────────
 // Nyalakan / matikan seluruh overlay
 electron_1.ipcMain.on("toggle-overlay", (_event, show) => {
     if (show) {
+        overlayWindow?.setIgnoreMouseEvents(false);
         overlayWindow?.show();
-        miniWindow?.show();
-        // Saat baru dibuka: canvas tampil = Draw mode
-        miniWindow?.webContents.send("mini-state", "drawing");
+        isPausedMain = false;
+        // Sembunyikan main window agar tidak menghalangi proses coret-coret
+        mainWindow?.minimize();
+        // Daftarkan global shortcut (misal: Ctrl/Cmd + Shift + P)
+        electron_1.globalShortcut.register("CommandOrControl+Shift+P", () => {
+            isPausedMain = !isPausedMain;
+            if (isPausedMain) {
+                overlayWindow?.setIgnoreMouseEvents(true, { forward: true });
+            }
+            else {
+                overlayWindow?.setIgnoreMouseEvents(false);
+            }
+            overlayWindow?.webContents.send("toggle-pause-state", isPausedMain);
+        });
     }
     else {
         overlayWindow?.hide();
-        miniWindow?.hide();
+        electron_1.globalShortcut.unregister("CommandOrControl+Shift+P");
+        // Kembalikan main window ke depan
+        mainWindow?.restore();
+        mainWindow?.focus();
     }
     mainWindow?.webContents.send("overlay-state-change", show);
 });
-// Pause drawing (sembunyikan canvas agar user bisa interaksi dengan OS)
-// Mini button tetap muncul — user bisa klik untuk resume
 electron_1.ipcMain.on("pause-drawing", () => {
-    overlayWindow?.hide();
-    miniWindow?.webContents.send("mini-state", "paused");
+    isPausedMain = true;
+    overlayWindow?.setIgnoreMouseEvents(true, { forward: true });
 });
 // Resume drawing (tampilkan canvas kembali)
 electron_1.ipcMain.on("resume-drawing", () => {
-    overlayWindow?.show();
-    miniWindow?.webContents.send("mini-state", "drawing");
+    isPausedMain = false;
+    overlayWindow?.setIgnoreMouseEvents(false);
+});
+// Kembali ke aplikasi utama (tanpa mematikan overlay)
+electron_1.ipcMain.on("return-to-app", () => {
+    mainWindow?.restore();
+    mainWindow?.focus();
+});
+// Dynamic click-through toggle dari UI overlay
+electron_1.ipcMain.on("set-ignore-mouse", (_event, ignore) => {
+    if (ignore) {
+        overlayWindow?.setIgnoreMouseEvents(true, { forward: true });
+    }
+    else {
+        overlayWindow?.setIgnoreMouseEvents(false);
+    }
 });
 // Hapus semua coretan
 electron_1.ipcMain.on("clear-canvas", () => {
@@ -191,6 +192,9 @@ function setupScreenShareHandler() {
 electron_1.app.whenReady().then(() => {
     setupScreenShareHandler();
     createWindows();
+});
+electron_1.app.on("will-quit", () => {
+    electron_1.globalShortcut.unregisterAll();
 });
 electron_1.app.on("window-all-closed", () => {
     if (process.platform !== "darwin")

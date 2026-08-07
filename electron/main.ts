@@ -197,6 +197,15 @@ ipcMain.on("annotation-clear-remote", () => {
     overlayWindow?.webContents.send("do-clear-canvas");
 });
 
+// Full array sync
+ipcMain.on("sync-annotations-to-overlay", (_event, annotations) => {
+    overlayWindow?.webContents.send("sync-annotations-to-overlay", annotations);
+});
+
+ipcMain.on("sync-annotations-to-main", (_event, annotations) => {
+    mainWindow?.webContents.send("sync-annotations-to-main", annotations);
+});
+
 // Screen share handler
 function setupScreenShareHandler() {
     session.defaultSession.setDisplayMediaRequestHandler((request, callback) => {

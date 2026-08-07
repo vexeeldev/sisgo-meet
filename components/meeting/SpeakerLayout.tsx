@@ -530,6 +530,7 @@ export default function SpeakerLayout({
               onAnnotationEnd={onScreenAnnotationEnd}
               onClearAnnotations={onClearScreenAnnotations}
               onCloseAnnotation={onCloseScreenAnnotation}
+              videoRef={screenVideoRef}
             />
           )}
 

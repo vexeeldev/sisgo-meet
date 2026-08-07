@@ -60,6 +60,13 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
   const [isWhiteboardMinimized, setIsWhiteboardMinimized] = useState(false);
   const [whiteboardSnapshot, setWhiteboardSnapshot] = useState<any>(null);
   const [screenAnnotations, setScreenAnnotations] = useState<any[]>([]);
+
+  useEffect(() => {
+    window.electronAPI?.syncAnnotationsToOverlay?.(screenAnnotations);
+  }, [screenAnnotations]);
+
+
+
   const [isScreenAnnotationOpen, setIsScreenAnnotationOpen] = useState(false);
   const [pinnedParticipants, setPinnedParticipants] = useState<string[]>([]);
   const [whiteboardAllowedIds, setWhiteboardAllowedIds] = useState<string[]>([]);
@@ -229,6 +236,17 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
       ? process.env.NEXT_PUBLIC_SIGNAL_SERVER || 'wss://backspace-repurpose-fervor.ngrok-free.dev/ws'
       : '',
   });
+
+  useEffect(() => {
+    const api = window.electronAPI;
+    if (!api) return;
+    if (api.onSyncAnnotationsToMain) {
+      return api.onSyncAnnotationsToMain((annotations) => {
+        setScreenAnnotations(annotations);
+        sendMessage('screen_annotation_update', { annotations });
+      });
+    }
+  }, [sendMessage]);
 
   const handleToggleScreenAnnotation = () => {
     const isAnyScreenSharing = isScreenSharing || !!remoteScreenStream;
