@@ -82,7 +82,7 @@ export default function OverlayPage() {
 
   const extraToolbarButtons = (
     <>
-      <div className="w-[1px] h-5 bg-white/10 shrink-0 mx-1" />
+      <div className="h-[1px] w-5 bg-white/10 shrink-0 my-1" />
 
       {/* Pause/Resume Toggle */}
       <button
@@ -124,6 +124,10 @@ export default function OverlayPage() {
       
       {/* Full screen wrapper, events disabled if paused */}
       <div style={{ position: "fixed", inset: 0, pointerEvents: isPaused ? "none" : "auto" }}>
+        
+        {/* Zoom-like Screen Share Border Indicator */}
+        <div className="absolute inset-0 border-[6px] border-emerald-500/80 pointer-events-none z-50 rounded-lg shadow-[inset_0_0_20px_rgba(16,185,129,0.5)]" />
+
         <ScreenAnnotation
           isSharingHost={true} // As this is the host's overlay
           participantName={participantName}

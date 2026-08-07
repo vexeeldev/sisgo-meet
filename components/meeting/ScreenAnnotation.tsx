@@ -522,68 +522,79 @@ export default function ScreenAnnotation({
       )}
 
       {!hideToolbar && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 pointer-events-auto animate-in fade-in slide-in-from-bottom-4 duration-200">
-          {/* Floating Eraser Radius Size Controller (Appears directly above toolbar when eraser is active) */}
-          {activeTool === 'eraser' && !isToolbarCollapsed && (
-            <div className="absolute -top-13 left-1/2 -translate-x-1/2 bg-[#1e1f22]/95 backdrop-blur-md border border-[#3c4043] rounded-xl shadow-2xl px-3.5 py-2 flex items-center gap-3 text-white animate-in fade-in slide-in-from-bottom-2 duration-150 whitespace-nowrap">
-              <span className="text-xs font-medium text-gray-300 flex items-center gap-1.5">
-                <Eraser className="w-3.5 h-3.5 text-red-400" />
-                <span>Ukuran Penghapus:</span>
-              </span>
-
-              {/* Slider Input (Bisa digeser) */}
-              <div className="flex items-center gap-2.5">
-                <input
-                  type="range"
-                  min="5"
-                  max="45"
-                  value={eraserRadius}
-                  onChange={(e) => setEraserRadius(Number(e.target.value))}
-                  onInput={(e: any) => setEraserRadius(Number(e.target.value))}
-                  className="w-28 h-1.5 bg-[#3c4043] rounded-lg appearance-none cursor-pointer accent-red-500 hover:accent-red-400 transition-all"
-                />
-                
-                {/* Live Circle Preview Dot */}
-                <div className="w-6 h-6 flex items-center justify-center bg-[#2b2c30] rounded-md border border-[#3c4043]">
-                  <div 
-                    className="rounded-full bg-red-500/80 border border-red-300 transition-all duration-75"
-                    style={{ 
-                      width: `${Math.max(4, Math.min(20, eraserRadius * 0.5))}px`,
-                      height: `${Math.max(4, Math.min(20, eraserRadius * 0.5))}px` 
-                    }}
-                  />
-                </div>
-
-                <span className="text-xs font-bold text-red-400 min-w-[32px] text-right">{eraserRadius * 2}px</span>
-              </div>
-
-              {/* Quick Presets */}
-              <div className="flex items-center gap-1 border-l border-[#3c4043] pl-2.5">
-                {[
-                  { label: 'S', r: 8 },
-                  { label: 'M', r: 14 },
-                  { label: 'L', r: 24 },
-                  { label: 'XL', r: 36 },
-                ].map((preset) => (
-                  <button
-                    key={preset.label}
-                    onClick={() => setEraserRadius(preset.r)}
-                    className={`w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold transition cursor-pointer ${
-                      eraserRadius === preset.r ? 'bg-red-600 text-white shadow-sm ring-1 ring-red-400' : 'hover:bg-[#3c4043] text-gray-400'
-                    }`}
-                    title={`Ukuran ${preset.label} (${preset.r * 2}px)`}
-                  >
-                    {preset.label}
-                  </button>
-                ))}
-              </div>
+        <>
+          {isToolbarCollapsed ? (
+            <div className="absolute bottom-6 left-6 z-30 pointer-events-auto animate-in fade-in zoom-in duration-200">
+              <button
+                onClick={() => setIsToolbarCollapsed(false)}
+                className="w-12 h-12 bg-[#1e1f22]/90 backdrop-blur-md border border-[#3c4043] rounded-full shadow-2xl flex items-center justify-center text-blue-400 hover:bg-[#3c4043] hover:text-white transition-all cursor-pointer group"
+                title="Buka Tools Anotasi"
+              >
+                <Pencil className="w-5 h-5 group-hover:scale-110 transition-transform" />
+              </button>
             </div>
-          )}
+          ) : (
+            <div className="absolute top-1/2 -translate-y-1/2 left-6 z-30 pointer-events-auto animate-in fade-in slide-in-from-left-4 duration-200">
+              {/* Floating Eraser Radius Size Controller */}
+              {activeTool === 'eraser' && (
+                <div className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-[#1e1f22]/95 backdrop-blur-md border border-[#3c4043] rounded-xl shadow-2xl px-3.5 py-2 flex flex-col items-center gap-3 text-white animate-in fade-in slide-in-from-left-2 duration-150 whitespace-nowrap">
+                  <span className="text-xs font-medium text-gray-300 flex items-center gap-1.5 w-full justify-center pb-1 border-b border-[#3c4043]">
+                    <Eraser className="w-3.5 h-3.5 text-red-400" />
+                    <span>Ukuran Penghapus</span>
+                  </span>
 
-          <div className="bg-[#1e1f22]/90 backdrop-blur-md border border-[#3c4043] rounded-2xl shadow-2xl p-2 flex items-center gap-1.5 text-white">
-          {!isToolbarCollapsed ? (
-            <>
-              <div className="flex items-center gap-1 pr-2 border-r border-[#3c4043]">
+                  {/* Slider Input */}
+                  <div className="flex flex-col items-center gap-2">
+                    <input
+                      type="range"
+                      min="5"
+                      max="45"
+                      value={eraserRadius}
+                      onChange={(e) => setEraserRadius(Number(e.target.value))}
+                      onInput={(e: any) => setEraserRadius(Number(e.target.value))}
+                      className="w-28 h-1.5 bg-[#3c4043] rounded-lg appearance-none cursor-pointer accent-red-500 hover:accent-red-400 transition-all"
+                    />
+                    
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="w-6 h-6 flex items-center justify-center bg-[#2b2c30] rounded-md border border-[#3c4043]">
+                        <div 
+                          className="rounded-full bg-red-500/80 border border-red-300 transition-all duration-75"
+                          style={{ 
+                            width: `${Math.max(4, Math.min(20, eraserRadius * 0.5))}px`,
+                            height: `${Math.max(4, Math.min(20, eraserRadius * 0.5))}px` 
+                          }}
+                        />
+                      </div>
+                      <span className="text-xs font-bold text-red-400 min-w-[32px] text-right">{eraserRadius * 2}px</span>
+                    </div>
+                  </div>
+
+                  {/* Quick Presets */}
+                  <div className="flex items-center gap-1 pt-2 border-t border-[#3c4043] w-full justify-center">
+                    {[
+                      { label: 'S', r: 8 },
+                      { label: 'M', r: 14 },
+                      { label: 'L', r: 24 },
+                      { label: 'XL', r: 36 },
+                    ].map((preset) => (
+                      <button
+                        key={preset.label}
+                        onClick={() => setEraserRadius(preset.r)}
+                        className={`w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold transition cursor-pointer ${
+                          eraserRadius === preset.r ? 'bg-red-600 text-white shadow-sm ring-1 ring-red-400' : 'hover:bg-[#3c4043] text-gray-400'
+                        }`}
+                        title={`Ukuran ${preset.label} (${preset.r * 2}px)`}
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Main Vertical Toolbar */}
+              <div className="bg-[#1e1f22]/90 backdrop-blur-md border border-[#3c4043] rounded-2xl shadow-2xl p-2 flex flex-col items-center gap-1 text-white">
+                <div className="flex flex-col items-center gap-1 pb-2 border-b border-[#3c4043] w-full">
                 <button
                   onClick={() => setActiveTool('pen')}
                   className={`p-2 rounded-xl transition-all cursor-pointer ${
@@ -656,9 +667,10 @@ export default function ScreenAnnotation({
                     style={{ backgroundColor: c }}
                   />
                 ))}
-              </div>
+                </div>
 
-              <div className="flex items-center gap-1 px-2 border-r border-[#3c4043]">
+                {/* Colors */}
+                <div className="flex flex-col items-center gap-1 py-1 pb-2 border-b border-[#3c4043] w-full">
                 {[2, 4, 8].map((w) => {
                   const targetRadius = w === 2 ? 8 : w === 4 ? 14 : 28;
                   const isActive = activeTool === 'eraser' ? eraserRadius === targetRadius : strokeWidth === w;
@@ -699,41 +711,25 @@ export default function ScreenAnnotation({
                 <Minimize2 className="w-4 h-4" />
               </button>
 
-              {onCloseAnnotation && (
-                <button
-                  onClick={onCloseAnnotation}
-                  className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-colors cursor-pointer border-l border-[#3c4043] pl-2 pr-1"
-                  title="Tutup Anotasi Layar"
-                >
-                  <X className="w-4.5 h-4.5" />
-                </button>
-              )}
+                {onCloseAnnotation && (
+                  <button
+                    onClick={onCloseAnnotation}
+                    className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-colors cursor-pointer w-full mt-1 border-t border-[#3c4043]"
+                    title="Tutup Anotasi Layar"
+                  >
+                    <X className="w-4.5 h-4.5 mx-auto" />
+                  </button>
+                )}
 
-              {extraToolbarButtons}
-            </>
-          ) : (
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setIsToolbarCollapsed(false)}
-                className="p-2 text-blue-400 hover:bg-blue-500/20 rounded-xl transition-colors cursor-pointer flex items-center gap-2 text-xs font-semibold"
-                title="Buka Tools Anotasi"
-              >
-                <Pencil className="w-4 h-4" />
-                <span>Screen Annotation</span>
-              </button>
-              {onCloseAnnotation && (
-                <button
-                  onClick={onCloseAnnotation}
-                  className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-colors cursor-pointer"
-                  title="Tutup Anotasi Layar"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
+                {extraToolbarButtons && (
+                  <div className="flex flex-col items-center gap-1 w-full border-t border-[#3c4043] pt-1 mt-1">
+                    {extraToolbarButtons}
+                  </div>
+                )}
+              </div>
             </div>
           )}
-        </div>
-      </div>
+        </>
       )}
     </div>
   );
