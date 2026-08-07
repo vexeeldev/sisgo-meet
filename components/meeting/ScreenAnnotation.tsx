@@ -549,7 +549,7 @@ export default function ScreenAnnotation({
                     setIsToolbarCollapsed(false);
                   }
                 }}
-                className="w-12 h-12 bg-white/95 backdrop-blur-md border border-gray-200 rounded-full shadow-2xl flex items-center justify-center text-blue-500 hover:bg-gray-100 hover:text-blue-600 transition-all cursor-pointer group"
+                className="w-12 h-12 bg-[#0a0a0a]/95 backdrop-blur-md border border-white/20 rounded-full shadow-2xl flex items-center justify-center text-white hover:bg-white/10 transition-all cursor-pointer group"
                 title={forceCollapsed ? "Kembali ke mode coret (Resume)" : "Buka Tools Anotasi"}
               >
                 <Pencil className="w-5 h-5 group-hover:scale-110 transition-transform" />
@@ -559,9 +559,9 @@ export default function ScreenAnnotation({
             <div className="absolute top-1/2 -translate-y-1/2 left-6 z-30 pointer-events-auto animate-in fade-in slide-in-from-left-4 duration-200">
               {/* Floating Eraser Radius Size Controller */}
               {activeTool === 'eraser' && (
-                <div className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-white/95 backdrop-blur-md border border-gray-200 rounded-xl shadow-2xl px-3.5 py-2 flex flex-col items-center gap-3 text-gray-800 animate-in fade-in slide-in-from-left-2 duration-150 whitespace-nowrap">
-                  <span className="text-xs font-medium text-gray-500 flex items-center gap-1.5 w-full justify-center pb-1 border-b border-gray-200">
-                    <Eraser className="w-3.5 h-3.5 text-red-500" />
+                <div className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-[#0a0a0a]/95 backdrop-blur-md border border-white/20 rounded-xl shadow-2xl px-3.5 py-2 flex flex-col items-center gap-3 text-white animate-in fade-in slide-in-from-left-2 duration-150 whitespace-nowrap">
+                  <span className="text-xs font-medium text-white/70 flex items-center gap-1.5 w-full justify-center pb-1 border-b border-white/20">
+                    <Eraser className="w-3.5 h-3.5 text-white" />
                     <span>Ukuran Penghapus</span>
                   </span>
 
@@ -574,25 +574,25 @@ export default function ScreenAnnotation({
                       value={eraserRadius}
                       onChange={(e) => setEraserRadius(Number(e.target.value))}
                       onInput={(e: any) => setEraserRadius(Number(e.target.value))}
-                      className="w-28 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-red-500 hover:accent-red-600 transition-all"
+                      className="w-28 h-1.5 bg-white/20 rounded-lg appearance-none cursor-pointer accent-white hover:accent-gray-200 transition-all"
                     />
                     
                     <div className="flex items-center gap-2 mt-1">
-                      <div className="w-6 h-6 flex items-center justify-center bg-gray-100 rounded-md border border-gray-200">
+                      <div className="w-6 h-6 flex items-center justify-center bg-white/5 rounded-md border border-white/20">
                         <div 
-                          className="rounded-full bg-red-500/80 border border-red-300 transition-all duration-75"
+                          className="rounded-full bg-white/80 border border-white/40 transition-all duration-75"
                           style={{ 
                             width: `${Math.max(4, Math.min(20, eraserRadius * 0.5))}px`,
                             height: `${Math.max(4, Math.min(20, eraserRadius * 0.5))}px` 
                           }}
                         />
                       </div>
-                      <span className="text-xs font-bold text-red-500 min-w-[32px] text-right">{eraserRadius * 2}px</span>
+                      <span className="text-xs font-bold text-white min-w-[32px] text-right">{eraserRadius * 2}px</span>
                     </div>
                   </div>
 
                   {/* Quick Presets */}
-                  <div className="flex items-center gap-1 pt-2 border-t border-gray-200 w-full justify-center">
+                  <div className="flex items-center gap-1 pt-2 border-t border-white/20 w-full justify-center">
                     {[
                       { label: 'S', r: 8 },
                       { label: 'M', r: 14 },
@@ -603,7 +603,7 @@ export default function ScreenAnnotation({
                         key={preset.label}
                         onClick={() => setEraserRadius(preset.r)}
                         className={`w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold transition cursor-pointer ${
-                          eraserRadius === preset.r ? 'bg-red-500 text-white shadow-sm ring-1 ring-red-300' : 'hover:bg-gray-100 text-gray-500'
+                          eraserRadius === preset.r ? 'bg-white text-black shadow-sm' : 'hover:bg-white/10 text-white/70 hover:text-white'
                         }`}
                         title={`Ukuran ${preset.label} (${preset.r * 2}px)`}
                       >
@@ -615,14 +615,14 @@ export default function ScreenAnnotation({
               )}
 
               {/* Main Vertical Toolbar */}
-              <div className="bg-white/95 backdrop-blur-md border border-gray-200 rounded-2xl shadow-2xl p-2 flex flex-col items-center gap-1 text-gray-800">
-                <div className="flex flex-col items-center gap-1 pb-2 border-b border-gray-200 w-full">
+              <div className="bg-[#0a0a0a]/95 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl p-2 flex flex-col items-center gap-1 text-white">
+                <div className="flex flex-col items-center gap-1 pb-2 border-b border-white/20 w-full">
                 <button
                   onClick={() => setActiveTool('pen')}
                   className={`p-2 rounded-xl transition-all cursor-pointer ${
                     activeTool === 'pen'
-                      ? 'bg-blue-50 text-blue-600'
-                      : 'hover:bg-gray-100 text-gray-500 hover:text-gray-800'
+                      ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                      : 'hover:bg-blue-500/10 text-blue-300/70 hover:text-blue-300 border border-transparent'
                   }`}
                   title="Coretan (Pen)"
                 >
@@ -633,8 +633,8 @@ export default function ScreenAnnotation({
                   onClick={() => setActiveTool('arrow')}
                   className={`p-2 rounded-xl transition-all cursor-pointer ${
                     activeTool === 'arrow'
-                      ? 'bg-blue-50 text-blue-600'
-                      : 'hover:bg-gray-100 text-gray-500 hover:text-gray-800'
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                      : 'hover:bg-emerald-500/10 text-emerald-300/70 hover:text-emerald-300 border border-transparent'
                   }`}
                   title="Panah (Arrow)"
                 >
@@ -645,8 +645,8 @@ export default function ScreenAnnotation({
                   onClick={() => setActiveTool('rect')}
                   className={`p-2 rounded-xl transition-all cursor-pointer ${
                     activeTool === 'rect'
-                      ? 'bg-blue-50 text-blue-600'
-                      : 'hover:bg-gray-100 text-gray-500 hover:text-gray-800'
+                      ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                      : 'hover:bg-amber-500/10 text-amber-300/70 hover:text-amber-300 border border-transparent'
                   }`}
                   title="Kotak (Rectangle)"
                 >
@@ -657,8 +657,8 @@ export default function ScreenAnnotation({
                   onClick={() => setActiveTool('circle')}
                   className={`p-2 rounded-xl transition-all cursor-pointer ${
                     activeTool === 'circle'
-                      ? 'bg-blue-50 text-blue-600'
-                      : 'hover:bg-gray-100 text-gray-500 hover:text-gray-800'
+                      ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                      : 'hover:bg-purple-500/10 text-purple-300/70 hover:text-purple-300 border border-transparent'
                   }`}
                   title="Lingkaran (Circle)"
                 >
@@ -669,8 +669,8 @@ export default function ScreenAnnotation({
                   onClick={() => setActiveTool('eraser')}
                   className={`p-2 rounded-xl transition-all cursor-pointer ${
                     activeTool === 'eraser'
-                      ? 'bg-red-50 text-red-500'
-                      : 'hover:bg-gray-100 text-gray-500 hover:text-gray-800'
+                      ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                      : 'hover:bg-red-500/10 text-red-300/70 hover:text-red-300 border border-transparent'
                   }`}
                   title="Hapus Garis (Eraser)"
                 >
@@ -679,19 +679,19 @@ export default function ScreenAnnotation({
               </div>
 
                 {/* Colors Dropdown (Pop-out to the right) */}
-                <div className="flex flex-col items-center gap-1 py-1 pb-2 border-b border-gray-200 w-full relative">
+                <div className="flex flex-col items-center gap-1 py-1 pb-2 border-b border-white/20 w-full relative">
                   <button
                     onClick={() => setShowColorPicker(!showColorPicker)}
-                    className="w-6 h-6 rounded-full border border-gray-300 shadow-sm transition-transform hover:scale-110 cursor-pointer flex items-center justify-center relative"
+                    className="w-6 h-6 rounded-full border border-white/40 shadow-sm transition-transform hover:scale-110 cursor-pointer flex items-center justify-center relative"
                     style={{ backgroundColor: activeColor }}
                     title="Pilih Warna"
                   >
                     {/* Tiny arrow indicator */}
-                    <div className="absolute -right-2.5 w-0 h-0 border-y-[3px] border-y-transparent border-l-[4px] border-l-gray-400" />
+                    <div className="absolute -right-2.5 w-0 h-0 border-y-[3px] border-y-transparent border-l-[4px] border-l-white/60" />
                   </button>
                   
                   {showColorPicker && (
-                    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 bg-white/95 backdrop-blur-md border border-gray-200 rounded-xl shadow-2xl p-1.5 flex flex-col gap-1.5 animate-in fade-in slide-in-from-left-2 duration-150 z-50">
+                    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 bg-[#0a0a0a]/95 backdrop-blur-md border border-white/20 rounded-xl shadow-2xl p-1.5 flex flex-col gap-1.5 animate-in fade-in slide-in-from-left-2 duration-150 z-50">
                       <div className="grid grid-cols-2 gap-1.5">
                         {COLOR_PALETTE.map((c) => (
                           <button
@@ -701,7 +701,7 @@ export default function ScreenAnnotation({
                               setShowColorPicker(false);
                             }}
                             className={`w-6 h-6 rounded-full transition-all cursor-pointer border ${
-                              activeColor === c ? 'border-gray-800 scale-125 shadow-md' : 'border-gray-200 hover:scale-110 opacity-80'
+                              activeColor === c ? 'border-white scale-125 shadow-md' : 'border-white/20 hover:scale-110 opacity-80'
                             }`}
                             style={{ backgroundColor: c }}
                             title="Warna"
@@ -713,7 +713,7 @@ export default function ScreenAnnotation({
                 </div>
 
                 {/* Stroke Width / Eraser Size */}
-                <div className="flex flex-col items-center gap-1 py-1 pb-2 border-b border-gray-200 w-full">
+                <div className="flex flex-col items-center gap-1 py-1 pb-2 border-b border-white/20 w-full">
                 {[2, 4, 8].map((w) => {
                   const targetRadius = w === 2 ? 8 : w === 4 ? 14 : 28;
                   const isActive = activeTool === 'eraser' ? eraserRadius === targetRadius : strokeWidth === w;
@@ -728,7 +728,7 @@ export default function ScreenAnnotation({
                         }
                       }}
                       className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-semibold cursor-pointer transition ${
-                        isActive ? 'bg-blue-500 text-white shadow-sm' : 'hover:bg-gray-100 text-gray-500'
+                        isActive ? 'bg-white text-black shadow-sm' : 'hover:bg-white/10 text-white/70 hover:text-white'
                       }`}
                       title={activeTool === 'eraser' ? `Ukuran Penghapus: ${w === 2 ? 'Kecil' : w === 4 ? 'Sedang' : 'Besar'}` : `Ketebalan Garis`}
                     >
@@ -740,7 +740,7 @@ export default function ScreenAnnotation({
 
               <button
                 onClick={onClearAnnotations}
-                className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
+                className="p-2 text-white/70 hover:bg-white/10 hover:text-white rounded-xl transition-colors cursor-pointer"
                 title="Hapus Semua Anotasi"
               >
                 <Trash2 className="w-4.5 h-4.5" />
@@ -748,7 +748,7 @@ export default function ScreenAnnotation({
 
               <button
                 onClick={() => setIsToolbarCollapsed(true)}
-                className="p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer"
+                className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer"
                 title="Kecilkan Toolbar"
               >
                 <Minimize2 className="w-4 h-4" />
@@ -757,7 +757,7 @@ export default function ScreenAnnotation({
                 {onCloseAnnotation && (
                   <button
                     onClick={onCloseAnnotation}
-                    className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer w-full mt-1 border-t border-gray-200"
+                    className="p-2 text-white/70 hover:text-red-400 hover:bg-red-500/20 rounded-xl transition-colors cursor-pointer w-full mt-1 border-t border-white/20"
                     title="Tutup Anotasi Layar"
                   >
                     <X className="w-4.5 h-4.5 mx-auto" />
@@ -765,7 +765,7 @@ export default function ScreenAnnotation({
                 )}
 
                 {extraToolbarButtons && (
-                  <div className="flex flex-col items-center gap-1 w-full border-t border-gray-200 pt-1 mt-1">
+                  <div className="flex flex-col items-center gap-1 w-full border-t border-white/20 pt-1 mt-1">
                     {extraToolbarButtons}
                   </div>
                 )}
