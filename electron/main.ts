@@ -154,12 +154,14 @@ ipcMain.on("toggle-overlay", (_event, show: boolean) => {
 ipcMain.on("pause-drawing", () => {
     isPausedMain = true;
     overlayWindow?.setIgnoreMouseEvents(true, { forward: true });
+    overlayWindow?.webContents.send("toggle-pause-state", true);
 });
 
 // Resume drawing (tampilkan canvas kembali)
 ipcMain.on("resume-drawing", () => {
     isPausedMain = false;
     overlayWindow?.setIgnoreMouseEvents(false);
+    overlayWindow?.webContents.send("toggle-pause-state", false);
 });
 
 // Dinamis toggle ignoreMouseEvents saat mouse di atas toolbar

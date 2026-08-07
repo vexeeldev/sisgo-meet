@@ -245,7 +245,15 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     if (api.onSyncAnnotationsToMain) {
       return api.onSyncAnnotationsToMain((annotations) => {
         setScreenAnnotations(annotations);
-        sendMessage('screen_annotation_update', { annotations });
+        // We DO NOT broadcast these annotations via WebRTC because 
+        // the Desktop overlay is already captured in the screen share video stream.
+        // Broadcasting it would cause duplicate lines (2 garis) on the viewer's side.
+        
+        // HOWEVER, if the host CLEARS the canvas (empty array), we MUST broadcast it
+        // so that viewers also clear any locally drawn strokes on their end.
+        if (annotations.length === 0) {
+          sendMessage('screen_annotation_update', { annotations: [] });
+        }
       });
     }
   }, [sendMessage]);

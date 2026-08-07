@@ -619,7 +619,7 @@ export default function ScreenAnnotation({
                   onClick={() => setActiveTool('pen')}
                   className={`p-2 rounded-xl transition-all cursor-pointer ${
                     activeTool === 'pen'
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                      ? 'bg-[#3c4043] text-white'
                       : 'hover:bg-[#3c4043]/70 text-gray-300'
                   }`}
                   title="Coretan (Pen)"
@@ -631,7 +631,7 @@ export default function ScreenAnnotation({
                   onClick={() => setActiveTool('arrow')}
                   className={`p-2 rounded-xl transition-all cursor-pointer ${
                     activeTool === 'arrow'
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                      ? 'bg-[#3c4043] text-white'
                       : 'hover:bg-[#3c4043]/70 text-gray-300'
                   }`}
                   title="Panah (Arrow)"
@@ -643,7 +643,7 @@ export default function ScreenAnnotation({
                   onClick={() => setActiveTool('rect')}
                   className={`p-2 rounded-xl transition-all cursor-pointer ${
                     activeTool === 'rect'
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                      ? 'bg-[#3c4043] text-white'
                       : 'hover:bg-[#3c4043]/70 text-gray-300'
                   }`}
                   title="Kotak (Rectangle)"
@@ -655,7 +655,7 @@ export default function ScreenAnnotation({
                   onClick={() => setActiveTool('circle')}
                   className={`p-2 rounded-xl transition-all cursor-pointer ${
                     activeTool === 'circle'
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                      ? 'bg-[#3c4043] text-white'
                       : 'hover:bg-[#3c4043]/70 text-gray-300'
                   }`}
                   title="Lingkaran (Circle)"
@@ -667,7 +667,7 @@ export default function ScreenAnnotation({
                   onClick={() => setActiveTool('eraser')}
                   className={`p-2 rounded-xl transition-all cursor-pointer ${
                     activeTool === 'eraser'
-                      ? 'bg-red-600 text-white shadow-lg shadow-red-500/30'
+                      ? 'bg-[#3c4043] text-white'
                       : 'hover:bg-[#3c4043]/70 text-gray-300'
                   }`}
                   title="Hapus Garis (Eraser)"
