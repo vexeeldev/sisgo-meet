@@ -126,7 +126,7 @@ export default function OverlayPage() {
       <div style={{ position: "fixed", inset: 0, pointerEvents: isPaused ? "none" : "auto" }}>
         
         {/* Zoom-like Screen Share Border Indicator */}
-        <div className="absolute inset-0 border-[6px] border-emerald-500/80 pointer-events-none z-50 rounded-lg shadow-[inset_0_0_20px_rgba(16,185,129,0.5)]" />
+        <div className="absolute inset-0 border-[3px] border-emerald-500/80 pointer-events-none z-50 rounded-lg shadow-[inset_0_0_15px_rgba(16,185,129,0.4)]" />
 
         <ScreenAnnotation
           isSharingHost={true} // As this is the host's overlay

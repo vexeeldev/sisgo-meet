@@ -711,22 +711,6 @@ export default function MeetingControls({
           >
             <BackHand className="w-6 h-6 sm:w-7 sm:h-7" />
           </button>
-
-          {/* Screen Annotation Toggle (Di samping Raise Hand - Icon Pensil/Anotasi Coret Layar) */}
-          {onToggleScreenAnnotation && (
-            <button
-              onClick={onToggleScreenAnnotation}
-              className={`flex w-12 h-12 sm:w-14 sm:h-14 items-center justify-center transition-all cursor-pointer ${
-                isScreenAnnotationOpen
-                  ? 'rounded-2xl bg-[#c2e7ff] text-[#001d35]'
-                  : 'rounded-full bg-[#3c4043] hover:bg-[#4a4b4c] text-white'
-              }`}
-              title={isScreenAnnotationOpen ? 'Sembunyikan Anotasi Layar' : 'Buka Anotasi Layar'}
-            >
-              <Pencil className="w-6 h-6 sm:w-7 sm:h-7" />
-            </button>
-          )}
-
           {/* Desktop Overlay Coret-Coret (Electron Only) */}
           <AnnotationTriggerButton />
 

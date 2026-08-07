@@ -169,6 +169,7 @@ export default function ScreenAnnotation({
 
   const [isDrawing, setIsDrawing] = useState(false);
   const [isToolbarCollapsed, setIsToolbarCollapsed] = useState(false);
+  const [showColorPicker, setShowColorPicker] = useState(false);
   const activeItemRef = useRef<AnnotationItem | null>(null);
   const lastDrawTimeRef = useRef<number>(0);
   const pendingPointsRef = useRef<number[]>([]);
@@ -656,20 +657,39 @@ export default function ScreenAnnotation({
                 </button>
               </div>
 
-              <div className="flex items-center gap-1.5 px-2 border-r border-[#3c4043]">
-                {COLOR_PALETTE.map((c) => (
+                {/* Colors Dropdown (Pop-out to the right) */}
+                <div className="flex flex-col items-center gap-1 py-1 pb-2 border-b border-[#3c4043] w-full relative">
                   <button
-                    key={c}
-                    onClick={() => setActiveColor(c)}
-                    className={`w-5 h-5 rounded-full transition-transform cursor-pointer ${
-                      activeColor === c ? 'scale-125 ring-2 ring-white shadow-md' : 'hover:scale-110 opacity-80'
-                    }`}
-                    style={{ backgroundColor: c }}
-                  />
-                ))}
+                    onClick={() => setShowColorPicker(!showColorPicker)}
+                    className="w-6 h-6 rounded-full border-2 border-[#3c4043] shadow-md transition-transform hover:scale-110 cursor-pointer flex items-center justify-center relative"
+                    style={{ backgroundColor: activeColor }}
+                    title="Pilih Warna"
+                  >
+                    {/* Tiny arrow indicator */}
+                    <div className="absolute -right-2.5 w-0 h-0 border-y-[3px] border-y-transparent border-l-[4px] border-l-gray-400" />
+                  </button>
+                  
+                  {showColorPicker && (
+                    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 bg-[#1e1f22]/95 backdrop-blur-md border border-[#3c4043] rounded-xl shadow-2xl p-2 grid grid-cols-2 gap-2 animate-in fade-in slide-in-from-left-2 duration-150 z-50">
+                      {COLOR_PALETTE.map((c) => (
+                        <button
+                          key={c}
+                          onClick={() => {
+                            setActiveColor(c);
+                            setShowColorPicker(false);
+                          }}
+                          className={`w-6 h-6 rounded-full transition-transform cursor-pointer border ${
+                            activeColor === c ? 'border-white scale-125 shadow-[0_0_8px_rgba(255,255,255,0.4)]' : 'border-[#3c4043] hover:scale-110 opacity-80'
+                          }`}
+                          style={{ backgroundColor: c }}
+                          title="Warna"
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                {/* Colors */}
+                {/* Stroke Width / Eraser Size */}
                 <div className="flex flex-col items-center gap-1 py-1 pb-2 border-b border-[#3c4043] w-full">
                 {[2, 4, 8].map((w) => {
                   const targetRadius = w === 2 ? 8 : w === 4 ? 14 : 28;
