@@ -39,6 +39,7 @@ declare global {
       onClearOverlayRemote: (cb: () => void) => () => void;
       sendRemoteStroke?: (stroke: AnnotationStroke) => void;
       clearOverlayRemote?: () => void;
+      setIgnoreMouseEvents: (ignore: boolean) => void;
       
       // Full Sync
       syncAnnotationsToOverlay?: (annotations: any[]) => void;

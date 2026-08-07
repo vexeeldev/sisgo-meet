@@ -525,14 +525,30 @@ export default function ScreenAnnotation({
       )}
 
       {!hideToolbar && (
-        <>
+        <div
+          onMouseEnter={() => {
+            if (typeof window !== 'undefined' && (window as any).electronAPI?.setIgnoreMouseEvents) {
+              (window as any).electronAPI.setIgnoreMouseEvents(false);
+            }
+          }}
+          onMouseLeave={() => {
+            if (typeof window !== 'undefined' && (window as any).electronAPI?.setIgnoreMouseEvents) {
+              (window as any).electronAPI.setIgnoreMouseEvents(true);
+            }
+          }}
+        >
           {(isToolbarCollapsed || forceCollapsed) ? (
-            <div className={`absolute bottom-6 left-6 z-30 pointer-events-auto animate-in fade-in zoom-in duration-200 ${forceCollapsed ? 'opacity-50 pointer-events-none' : ''}`}>
+            <div className="absolute bottom-6 left-6 z-30 pointer-events-auto animate-in fade-in zoom-in duration-200">
               <button
-                onClick={() => !forceCollapsed && setIsToolbarCollapsed(false)}
-                className={`w-12 h-12 bg-[#1e1f22]/90 backdrop-blur-md border border-[#3c4043] rounded-full shadow-2xl flex items-center justify-center text-blue-400 transition-all cursor-pointer group ${forceCollapsed ? 'cursor-not-allowed' : 'hover:bg-[#3c4043] hover:text-white'}`}
-                title={forceCollapsed ? "Toolbar disembunyikan karena Mode Scroll aktif" : "Buka Tools Anotasi"}
-                disabled={forceCollapsed}
+                onClick={() => {
+                  if (forceCollapsed && typeof window !== 'undefined' && (window as any).electronAPI?.resumeDrawing) {
+                    (window as any).electronAPI.resumeDrawing();
+                  } else {
+                    setIsToolbarCollapsed(false);
+                  }
+                }}
+                className="w-12 h-12 bg-[#1e1f22]/90 backdrop-blur-md border border-[#3c4043] rounded-full shadow-2xl flex items-center justify-center text-blue-400 hover:bg-[#3c4043] hover:text-white transition-all cursor-pointer group"
+                title={forceCollapsed ? "Kembali ke mode coret (Resume)" : "Buka Tools Anotasi"}
               >
                 <Pencil className="w-5 h-5 group-hover:scale-110 transition-transform" />
               </button>
@@ -673,7 +689,7 @@ export default function ScreenAnnotation({
                   </button>
                   
                   {showColorPicker && (
-                    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 bg-[#1e1f22]/95 backdrop-blur-md border border-[#3c4043] rounded-xl shadow-2xl p-1.5 grid grid-cols-3 gap-1.5 animate-in fade-in slide-in-from-left-2 duration-150 z-50">
+                    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 bg-[#1e1f22]/95 backdrop-blur-md border border-[#3c4043] rounded-xl shadow-2xl p-1.5 flex flex-col gap-1.5 animate-in fade-in slide-in-from-left-2 duration-150 z-50">
                       {COLOR_PALETTE.map((c) => (
                         <button
                           key={c}
@@ -681,7 +697,7 @@ export default function ScreenAnnotation({
                             setActiveColor(c);
                             setShowColorPicker(false);
                           }}
-                          className={`w-5 h-5 rounded-full transition-transform cursor-pointer border ${
+                          className={`w-6 h-6 rounded-full transition-transform cursor-pointer border ${
                             activeColor === c ? 'border-white scale-125 shadow-[0_0_8px_rgba(255,255,255,0.4)]' : 'border-[#3c4043] hover:scale-110 opacity-80'
                           }`}
                           style={{ backgroundColor: c }}
@@ -752,7 +768,7 @@ export default function ScreenAnnotation({
               </div>
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   );

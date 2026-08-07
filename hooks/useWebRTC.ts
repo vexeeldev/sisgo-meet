@@ -79,23 +79,23 @@ const ICE_SERVERS: RTCIceServer[] = [
   },
   {
     urls: "turn:global.relay.metered.ca:80",
-    username: "2886ed052ac9b632beb00a11",
-    credential: "W6fkXa4N3EawIeQa",
+    username: "dac80883a82648dca6f1fb33",
+    credential: "o5zPaQISlVd0vOpo",
   },
   {
     urls: "turn:global.relay.metered.ca:80?transport=tcp",
-    username: "2886ed052ac9b632beb00a11",
-    credential: "W6fkXa4N3EawIeQa",
+    username: "dac80883a82648dca6f1fb33",
+    credential: "o5zPaQISlVd0vOpo",
   },
   {
     urls: "turn:global.relay.metered.ca:443",
-    username: "2886ed052ac9b632beb00a11",
-    credential: "W6fkXa4N3EawIeQa",
+    username: "dac80883a82648dca6f1fb33",
+    credential: "o5zPaQISlVd0vOpo",
   },
   {
     urls: "turns:global.relay.metered.ca:443?transport=tcp",
-    username: "2886ed052ac9b632beb00a11",
-    credential: "W6fkXa4N3EawIeQa",
+    username: "dac80883a82648dca6f1fb33",
+    credential: "o5zPaQISlVd0vOpo",
   },
 ];
 
@@ -142,7 +142,7 @@ export function useWebRTC({
   const [remoteStreams, setRemoteStreams] = useState<MediaStream[]>([]);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [participants, setParticipants] = useState<string[]>([]);
-  const [participantDetails, setParticipantDetails] = useState<Record<string, {name: string, role?: string}>>({});
+  const [participantDetails, setParticipantDetails] = useState<Record<string, { name: string, role?: string }>>({});
   const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
   const [screenStream, setScreenStream] = useState<MediaStream | null>(null);
   const [remoteScreenStream, setRemoteScreenStream] = useState<MediaStream | null>(null);
@@ -235,7 +235,7 @@ export function useWebRTC({
           setSpeaking(prev => ({ ...prev, local: false }));
         });
         harkEvents.current['local'] = speech;
-        
+
         return () => {
           speech.stop();
           delete harkEvents.current['local'];
@@ -258,7 +258,7 @@ export function useWebRTC({
         harkEvents.current[stream.id] = speech;
       }
     });
-    
+
     Object.keys(harkEvents.current).forEach(id => {
       if (id !== 'local' && !remoteStreams.find(s => s.id === id)) {
         harkEvents.current[id].stop();
@@ -278,7 +278,7 @@ export function useWebRTC({
         setNetworkQuality(prev => prev.local === 'excellent' ? prev : { local: 'excellent' });
         return;
       }
-      
+
       const newQuality: Record<string, NetworkQuality> = {};
       let totalRtt = 0;
       let rttCount = 0;
@@ -294,7 +294,7 @@ export function useWebRTC({
           const pc = (peer as any)._pc as RTCPeerConnection;
           const stats = await pc.getStats();
           let rtt: number | null = null;
-          
+
           stats.forEach(report => {
             if (report.type === 'candidate-pair' && report.state === 'succeeded') {
               if (report.currentRoundTripTime !== undefined) {
@@ -329,7 +329,7 @@ export function useWebRTC({
         } else {
           newQuality['local'] = 'excellent';
         }
-        
+
         setNetworkQuality(prev => {
           // Only update if changed
           let changed = false;
@@ -373,7 +373,7 @@ export function useWebRTC({
         };
 
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
-        
+
         // Apply initial camera/mic states
         const videoTrack = stream.getVideoTracks()[0];
         if (videoTrack) {
@@ -385,8 +385,8 @@ export function useWebRTC({
               width: { ideal: 1920 },
               height: { ideal: 1080 },
               frameRate: { ideal: 60 },
-            }).catch(() => {});
-          } catch (e) {}
+            }).catch(() => { });
+          } catch (e) { }
           if (initialCameraOn === false) {
             videoTrack.enabled = false;
           }
@@ -405,7 +405,7 @@ export function useWebRTC({
             video: false,
             audio: true,
           });
-          
+
           const audioTrack = stream.getAudioTracks()[0];
           if (audioTrack && initialMicOn === false) {
             audioTrack.enabled = false;
@@ -426,354 +426,354 @@ export function useWebRTC({
       const wsUrl = `${signalServer}?room=${roomId}&participant_uuid=${participantUUID}&status=approved`;
       ws.current = new WebSocket(wsUrl);
 
-    ws.current.onopen = () => {
-      sendMessage('profile', { name: userName, role: userRole });
-      
-      if (userRole === 'host' || userRole === 'interviewer') {
-        sendMessage('host_joined');
-      }
-      playSound();
-    };
+      ws.current.onopen = () => {
+        sendMessage('profile', { name: userName, role: userRole });
 
-    ws.current.onmessage = (event) => {
-      try {
-        const msg: WSMessage = JSON.parse(event.data);
-
-        switch (msg.type) {
-          case 'room-info': {
-            setMyConnId(msg.sender_id);
-            const list: RoomInfoParticipant[] = msg.data?.participants ?? [];
-            setParticipants(prev => {
-              const ids = list.map(p => p.id);
-              const merged = [...prev];
-              ids.forEach(id => { if (!merged.includes(id)) merged.push(id); });
-              return merged;
-            });
-            list.forEach(p => {
-              runWhenStreamReady(() => createPeer(p.id, true));
-            });
-            break;
-          }
-
-          case 'join': {
-            const connId = msg.sender_id;
-            setParticipants(prev => (prev.includes(connId) ? prev : [...prev, connId]));
-            // Beritahu orang yang baru join siapa kita
-            sendMessage('profile', { name: userName, role: userRole }, connId);
-            playSound(); // Entry chime sound when a new participant enters
-
-            // Jika kita adalah Host dan Whiteboard sedang terbuka, kirim status & snapshot ke orang baru yang join
-            if ((userRole === 'interviewer' || userRole === 'host') && isWhiteboardOpenRef.current) {
-              sendMessage('whiteboard_toggle', { isOpen: true }, connId);
-              if (whiteboardSnapshotRef.current) {
-                sendMessage('whiteboard_update', { snapshot: whiteboardSnapshotRef.current }, connId);
-              }
-              if (whiteboardAllowedIdsRef.current.length > 0) {
-                sendMessage('whiteboard_permission_update', { allowedIds: whiteboardAllowedIdsRef.current }, connId);
-              }
-            }
-            if (isScreenSharingRef.current && screenAnnotationsRef.current.length > 0) {
-              sendMessage('screen_annotation_sync', { annotations: screenAnnotationsRef.current }, connId);
-            }
-            break;
-          }
-          
-          case 'profile': {
-            const connId = msg.sender_id;
-            const name = msg.data?.name;
-            const role = msg.data?.role;
-            if (name) {
-              setParticipantDetails(prev => ({ ...prev, [connId]: { name, role } }));
-            }
-            if ((userRole === 'interviewer' || userRole === 'host') && isWhiteboardOpenRef.current) {
-              sendMessage('whiteboard_toggle', { isOpen: true }, connId);
-              if (whiteboardSnapshotRef.current) {
-                sendMessage('whiteboard_update', { snapshot: whiteboardSnapshotRef.current }, connId);
-              }
-            }
-            if (isScreenSharingRef.current && screenAnnotationsRef.current.length > 0) {
-              sendMessage('screen_annotation_sync', { annotations: screenAnnotationsRef.current }, connId);
-            }
-            break;
-          }
-
-          case 'leave': {
-            const connId = msg.sender_id;
-            setParticipants(prev => prev.filter(id => id !== connId));
-            if (peers.current[connId]) {
-              peers.current[connId].destroy();
-              delete peers.current[connId];
-            }
-            delete pendingSignals.current[connId];
-            const leftStream = peerStreams.current[connId];
-            if (leftStream) {
-              setRemoteStreams(prev => prev.filter(s => s.id !== leftStream.id));
-              delete peerStreams.current[connId];
-            }
-            if (remoteScreenSharerIdRef.current === connId) {
-              clearRemoteScreenShare();
-            }
-            setRemoteVideoOffByUser(prev => {
-              const next = { ...prev };
-              delete next[connId];
-              return next;
-            });
-            setParticipantDetails(prev => {
-              const next = { ...prev };
-              delete next[connId];
-              return next;
-            });
-            setPeerIdToStreamId(prev => {
-              const next = { ...prev };
-              delete next[connId];
-              return next;
-            });
-            break;
-          }
-
-          case 'end_call': {
-            if (onCallEnded) {
-              onCallEnded();
-            }
-            break;
-          }
-
-          case 'kick': {
-            if (onKicked) {
-              onKicked();
-            }
-            break;
-          }
-
-          case 'chat': {
-            if (onChatReceived && msg.data) {
-              onChatReceived(msg.data);
-            }
-            break;
-          }
-
-          case 'raise_hand': {
-            if (onHandRaised && msg.data) {
-              onHandRaised(msg.data, msg.sender_id);
-            }
-            break;
-          }
-
-          case 'video_off': {
-            const connId = msg.sender_id;
-            setRemoteVideoOffByUser(prev => ({ ...prev, [connId]: true }));
-            break;
-          }
-
-          case 'video_on': {
-            const connId = msg.sender_id;
-            setRemoteVideoOffByUser(prev => ({ ...prev, [connId]: false }));
-            break;
-          }
-
-          case 'audio_off': {
-            const connId = msg.sender_id;
-            setRemoteAudioOffByUser(prev => ({ ...prev, [connId]: true }));
-            break;
-          }
-
-          case 'audio_on': {
-            const connId = msg.sender_id;
-            setRemoteAudioOffByUser(prev => ({ ...prev, [connId]: false }));
-            break;
-          }
-
-          case 'offer': {
-            const signal = msg.data?.signal ?? msg.data;
-            const connId = msg.sender_id;
-            if (peers.current[connId]) {
-              peers.current[connId].signal(signal);
-            } else {
-              runWhenStreamReady(() => createPeer(connId, false, signal));
-            }
-            break;
-          }
-
-          case 'answer': {
-            const signal = msg.data?.signal ?? msg.data;
-            const connId = msg.sender_id;
-            if (peers.current[connId]) {
-              peers.current[connId].signal(signal);
-            } else {
-              (pendingSignals.current[connId] ||= []).push(signal);
-            }
-            break;
-          }
-
-          case 'ice-candidate': {
-            const signal = msg.data?.signal ?? msg.data;
-            const connId = msg.sender_id;
-            if (peers.current[connId]) {
-              peers.current[connId].signal(signal);
-            } else {
-              (pendingSignals.current[connId] ||= []).push(signal);
-            }
-            break;
-          }
-
-          case 'screen_share': {
-            // If WE are currently sharing and someone else starts sharing, stop ours
-            if (screenStreamRef.current && msg.sender_id !== userIdRef.current) {
-              stopScreenSharing();
-            }
-            remoteScreenSharerIdRef.current = msg.sender_id;
-            setRemoteScreenSharerId(msg.sender_id);
-            break;
-          }
-
-          case 'screen_stop': {
-            if (remoteScreenSharerIdRef.current === msg.sender_id) {
-              const stoppedStreamId = remoteScreenStreamRef.current?.id ?? null;
-              clearRemoteScreenShare();
-              if (stoppedStreamId) {
-                setRemoteStreams(prev => prev.filter(s => s.id !== stoppedStreamId));
-              }
-            }
-            break;
-          }
-
-          case 'join_request': {
-            if (msg.data && msg.data.participant_uuid) {
-              const reqData = {
-                ...msg.data,
-                name: msg.data.name && msg.data.name.trim() ? msg.data.name.trim() : 'Guest',
-              };
-              setJoinRequests(prev => {
-                const existingIndex = prev.findIndex(r => r.participant_uuid === reqData.participant_uuid);
-                if (existingIndex >= 0) {
-                  const updated = [...prev];
-                  updated[existingIndex] = reqData;
-                  return updated;
-                }
-                return [...prev, reqData];
-              });
-            }
-            break;
-          }
-
-          case 'confetti_time': {
-            launchConfetti();
-            break;
-          }
-
-          case 'balloon_time': {
-            launchBalloons();
-            break;
-          }
-
-          case 'cat_time': {
-            launchWalkingCat();
-            break;
-          }
-
-          case 'tux_time': {
-            launchTux();
-            break;
-          }
-
-          case 'ufo_time': {
-            launchUFO();
-            break;
-          }
-
-          case 'brimo_time': {
-            playSound();
-            break;
-          }
-
-          case 'whiteboard_toggle': {
-            if (onWhiteboardToggle) {
-              onWhiteboardToggle(!!msg.data?.isOpen);
-            }
-            break;
-          }
-
-          case 'whiteboard_update': {
-            if (onWhiteboardUpdate && msg.data?.snapshot) {
-              onWhiteboardUpdate(msg.data.snapshot);
-            }
-            break;
-          }
-
-          case 'whiteboard_permission_update': {
-            if (onWhiteboardPermissionUpdate && Array.isArray(msg.data?.allowedIds)) {
-              onWhiteboardPermissionUpdate(msg.data.allowedIds);
-            }
-            break;
-          }
-
-          case 'screen_annotation_update':
-          case 'screen_annotation_sync': {
-            if (onScreenAnnotationUpdate && Array.isArray(msg.data?.annotations)) {
-              onScreenAnnotationUpdate(msg.data.annotations);
-            }
-            break;
-          }
-
-          case 'screen_annotation_start': {
-            if (onScreenAnnotationStart && msg.data?.item) {
-              onScreenAnnotationStart(msg.data.item);
-            }
-            break;
-          }
-
-          case 'screen_annotation_draw': {
-            if (onScreenAnnotationDraw && msg.data?.id && Array.isArray(msg.data?.points)) {
-              onScreenAnnotationDraw(msg.data);
-            }
-            break;
-          }
-
-          case 'screen_annotation_end': {
-            if (onScreenAnnotationEnd && msg.data?.id) {
-              onScreenAnnotationEnd(msg.data);
-            }
-            break;
-          }
-
-          case 'screen_annotation_clear': {
-            if (onScreenAnnotationClear) {
-              onScreenAnnotationClear();
-            }
-            break;
-          }
-
-          default:
+        if (userRole === 'host' || userRole === 'interviewer') {
+          sendMessage('host_joined');
         }
-      } catch (e) {
-        console.error('Error parsing message:', e);
-      }
+        playSound();
+      };
+
+      ws.current.onmessage = (event) => {
+        try {
+          const msg: WSMessage = JSON.parse(event.data);
+
+          switch (msg.type) {
+            case 'room-info': {
+              setMyConnId(msg.sender_id);
+              const list: RoomInfoParticipant[] = msg.data?.participants ?? [];
+              setParticipants(prev => {
+                const ids = list.map(p => p.id);
+                const merged = [...prev];
+                ids.forEach(id => { if (!merged.includes(id)) merged.push(id); });
+                return merged;
+              });
+              list.forEach(p => {
+                runWhenStreamReady(() => createPeer(p.id, true));
+              });
+              break;
+            }
+
+            case 'join': {
+              const connId = msg.sender_id;
+              setParticipants(prev => (prev.includes(connId) ? prev : [...prev, connId]));
+              // Beritahu orang yang baru join siapa kita
+              sendMessage('profile', { name: userName, role: userRole }, connId);
+              playSound(); // Entry chime sound when a new participant enters
+
+              // Jika kita adalah Host dan Whiteboard sedang terbuka, kirim status & snapshot ke orang baru yang join
+              if ((userRole === 'interviewer' || userRole === 'host') && isWhiteboardOpenRef.current) {
+                sendMessage('whiteboard_toggle', { isOpen: true }, connId);
+                if (whiteboardSnapshotRef.current) {
+                  sendMessage('whiteboard_update', { snapshot: whiteboardSnapshotRef.current }, connId);
+                }
+                if (whiteboardAllowedIdsRef.current.length > 0) {
+                  sendMessage('whiteboard_permission_update', { allowedIds: whiteboardAllowedIdsRef.current }, connId);
+                }
+              }
+              if (isScreenSharingRef.current && screenAnnotationsRef.current.length > 0) {
+                sendMessage('screen_annotation_sync', { annotations: screenAnnotationsRef.current }, connId);
+              }
+              break;
+            }
+
+            case 'profile': {
+              const connId = msg.sender_id;
+              const name = msg.data?.name;
+              const role = msg.data?.role;
+              if (name) {
+                setParticipantDetails(prev => ({ ...prev, [connId]: { name, role } }));
+              }
+              if ((userRole === 'interviewer' || userRole === 'host') && isWhiteboardOpenRef.current) {
+                sendMessage('whiteboard_toggle', { isOpen: true }, connId);
+                if (whiteboardSnapshotRef.current) {
+                  sendMessage('whiteboard_update', { snapshot: whiteboardSnapshotRef.current }, connId);
+                }
+              }
+              if (isScreenSharingRef.current && screenAnnotationsRef.current.length > 0) {
+                sendMessage('screen_annotation_sync', { annotations: screenAnnotationsRef.current }, connId);
+              }
+              break;
+            }
+
+            case 'leave': {
+              const connId = msg.sender_id;
+              setParticipants(prev => prev.filter(id => id !== connId));
+              if (peers.current[connId]) {
+                peers.current[connId].destroy();
+                delete peers.current[connId];
+              }
+              delete pendingSignals.current[connId];
+              const leftStream = peerStreams.current[connId];
+              if (leftStream) {
+                setRemoteStreams(prev => prev.filter(s => s.id !== leftStream.id));
+                delete peerStreams.current[connId];
+              }
+              if (remoteScreenSharerIdRef.current === connId) {
+                clearRemoteScreenShare();
+              }
+              setRemoteVideoOffByUser(prev => {
+                const next = { ...prev };
+                delete next[connId];
+                return next;
+              });
+              setParticipantDetails(prev => {
+                const next = { ...prev };
+                delete next[connId];
+                return next;
+              });
+              setPeerIdToStreamId(prev => {
+                const next = { ...prev };
+                delete next[connId];
+                return next;
+              });
+              break;
+            }
+
+            case 'end_call': {
+              if (onCallEnded) {
+                onCallEnded();
+              }
+              break;
+            }
+
+            case 'kick': {
+              if (onKicked) {
+                onKicked();
+              }
+              break;
+            }
+
+            case 'chat': {
+              if (onChatReceived && msg.data) {
+                onChatReceived(msg.data);
+              }
+              break;
+            }
+
+            case 'raise_hand': {
+              if (onHandRaised && msg.data) {
+                onHandRaised(msg.data, msg.sender_id);
+              }
+              break;
+            }
+
+            case 'video_off': {
+              const connId = msg.sender_id;
+              setRemoteVideoOffByUser(prev => ({ ...prev, [connId]: true }));
+              break;
+            }
+
+            case 'video_on': {
+              const connId = msg.sender_id;
+              setRemoteVideoOffByUser(prev => ({ ...prev, [connId]: false }));
+              break;
+            }
+
+            case 'audio_off': {
+              const connId = msg.sender_id;
+              setRemoteAudioOffByUser(prev => ({ ...prev, [connId]: true }));
+              break;
+            }
+
+            case 'audio_on': {
+              const connId = msg.sender_id;
+              setRemoteAudioOffByUser(prev => ({ ...prev, [connId]: false }));
+              break;
+            }
+
+            case 'offer': {
+              const signal = msg.data?.signal ?? msg.data;
+              const connId = msg.sender_id;
+              if (peers.current[connId]) {
+                peers.current[connId].signal(signal);
+              } else {
+                runWhenStreamReady(() => createPeer(connId, false, signal));
+              }
+              break;
+            }
+
+            case 'answer': {
+              const signal = msg.data?.signal ?? msg.data;
+              const connId = msg.sender_id;
+              if (peers.current[connId]) {
+                peers.current[connId].signal(signal);
+              } else {
+                (pendingSignals.current[connId] ||= []).push(signal);
+              }
+              break;
+            }
+
+            case 'ice-candidate': {
+              const signal = msg.data?.signal ?? msg.data;
+              const connId = msg.sender_id;
+              if (peers.current[connId]) {
+                peers.current[connId].signal(signal);
+              } else {
+                (pendingSignals.current[connId] ||= []).push(signal);
+              }
+              break;
+            }
+
+            case 'screen_share': {
+              // If WE are currently sharing and someone else starts sharing, stop ours
+              if (screenStreamRef.current && msg.sender_id !== userIdRef.current) {
+                stopScreenSharing();
+              }
+              remoteScreenSharerIdRef.current = msg.sender_id;
+              setRemoteScreenSharerId(msg.sender_id);
+              break;
+            }
+
+            case 'screen_stop': {
+              if (remoteScreenSharerIdRef.current === msg.sender_id) {
+                const stoppedStreamId = remoteScreenStreamRef.current?.id ?? null;
+                clearRemoteScreenShare();
+                if (stoppedStreamId) {
+                  setRemoteStreams(prev => prev.filter(s => s.id !== stoppedStreamId));
+                }
+              }
+              break;
+            }
+
+            case 'join_request': {
+              if (msg.data && msg.data.participant_uuid) {
+                const reqData = {
+                  ...msg.data,
+                  name: msg.data.name && msg.data.name.trim() ? msg.data.name.trim() : 'Guest',
+                };
+                setJoinRequests(prev => {
+                  const existingIndex = prev.findIndex(r => r.participant_uuid === reqData.participant_uuid);
+                  if (existingIndex >= 0) {
+                    const updated = [...prev];
+                    updated[existingIndex] = reqData;
+                    return updated;
+                  }
+                  return [...prev, reqData];
+                });
+              }
+              break;
+            }
+
+            case 'confetti_time': {
+              launchConfetti();
+              break;
+            }
+
+            case 'balloon_time': {
+              launchBalloons();
+              break;
+            }
+
+            case 'cat_time': {
+              launchWalkingCat();
+              break;
+            }
+
+            case 'tux_time': {
+              launchTux();
+              break;
+            }
+
+            case 'ufo_time': {
+              launchUFO();
+              break;
+            }
+
+            case 'brimo_time': {
+              playSound();
+              break;
+            }
+
+            case 'whiteboard_toggle': {
+              if (onWhiteboardToggle) {
+                onWhiteboardToggle(!!msg.data?.isOpen);
+              }
+              break;
+            }
+
+            case 'whiteboard_update': {
+              if (onWhiteboardUpdate && msg.data?.snapshot) {
+                onWhiteboardUpdate(msg.data.snapshot);
+              }
+              break;
+            }
+
+            case 'whiteboard_permission_update': {
+              if (onWhiteboardPermissionUpdate && Array.isArray(msg.data?.allowedIds)) {
+                onWhiteboardPermissionUpdate(msg.data.allowedIds);
+              }
+              break;
+            }
+
+            case 'screen_annotation_update':
+            case 'screen_annotation_sync': {
+              if (onScreenAnnotationUpdate && Array.isArray(msg.data?.annotations)) {
+                onScreenAnnotationUpdate(msg.data.annotations);
+              }
+              break;
+            }
+
+            case 'screen_annotation_start': {
+              if (onScreenAnnotationStart && msg.data?.item) {
+                onScreenAnnotationStart(msg.data.item);
+              }
+              break;
+            }
+
+            case 'screen_annotation_draw': {
+              if (onScreenAnnotationDraw && msg.data?.id && Array.isArray(msg.data?.points)) {
+                onScreenAnnotationDraw(msg.data);
+              }
+              break;
+            }
+
+            case 'screen_annotation_end': {
+              if (onScreenAnnotationEnd && msg.data?.id) {
+                onScreenAnnotationEnd(msg.data);
+              }
+              break;
+            }
+
+            case 'screen_annotation_clear': {
+              if (onScreenAnnotationClear) {
+                onScreenAnnotationClear();
+              }
+              break;
+            }
+
+            default:
+          }
+        } catch (e) {
+          console.error('Error parsing message:', e);
+        }
+      };
+
+      ws.current.onerror = (error) => {
+        console.error('❌ WebSocket error:', error);
+      };
+
+      ws.current.onclose = (event) => {
+        if (!isUnmounted) {
+          console.warn('WebSocket closed, attempting to reconnect in 3s...');
+          Object.keys(peers.current).forEach(key => {
+            try {
+              peers.current[key]?.destroy();
+              delete peers.current[key];
+            } catch (e) { }
+          });
+          peers.current = {};
+          setParticipants([]);
+          setRemoteStreams([]);
+          setParticipantDetails({});
+          clearRemoteScreenShare();
+          setTimeout(connectWebSocket, 3000);
+        }
+      };
+
     };
 
-    ws.current.onerror = (error) => {
-      console.error('❌ WebSocket error:', error);
-    };
-
-    ws.current.onclose = (event) => {
-      if (!isUnmounted) {
-        console.warn('WebSocket closed, attempting to reconnect in 3s...');
-        Object.keys(peers.current).forEach(key => {
-          try {
-            peers.current[key]?.destroy();
-            delete peers.current[key];
-          } catch (e) {}
-        });
-        peers.current = {};
-        setParticipants([]);
-        setRemoteStreams([]);
-        setParticipantDetails({});
-        clearRemoteScreenShare();
-        setTimeout(connectWebSocket, 3000);
-      }
-    };
-
-    };
-    
     connectWebSocket();
 
     return () => {
@@ -827,7 +827,7 @@ export function useWebRTC({
       setParticipants([]);
       setParticipantDetails({});
       clearRemoteScreenShare();
-      
+
       // 6. Clean Virtual Background & Raw Track
       if (rawVideoTrackRef.current) {
         rawVideoTrackRef.current.stop();
@@ -841,7 +841,7 @@ export function useWebRTC({
       // 7. Clear pending actions
       pendingStreamActions.current = [];
       pendingSignals.current = {};
-      
+
       isWebRTCStarted.current = false;
     };
   }, [roomId, signalServer]);
@@ -861,34 +861,34 @@ export function useWebRTC({
     }
   };
 
-function preferH264(sdp: string): string {
-  const lines = sdp.split('\r\n');
-  const mLineIndex = lines.findIndex(line => line.startsWith('m=video'));
-  if (mLineIndex === -1) return sdp;
+  function preferH264(sdp: string): string {
+    const lines = sdp.split('\r\n');
+    const mLineIndex = lines.findIndex(line => line.startsWith('m=video'));
+    if (mLineIndex === -1) return sdp;
 
-  const h264Payloads: string[] = [];
-  lines.forEach(line => {
-    if (line.startsWith('a=rtpmap:') && line.includes('H264/90000')) {
-      const parts = line.split(' ');
-      const payload = parts[0].split(':')[1];
-      h264Payloads.push(payload);
-    }
-  });
+    const h264Payloads: string[] = [];
+    lines.forEach(line => {
+      if (line.startsWith('a=rtpmap:') && line.includes('H264/90000')) {
+        const parts = line.split(' ');
+        const payload = parts[0].split(':')[1];
+        h264Payloads.push(payload);
+      }
+    });
 
-  if (h264Payloads.length === 0) return sdp;
+    if (h264Payloads.length === 0) return sdp;
 
-  const mLineParts = lines[mLineIndex].split(' ');
-  const header = mLineParts.slice(0, 3);
-  const existingPayloads = mLineParts.slice(3);
+    const mLineParts = lines[mLineIndex].split(' ');
+    const header = mLineParts.slice(0, 3);
+    const existingPayloads = mLineParts.slice(3);
 
-  const newPayloads = [
-    ...h264Payloads,
-    ...existingPayloads.filter(p => !h264Payloads.includes(p))
-  ];
+    const newPayloads = [
+      ...h264Payloads,
+      ...existingPayloads.filter(p => !h264Payloads.includes(p))
+    ];
 
-  lines[mLineIndex] = [...header, ...newPayloads].join(' ');
-  return lines.join('\r\n');
-}
+    lines[mLineIndex] = [...header, ...newPayloads].join(' ');
+    return lines.join('\r\n');
+  }
 
   const createPeer = (userId: string, initiator: boolean, signal?: any) => {
     if (!localStreamRef.current) {
@@ -969,7 +969,7 @@ function preferH264(sdp: string): string {
               const params = sender.getParameters();
               (params as any).degradationPreference = 'maintain-resolution';
               if (params.encodings && params.encodings.length > 0) {
-                params.encodings[0].maxBitrate = 3000000; 
+                params.encodings[0].maxBitrate = 3000000;
                 params.encodings[0].maxFramerate = 60;
               }
               sender.setParameters(params).catch(err => console.warn('Failed setting sender parameters:', err));
@@ -1091,7 +1091,7 @@ function preferH264(sdp: string): string {
             stream.getTracks().forEach(track => {
               peer.addTrack(track, stream);
             });
-            
+
             // Konfigurasi Bitrate Tinggi (5 Mbps) khusus untuk Screen Share
             const pc: RTCPeerConnection | undefined = (peer as any)._pc;
             if (pc) {
@@ -1106,7 +1106,7 @@ function preferH264(sdp: string): string {
                     }
                     if (params.encodings.length > 0) {
                       params.encodings[0].maxBitrate = 5000000;
-                      params.encodings[0].maxFramerate = 15; 
+                      params.encodings[0].maxFramerate = 15;
                     }
                     sender.setParameters(params).catch(err => console.warn('Gagal set parameter bitrate screen share:', err));
                   } catch (err) {
@@ -1218,7 +1218,7 @@ function preferH264(sdp: string): string {
     if (mode === 'none') {
       const originalTrack = localStreamRef.current.getVideoTracks()[0];
       if (originalTrack) applyOutgoingVideoTrack(originalTrack);
-      
+
       setLocalStream(localStreamRef.current);
 
       vbProcessorRef.current?.stop();

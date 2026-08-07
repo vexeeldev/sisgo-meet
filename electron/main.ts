@@ -162,6 +162,17 @@ ipcMain.on("resume-drawing", () => {
     overlayWindow?.setIgnoreMouseEvents(false);
 });
 
+// Dinamis toggle ignoreMouseEvents saat mouse di atas toolbar
+ipcMain.on("set-ignore-mouse-events", (_event, ignore) => {
+    if (isPausedMain) {
+        if (ignore) {
+            overlayWindow?.setIgnoreMouseEvents(true, { forward: true });
+        } else {
+            overlayWindow?.setIgnoreMouseEvents(false);
+        }
+    }
+});
+
 // Kembali ke aplikasi utama (tanpa mematikan overlay)
 ipcMain.on("return-to-app", () => {
     mainWindow?.restore();

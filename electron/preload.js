@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
   // ─── Tool / Clear ────────────────────────────────────────────────────────
   clearCanvas: () => ipcRenderer.send("clear-canvas"),
   returnToApp: () => ipcRenderer.send("return-to-app"),
+  setIgnoreMouseEvents: (ignore) => ipcRenderer.send("set-ignore-mouse-events", ignore),
 
   // ─── Listeners: Main App menerima state overlay ──────────────────────────
   onOverlayStateChange: (callback) => {
