@@ -519,7 +519,7 @@ export default function SpeakerLayout({
           />
 
           {/* Realtime Screen Annotation Overlay (React Konva) */}
-          {(screenAnnotations.length > 0 || onCloseScreenAnnotation) && (
+          {!isLocalScreenSharing && (screenAnnotations.length > 0 || onCloseScreenAnnotation) && (
             <ScreenAnnotation
               isSharingHost={isLocalScreenSharing}
               participantName={participantName}

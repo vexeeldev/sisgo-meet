@@ -521,7 +521,7 @@ export default function ScreenAnnotation({
         </Stage>
       )}
 
-      {!hideToolbar && onCloseAnnotation && (
+      {!hideToolbar && (
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 pointer-events-auto animate-in fade-in slide-in-from-bottom-4 duration-200">
           {/* Floating Eraser Radius Size Controller (Appears directly above toolbar when eraser is active) */}
           {activeTool === 'eraser' && !isToolbarCollapsed && (

@@ -87,23 +87,24 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
   const handleScreenAnnotationDraw = (data: { id: string; points: number[] }) => {
     setScreenAnnotations((prev) => {
       if (prev.length === 0) return prev;
-      const lastIndex = prev.length - 1;
-      const lastItem = { ...prev[lastIndex] };
+      const targetIndex = prev.findIndex(item => item.id === data.id);
+      if (targetIndex === -1) return prev;
+      
+      const targetItem = { ...prev[targetIndex] };
 
-      if (lastItem.id === data.id) {
-        if (lastItem.tool === 'pen') {
-          lastItem.points = [...(lastItem.points || []), ...data.points];
-        } else if (lastItem.tool === 'arrow') {
-          lastItem.points = data.points;
-        } else if (lastItem.tool === 'rect' || lastItem.tool === 'circle') {
-          lastItem.width = data.points[0];
-          lastItem.height = data.points[1];
-          lastItem.radius = data.points[2];
-        }
-        const updated = [...prev];
-        updated[lastIndex] = lastItem;
-        return updated;
+      if (targetItem.tool === 'pen') {
+        targetItem.points = [...(targetItem.points || []), ...data.points];
+      } else if (targetItem.tool === 'arrow') {
+        targetItem.points = data.points;
+      } else if (targetItem.tool === 'rect' || targetItem.tool === 'circle') {
+        targetItem.width = data.points[0];
+        targetItem.height = data.points[1];
+        targetItem.radius = data.points[2];
       }
+      
+      const updated = [...prev];
+      updated[targetIndex] = targetItem;
+      return updated;
       return prev;
     });
 
@@ -205,23 +206,24 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     onScreenAnnotationDraw: (data: { id: string; points: number[] }) => {
       setScreenAnnotations((prev) => {
         if (prev.length === 0) return prev;
-        const lastIndex = prev.length - 1;
-        const lastItem = { ...prev[lastIndex] };
+        const targetIndex = prev.findIndex(item => item.id === data.id);
+        if (targetIndex === -1) return prev;
+        
+        const targetItem = { ...prev[targetIndex] };
 
-        if (lastItem.id === data.id) {
-          if (lastItem.tool === 'pen') {
-            lastItem.points = [...(lastItem.points || []), ...data.points];
-          } else if (lastItem.tool === 'arrow') {
-            lastItem.points = data.points;
-          } else if (lastItem.tool === 'rect' || lastItem.tool === 'circle') {
-            lastItem.width = data.points[0];
-            lastItem.height = data.points[1];
-            lastItem.radius = data.points[2];
-          }
-          const updated = [...prev];
-          updated[lastIndex] = lastItem;
-          return updated;
+        if (targetItem.tool === 'pen') {
+          targetItem.points = [...(targetItem.points || []), ...data.points];
+        } else if (targetItem.tool === 'arrow') {
+          targetItem.points = data.points;
+        } else if (targetItem.tool === 'rect' || targetItem.tool === 'circle') {
+          targetItem.width = data.points[0];
+          targetItem.height = data.points[1];
+          targetItem.radius = data.points[2];
         }
+        
+        const updated = [...prev];
+        updated[targetIndex] = targetItem;
+        return updated;
         return prev;
       });
     },
