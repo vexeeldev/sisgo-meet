@@ -2,6 +2,10 @@
   "name": "sisgo-meet",
   "version": "0.1.0",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vexeeldev/sisgo-meet.git"
+  },
   "scripts": {
     "dev": "next dev --port 3001",
     "electron": "DISPLAY=:1 electron --no-sandbox --ozone-platform=x11 -r ts-node/register electron/main.ts",
@@ -12,8 +16,7 @@
     "build:electron": "tsc -p electron/tsconfig.json && cp electron/preload.js dist-electron/",
     "desktop:build": "npm run build:electron && electron-builder",
     "desktop:build:win": "npm run build:electron && electron-builder --win",
-    "desktop:build:mac": "npm run build:electron && electron-builder --mac",
-    "desktop:build:linux": "npm run build:electron && electron-builder --linux"
+    "desktop:build:mac": "npm run build:electron && electron-builder --mac"
   },
   "main": "dist-electron/main.js",
   "build": {
