@@ -1155,6 +1155,10 @@ export function useWebRTC({
       });
     }
 
+    if (typeof window !== 'undefined') {
+      window.electronAPI?.toggleOverlay?.(false);
+    }
+
     sendMessage('screen_stop');
   };
 

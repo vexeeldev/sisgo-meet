@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import MeetingHeader from '@/components/meeting/room/MeetingHeader';
 import MeetingVideo from '@/components/meeting/room/MeetingVideo';
@@ -22,6 +22,15 @@ export default function MeetingPage() {
   const roomId = params.roomId as string;
   const [showRecordingsPanel, setShowRecordingsPanel] = useState(false);
   const [showCloseWhiteboardModal, setShowCloseWhiteboardModal] = useState(false);
+
+  useEffect(() => {
+    // Ensure overlay is closed when the meeting room unmounts (e.g. user closes window, navigates away, etc)
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.electronAPI?.toggleOverlay?.(false);
+      }
+    };
+  }, []);
 
   const {
     showLobby,

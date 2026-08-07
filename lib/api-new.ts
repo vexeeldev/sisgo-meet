@@ -849,4 +849,22 @@ export const api = {
     if (typeof window === 'undefined') return false;
     return !!localStorage.getItem('token');
   },
+
+  endInterviewRoom: async (roomUuid: string, token: string) => {
+    try {
+      const res = await fetch(`${API_BASE}/rooms/${roomUuid}/end-interview`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+
+      const result = await res.json();
+      return { success: res.ok, ...result };
+    } catch (error: any) {
+      return { success: false, message: error?.message || "Network error" };
+    }
+  },
 };

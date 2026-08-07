@@ -531,6 +531,7 @@ export default function SpeakerLayout({
               onClearAnnotations={onClearScreenAnnotations}
               onCloseAnnotation={onCloseScreenAnnotation}
               videoRef={screenVideoRef}
+              hideLocalStrokes={true}
             />
           )}
 

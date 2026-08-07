@@ -172,9 +172,15 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     initialCameraOn: !isVideoOff,
     initialMicOn: !isMuted,
     onKicked: () => {
+      if (typeof window !== 'undefined') {
+        window.electronAPI?.toggleOverlay?.(false);
+      }
       window.location.href = '/dashboard';
     },
     onCallEnded: () => {
+      if (typeof window !== 'undefined') {
+        window.electronAPI?.toggleOverlay?.(false);
+      }
       window.location.href = '/dashboard';
     },
     onChatReceived: (msg: any) => {
@@ -441,6 +447,9 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
 
   const leaveCall = () => {
     localStream?.getTracks().forEach((track) => track.stop());
+    if (typeof window !== 'undefined') {
+      window.electronAPI?.toggleOverlay?.(false);
+    }
     router.push('/dashboard');
   };
 
@@ -465,7 +474,17 @@ export function useMeetingRoom({ roomId }: UseMeetingRoomProps) {
     }
   }, [isScreenSharing, remoteScreenStream, isWhiteboardOpen, isWhiteboardMinimized]);
 
-  const handleEndForAll = () => {
+  const handleEndForAll = async () => {
+    if (roomType === 'interview') {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          await api.endInterviewRoom(roomId, token);
+        } catch (error) {
+          console.error("Failed to auto-delete interview room:", error);
+        }
+      }
+    }
     sendMessage('end_call', {});
     leaveCall();
   };

@@ -41,6 +41,7 @@ interface ScreenAnnotationProps {
   hideToolbar?: boolean;
   extraToolbarButtons?: React.ReactNode;
   forceCollapsed?: boolean;
+  hideLocalStrokes?: boolean;
 }
 
 const COLOR_PALETTE = [
@@ -150,6 +151,7 @@ export default function ScreenAnnotation({
   hideToolbar,
   extraToolbarButtons,
   forceCollapsed = false,
+  hideLocalStrokes = false,
 }: ScreenAnnotationProps) {
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
@@ -435,7 +437,7 @@ export default function ScreenAnnotation({
           onTouchEnd={handleMouseUp}
           style={{ cursor: activeTool === 'eraser' ? 'none' : 'crosshair' }}
         >
-          <Layer>
+          <Layer opacity={hideLocalStrokes ? 0 : 1}>
             {annotations.map((item) => {
               if (item.tool === 'pen') {
                 return (
