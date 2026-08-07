@@ -40,6 +40,7 @@ interface ScreenAnnotationProps {
   videoRef?: React.RefObject<HTMLVideoElement | null>;
   hideToolbar?: boolean;
   extraToolbarButtons?: React.ReactNode;
+  forceCollapsed?: boolean;
 }
 
 const COLOR_PALETTE = [
@@ -148,6 +149,7 @@ export default function ScreenAnnotation({
   videoRef,
   hideToolbar,
   extraToolbarButtons,
+  forceCollapsed = false,
 }: ScreenAnnotationProps) {
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
@@ -524,12 +526,13 @@ export default function ScreenAnnotation({
 
       {!hideToolbar && (
         <>
-          {isToolbarCollapsed ? (
-            <div className="absolute bottom-6 left-6 z-30 pointer-events-auto animate-in fade-in zoom-in duration-200">
+          {(isToolbarCollapsed || forceCollapsed) ? (
+            <div className={`absolute bottom-6 left-6 z-30 pointer-events-auto animate-in fade-in zoom-in duration-200 ${forceCollapsed ? 'opacity-50 pointer-events-none' : ''}`}>
               <button
-                onClick={() => setIsToolbarCollapsed(false)}
-                className="w-12 h-12 bg-[#1e1f22]/90 backdrop-blur-md border border-[#3c4043] rounded-full shadow-2xl flex items-center justify-center text-blue-400 hover:bg-[#3c4043] hover:text-white transition-all cursor-pointer group"
-                title="Buka Tools Anotasi"
+                onClick={() => !forceCollapsed && setIsToolbarCollapsed(false)}
+                className={`w-12 h-12 bg-[#1e1f22]/90 backdrop-blur-md border border-[#3c4043] rounded-full shadow-2xl flex items-center justify-center text-blue-400 transition-all cursor-pointer group ${forceCollapsed ? 'cursor-not-allowed' : 'hover:bg-[#3c4043] hover:text-white'}`}
+                title={forceCollapsed ? "Toolbar disembunyikan karena Mode Scroll aktif" : "Buka Tools Anotasi"}
+                disabled={forceCollapsed}
               >
                 <Pencil className="w-5 h-5 group-hover:scale-110 transition-transform" />
               </button>
@@ -670,7 +673,7 @@ export default function ScreenAnnotation({
                   </button>
                   
                   {showColorPicker && (
-                    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 bg-[#1e1f22]/95 backdrop-blur-md border border-[#3c4043] rounded-xl shadow-2xl p-2 grid grid-cols-2 gap-2 animate-in fade-in slide-in-from-left-2 duration-150 z-50">
+                    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 bg-[#1e1f22]/95 backdrop-blur-md border border-[#3c4043] rounded-xl shadow-2xl p-1.5 grid grid-cols-3 gap-1.5 animate-in fade-in slide-in-from-left-2 duration-150 z-50">
                       {COLOR_PALETTE.map((c) => (
                         <button
                           key={c}
@@ -678,7 +681,7 @@ export default function ScreenAnnotation({
                             setActiveColor(c);
                             setShowColorPicker(false);
                           }}
-                          className={`w-6 h-6 rounded-full transition-transform cursor-pointer border ${
+                          className={`w-5 h-5 rounded-full transition-transform cursor-pointer border ${
                             activeColor === c ? 'border-white scale-125 shadow-[0_0_8px_rgba(255,255,255,0.4)]' : 'border-[#3c4043] hover:scale-110 opacity-80'
                           }`}
                           style={{ backgroundColor: c }}

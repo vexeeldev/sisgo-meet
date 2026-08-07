@@ -135,8 +135,8 @@ export default function OverlayPage() {
           onChangeAnnotations={handleChangeAnnotations}
           onClearAnnotations={handleClearAnnotations}
           extraToolbarButtons={extraToolbarButtons}
-          // We do NOT hide toolbar, we use the ScreenAnnotation one!
           hideToolbar={false} 
+          forceCollapsed={isPaused}
         />
       </div>
     </>
